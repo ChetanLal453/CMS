@@ -1,0 +1,53 @@
+import type { AdvancedHeading } from './types'
+
+export const defaultAdvancedHeadingProps: AdvancedHeading = {
+  type: 'advancedheading',
+  schemaVersion: 1,
+  text: 'Advanced Heading',
+  level: 'h2',
+  style: {
+    usePresetStyles: true,
+    fontFamily: "'DM Sans', system-ui, sans-serif",
+    fontSize: '',
+    fontSizeMobile: '',
+    fontSizeTablet: '',
+    fontWeight: '700',
+    lineHeight: '1.2',
+    letterSpacing: '0px',
+    textTransform: 'none',
+    textDecoration: 'none',
+    fontStyle: 'normal',
+    color: 'var(--canvas-text, #111111)',
+    hoverColor: 'var(--canvas-accent2, #0056b3)',
+    alignment: 'left',
+    textAlignMobile: 'center',
+    textAlignTablet: 'left',
+    maxWidth: '100%',
+    margin: '0 0 16px 0',
+    padding: '0',
+  },
+  highlight: {
+    text: '',
+    color: 'var(--canvas-accent2, #a594ff)',
+  },
+  seo: {
+    enabled: true,
+    maxLength: 60,
+  },
+  aria: {
+    visible: true,
+    semanticLevel: 'h2',
+    htmlTag: 'auto',
+    ariaLevel: 2,
+    ariaLabel: '',
+    role: 'heading',
+    autoId: true,
+    customId: '',
+    className: '',
+    dataTracking: '',
+    componentId: '',
+  },
+  meta: {
+    migratedFrom: 'structured',
+  },
+}

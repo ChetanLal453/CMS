@@ -1,0 +1,381 @@
+import type {
+  AdvancedCard,
+  AdvancedCardVariant,
+  DeepPartial,
+  LegacyAdvancedCardProps,
+} from './types'
+
+export const LEGACY_ADVANCED_CARD_DEFAULTS: LegacyAdvancedCardProps = {
+  showImage: true,
+  image: '',
+  alt: 'Card Image',
+  imagePosition: 'top',
+  imageHeight: 200,
+  imageWidth: 400,
+  objectFit: 'cover',
+  overlayColor: 'rgba(0,0,0,0.4)',
+  overlayOpacity: 0.4,
+  imageShadow: 'none',
+  imageBorderRadius: 8,
+
+  imageHoverEffect: 'none',
+  imageHoverZoom: 1.1,
+  imageHoverBrightness: 1.2,
+  imageHoverGrayscale: 100,
+  imageHoverDuration: 0.3,
+
+  showIcon: false,
+  icon: 'FaStar',
+  iconSize: 32,
+  iconColor: '#ffffff',
+  iconBackgroundColor: '#3b82f6',
+  iconShape: 'circle',
+  iconBorderRadius: 8,
+  iconPadding: 12,
+  iconShadow: 'none',
+  iconPosition: 'top',
+
+  iconHoverEffect: 'none',
+  iconHoverScale: 1.2,
+  iconHoverColor: '#ffffff',
+  iconBgHoverColor: '#2563eb',
+  iconHoverDuration: 0.3,
+
+  showTitle: true,
+  title: 'Elegant Modern Design',
+  titleColor: '#000000',
+  titleFontSize: '24px',
+  titleFontFamily: 'inherit',
+  titleAlignment: 'left',
+  titleHoverEffect: 'none',
+
+  showSubtitle: true,
+  subtitle: 'Beautiful and customizable card',
+  subtitleColor: '#666666',
+  subtitleFontSize: '16px',
+  subtitleAlign: 'left',
+  subtitleHoverEffect: 'none',
+
+  showDescription: true,
+  description: 'A reusable, editable card component with full live sync.',
+  descriptionColor: '#333333',
+  descriptionFontSize: '14px',
+  descriptionAlign: 'left',
+  descriptionHoverEffect: 'none',
+
+  textAlignment: 'left',
+  lineHeight: '1.5',
+  textSpacing: '0px',
+  fontFamily: 'inherit',
+
+  showBadge: true,
+  badgeText: 'New',
+  badgeColor: '#2563eb',
+  badgeTextColor: '#ffffff',
+  badgePosition: 'top-left',
+  badgeShape: 'rounded',
+  badgeHoverEffect: 'none',
+
+  showButton: true,
+  buttonText: 'Learn More',
+  buttonLink: '#',
+  buttonStyle: 'primary',
+  buttonColor: '#3b82f6',
+  buttonTextColor: '#ffffff',
+  buttonAlignment: 'left',
+  buttonIcon: '',
+  buttonSize: 'md',
+  buttonRadius: 8,
+  buttonFullWidth: false,
+
+  buttonHoverEffect: 'none',
+  buttonHoverColor: '#2563eb',
+  buttonTextHoverColor: '#ffffff',
+
+  cardHoverEffect: 'none',
+  cardHoverShadow: 'none',
+  cardHoverScale: 1.03,
+  cardHoverTilt: 3,
+  cardHoverGlowColor: '#3b82f6',
+  cardHoverGlowIntensity: 0.3,
+  cardHoverGradientFrom: '#3b82f6',
+  cardHoverGradientTo: '#8b5cf6',
+  cardHoverDuration: 0.3,
+
+  backgroundColor: '#ffffff',
+  borderColor: '#e5e7eb',
+  borderWidth: 1,
+  borderRadius: 16,
+  shadow: 'md',
+  padding: 24,
+  margin: '0px',
+  width: '100%',
+  height: 'auto',
+
+  animationType: 'none',
+  animationDelay: 0,
+  hoverAnimation: 'none',
+  transitionDuration: 0.3,
+
+  enableFlip: false,
+  flipOn: 'hover',
+  flipDirection: 'horizontal',
+  flipDuration: 0.6,
+  flipPerspective: 1000,
+
+  visible: true,
+  id: '',
+  customClass: '',
+  componentId: '',
+  editable: false,
+}
+
+export const advancedCardDefaultProps = LEGACY_ADVANCED_CARD_DEFAULTS
+
+export const ADVANCED_CARD_BASE_DEFAULTS: AdvancedCard = {
+  id: '',
+  type: 'advancedCard',
+  variant: 'default',
+  schemaVersion: 2,
+  content: {
+    title: {
+      text: 'Elegant Modern Design',
+      visible: true,
+    },
+    subtitle: {
+      text: 'Beautiful and customizable card',
+      visible: true,
+    },
+    description: {
+      text: 'A reusable, editable card component with full live sync.',
+      visible: true,
+    },
+    image: {
+      src: '',
+      alt: 'Card Image',
+      visible: true,
+    },
+    icon: {
+      name: 'FaStar',
+      visible: false,
+    },
+    badge: {
+      text: 'New',
+      visible: true,
+    },
+    button: {
+      label: 'Learn More',
+      href: '#',
+      icon: '',
+      visible: true,
+    },
+    extra: {},
+  },
+  layout: {
+    direction: 'vertical',
+    imagePosition: 'top',
+    iconPosition: 'top',
+    alignment: 'left',
+    textAlignment: 'left',
+    titleAlignment: 'left',
+    subtitleAlignment: 'left',
+    descriptionAlignment: 'left',
+    buttonAlignment: 'left',
+    buttonFullWidth: false,
+    contentOrder: ['badge', 'image', 'icon', 'title', 'subtitle', 'description', 'button'],
+    gap: 16,
+    padding: 24,
+    margin: '0px',
+    width: '100%',
+    height: 'auto',
+    imageHeight: 200,
+    imageWidth: 400,
+  },
+  style: {
+    backgroundColor: '#ffffff',
+    opacity: 1,
+    border: {
+      color: '#e5e7eb',
+      width: 1,
+      radius: 16,
+    },
+    shadow: {
+      card: 'md',
+      image: 'none',
+      icon: 'none',
+    },
+    text: {
+      fontFamily: 'inherit',
+      lineHeight: '1.5',
+      letterSpacing: '0px',
+      title: {
+        color: '#000000',
+        fontSize: '24px',
+        fontFamily: 'inherit',
+      },
+      subtitle: {
+        color: '#666666',
+        fontSize: '16px',
+      },
+      description: {
+        color: '#333333',
+        fontSize: '14px',
+      },
+    },
+    image: {
+      objectFit: 'cover',
+      overlayColor: 'rgba(0,0,0,0.4)',
+      overlayOpacity: 0.4,
+      borderRadius: 8,
+    },
+    icon: {
+      size: 32,
+      color: '#ffffff',
+      backgroundColor: '#3b82f6',
+      shape: 'circle',
+      borderRadius: 8,
+      padding: 12,
+    },
+    badge: {
+      color: '#2563eb',
+      textColor: '#ffffff',
+      position: 'top-left',
+      shape: 'rounded',
+    },
+    button: {
+      variant: 'primary',
+      color: '#3b82f6',
+      textColor: '#ffffff',
+      size: 'md',
+      radius: 8,
+    },
+  },
+  interaction: {
+    hover: {
+      card: {
+        effect: 'none',
+        shadow: 'none',
+        scale: 1.03,
+        tilt: 3,
+        glowColor: '#3b82f6',
+        glowIntensity: 0.3,
+        gradientFrom: '#3b82f6',
+        gradientTo: '#8b5cf6',
+        duration: 0.3,
+      },
+      image: {
+        effect: 'none',
+        zoom: 1.1,
+        brightness: 1.2,
+        grayscale: 100,
+        duration: 0.3,
+      },
+      icon: {
+        effect: 'none',
+        scale: 1.2,
+        color: '#ffffff',
+        backgroundColor: '#2563eb',
+        duration: 0.3,
+      },
+      text: {
+        title: 'none',
+        subtitle: 'none',
+        description: 'none',
+      },
+      badge: {
+        effect: 'none',
+      },
+      button: {
+        effect: 'none',
+        color: '#2563eb',
+        textColor: '#ffffff',
+      },
+    },
+    click: {
+      action: 'none',
+    },
+    flip: {
+      enabled: false,
+      trigger: 'hover',
+      direction: 'horizontal',
+      duration: 0.6,
+      perspective: 1000,
+    },
+  },
+  animation: {
+    entry: {
+      type: 'none',
+      delay: 0,
+      duration: 0.3,
+      easing: 'ease',
+    },
+    hoverAnimation: 'none',
+    transitionDuration: 0.3,
+  },
+  responsive: {
+    hideOnMobile: false,
+    hideOnTablet: false,
+    layoutOverrides: {},
+    mobileStyles: {},
+    tabletStyles: {},
+  },
+  system: {
+    visible: true,
+    customClass: '',
+    componentId: '',
+    editable: false,
+  },
+  meta: {},
+}
+
+export const ADVANCED_CARD_VARIANT_DEFAULTS: Record<AdvancedCardVariant, DeepPartial<AdvancedCard>> = {
+  default: {},
+  feature: {
+    layout: {
+      imagePosition: 'top',
+      alignment: 'center',
+      textAlignment: 'center',
+      titleAlignment: 'center',
+      subtitleAlignment: 'center',
+      descriptionAlignment: 'center',
+      buttonAlignment: 'center',
+    },
+    content: {
+      badge: {
+        visible: false,
+      },
+      icon: {
+        visible: true,
+      },
+    },
+  },
+  blog: {
+    layout: {
+      imagePosition: 'top',
+      alignment: 'left',
+      textAlignment: 'left',
+      titleAlignment: 'left',
+      subtitleAlignment: 'left',
+      descriptionAlignment: 'left',
+    },
+    content: {
+      subtitle: {
+        visible: false,
+      },
+      badge: {
+        visible: true,
+      },
+    },
+  },
+  flip: {
+    interaction: {
+      flip: {
+        enabled: true,
+        trigger: 'hover',
+        direction: 'horizontal',
+        duration: 0.6,
+        perspective: 1000,
+      },
+    },
+  },
+}

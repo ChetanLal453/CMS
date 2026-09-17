@@ -1,0 +1,159 @@
+import { createDefaultSlide, defaultSwiperContainerProps } from './defaults'
+import { normalizeSwiperContainer } from './normalize'
+import { createSwiperContainerViewModel, shouldEnableSwiperContainerLoop } from './viewModel'
+
+export type {
+  SwiperContainerInput,
+  SwiperContainerProps,
+  SwiperContainerViewModel,
+  SwiperModuleKey,
+  SwiperRenderConfig,
+  SwiperRenderSlideView,
+  SwiperRenderStyleTokens,
+  SwiperSlideItem,
+} from './types'
+export { defaultSwiperContainerProps } from './defaults'
+export { createDefaultSlide } from './defaults'
+export { normalizeSwiperContainer } from './normalize'
+export { createSwiperContainerViewModel, shouldEnableSwiperContainerLoop } from './viewModel'
+
+export const swiperContainerContract = {
+  defaultProps: defaultSwiperContainerProps,
+  schema: {
+    properties: {
+      direction: {
+        type: 'select',
+        label: 'Direction',
+        default: 'horizontal',
+        options: [
+          { value: 'horizontal', label: 'Horizontal' },
+          { value: 'vertical', label: 'Vertical' },
+        ],
+        category: 'Layout',
+      },
+      slidesPerView: {
+        type: 'select',
+        label: 'Slides Per View',
+        default: 3,
+        options: [
+          { value: 1, label: '1' },
+          { value: 2, label: '2' },
+          { value: 3, label: '3' },
+          { value: 4, label: '4' },
+          { value: 5, label: '5' },
+          { value: 'auto', label: 'Auto' },
+        ],
+        category: 'Layout',
+      },
+      slidesPerGroup: {
+        type: 'select',
+        label: 'Slides Per Group',
+        default: 1,
+        options: [
+          { value: 1, label: '1' },
+          { value: 2, label: '2' },
+          { value: 3, label: '3' },
+          { value: 4, label: '4' },
+        ],
+        category: 'Layout',
+      },
+      spaceBetween: { type: 'number', label: 'Space Between (px)', default: 12, min: 0, max: 80, category: 'Layout' },
+      centeredSlides: { type: 'toggle', label: 'Centered Slides', default: false, category: 'Layout' },
+      slideMinHeight: { type: 'text', label: 'Slide Height', default: '120px', category: 'Layout' },
+      autoplay: { type: 'toggle', label: 'Auto Play', default: false, category: 'Behavior' },
+      autoplayDelay: { type: 'number', label: 'Auto Play Delay (ms)', default: 3000, min: 1000, max: 10000, step: 500, category: 'Behavior' },
+      loop: { type: 'toggle', label: 'Infinite Loop', default: true, category: 'Behavior' },
+      speed: { type: 'number', label: 'Transition Speed (ms)', default: 500, min: 100, max: 2000, category: 'Behavior' },
+      draggable: { type: 'toggle', label: 'Draggable', default: true, category: 'Behavior' },
+      grabCursor: { type: 'toggle', label: 'Grab Cursor', default: true, category: 'Behavior' },
+      freeMode: { type: 'toggle', label: 'Free Mode', default: false, category: 'Behavior' },
+      mousewheel: { type: 'toggle', label: 'Mousewheel Control', default: false, category: 'Behavior' },
+      keyboard: { type: 'toggle', label: 'Keyboard Control', default: true, category: 'Behavior' },
+      navigation: { type: 'toggle', label: 'Navigation Arrows', default: true, category: 'Navigation' },
+      arrowStyle: {
+        type: 'select',
+        label: 'Arrow Style',
+        default: 'rounded',
+        options: [
+          { value: 'rounded', label: 'Rounded' },
+          { value: 'square', label: 'Square' },
+          { value: 'minimal', label: 'Minimal' },
+        ],
+        category: 'Navigation',
+      },
+      arrowPosition: {
+        type: 'select',
+        label: 'Arrow Position',
+        default: 'sides',
+        options: [
+          { value: 'sides', label: 'Sides' },
+          { value: 'bottom', label: 'Bottom' },
+          { value: 'top-right', label: 'Top Right' },
+        ],
+        category: 'Navigation',
+      },
+      pagination: { type: 'toggle', label: 'Pagination Dots', default: true, category: 'Navigation' },
+      paginationType: {
+        type: 'select',
+        label: 'Pagination Type',
+        default: 'bullets',
+        options: [
+          { value: 'bullets', label: 'Bullets' },
+          { value: 'fraction', label: 'Fraction' },
+          { value: 'progressbar', label: 'Progress Bar' },
+          { value: 'lines', label: 'Lines' },
+          { value: 'numbered', label: 'Numbered' },
+        ],
+        category: 'Navigation',
+      },
+      paginationDynamic: { type: 'toggle', label: 'Dynamic Bullets', default: false, category: 'Navigation' },
+      paginationClickable: { type: 'toggle', label: 'Clickable Pagination', default: true, category: 'Navigation' },
+      scrollbar: { type: 'toggle', label: 'Scrollbar', default: false, category: 'Navigation' },
+      effect: {
+        type: 'select',
+        label: 'Transition Effect',
+        default: 'slide',
+        options: [
+          { value: 'slide', label: 'Slide' },
+          { value: 'fade', label: 'Fade' },
+          { value: 'cube', label: 'Cube' },
+          { value: 'coverflow', label: 'Coverflow' },
+          { value: 'flip', label: 'Flip' },
+          { value: 'cards', label: 'Cards' },
+        ],
+        category: 'Effects',
+      },
+      effectFadeCrossFade: { type: 'toggle', label: 'Fade Cross-Fade', default: true, category: 'Effects' },
+      effectCubeShadow: { type: 'toggle', label: 'Cube Shadow', default: true, category: 'Effects' },
+      effectCubeSlideShadows: { type: 'toggle', label: 'Cube Slide Shadows', default: true, category: 'Effects' },
+      effectCoverflowRotate: { type: 'number', label: 'Coverflow Rotate', default: 30, min: 0, max: 90, category: 'Effects' },
+      effectCoverflowDepth: { type: 'number', label: 'Coverflow Depth', default: 100, min: 0, max: 400, category: 'Effects' },
+      effectCoverflowStretch: { type: 'number', label: 'Coverflow Stretch', default: 0, min: -200, max: 200, category: 'Effects' },
+      effectCoverflowModifier: { type: 'number', label: 'Coverflow Modifier', default: 1, min: 0.1, max: 3, step: 0.1, category: 'Effects' },
+      effectFlipSlideShadows: { type: 'toggle', label: 'Flip Slide Shadows', default: true, category: 'Effects' },
+      effectCardsPerSlideOffset: { type: 'number', label: 'Cards Offset', default: 8, min: 0, max: 32, category: 'Effects' },
+      effectCardsRotate: { type: 'toggle', label: 'Cards Rotate', default: true, category: 'Effects' },
+      hoverEffects: { type: 'toggle', label: 'Slide Hover Effects', default: true, category: 'Effects' },
+      hoverEffectType: {
+        type: 'select',
+        label: 'Hover Type',
+        default: 'none',
+        options: [
+          { value: 'none', label: 'None' },
+          { value: 'zoom', label: 'Zoom' },
+          { value: 'lift', label: 'Lift' },
+          { value: 'dim', label: 'Dim' },
+          { value: 'brighten', label: 'Brighten' },
+          { value: 'glow', label: 'Border Glow' },
+        ],
+        category: 'Effects',
+      },
+      hoverIntensity: { type: 'number', label: 'Hover Intensity', default: 1.06, min: 1, max: 1.2, step: 0.01, category: 'Effects' },
+      backgroundColor: { type: 'color', label: 'Background Color', default: 'transparent', category: 'Style' },
+      borderRadius: { type: 'text', label: 'Border Radius', default: '0px', category: 'Style' },
+      width: { type: 'text', label: 'Width', default: '100%', category: 'Style' },
+    },
+  },
+  normalize: normalizeSwiperContainer,
+  createViewModel: createSwiperContainerViewModel,
+}

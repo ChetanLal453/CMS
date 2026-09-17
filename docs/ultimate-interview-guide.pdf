@@ -1,0 +1,3018 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 29 /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R 29 0 R 31 0 R 33 0 R 35 0 R 37 0 R 39 0 R 41 0 R 43 0 R 45 0 R 47 0 R 49 0 R 51 0 R 53 0 R 55 0 R 57 0 R 59 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2540 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(CURVE METRICS ULTIMATE INTERVIEW GUIDE) Tj
+T*
+() Tj
+T*
+(HOW TO USE THIS GUIDE) Tj
+T*
+() Tj
+T*
+(This guide is designed to help you explain the project at multiple levels:) Tj
+T*
+() Tj
+T*
+(? short answers for fast interview responses) Tj
+T*
+(? medium-depth answers for follow-up rounds) Tj
+T*
+(? deep architectural answers for senior and system design interviews) Tj
+T*
+(? project-specific questions tied to what is actually in the codebase) Tj
+T*
+(? interviewer-style questions based only on what you say out loud) Tj
+T*
+() Tj
+T*
+(Best practice in interviews:) Tj
+T*
+() Tj
+T*
+(1. Start high-level.) Tj
+T*
+(2. Explain responsibilities before implementation details.) Tj
+T*
+(3. Say why a design exists, not just what it does.) Tj
+T*
+(4. Mention one tradeoff and one future improvement.) Tj
+T*
+(5. Be honest about weaknesses.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(30-SECOND PROJECT SUMMARY) Tj
+T*
+() Tj
+T*
+(This project is a CMS-driven full stack platform with three main parts: an admin app for ) Tj
+T*
+(content authoring and publishing, a shared contract layer for layout/block normalization and) Tj
+T*
+( validation, and a public Next.js website that server-renders published content. The most ) Tj
+T*
+(important architectural decision is a revision-based page workflow, so drafts, preview, ) Tj
+T*
+(restore, and publishing are all first-class instead of directly editing live content.) Tj
+T*
+() Tj
+T*
+(1-MINUTE PROJECT SUMMARY) Tj
+T*
+() Tj
+T*
+(The platform is split into `admin`, `shared`, and `curvemetricswebsite`. The admin app is ) Tj
+T*
+(where internal users manage pages, media, templates, and publishing workflows. The shared ) Tj
+T*
+(layer defines canonical schemas, block contracts, normalization logic, and runtime ) Tj
+T*
+(validation so preview and production interpret content the same way. The public website is ) Tj
+T*
+(intentionally thin: it fetches a validated page bundle from the admin content API, derives a) Tj
+T*
+( render view, and server-renders the final page. The strongest part of the design is the ) Tj
+T*
+(revision-first page lifecycle. The biggest weakness is that public delivery still depends on) Tj
+T*
+( the admin/content runtime at request time, which creates scalability and availability ) Tj
+T*
+(concerns.) Tj
+T*
+() Tj
+T*
+(2-MINUTE ARCHITECTURE ANSWER) Tj
+T*
+() Tj
+T*
+(I would explain the system as a CMS-style platform built around content lifecycle safety. ) Tj
+T*
+(The admin app owns writes and workflows like edit, autosave, preview, restore, and publish. ) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1783 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(Instead of storing only the current page state, the system stores revisions, so draft ) Tj
+T*
+(content and published content are separate. The shared layer owns the canonical meaning of ) Tj
+T*
+(blocks and layouts. It handles normalization, validation, and bundle assembly. The public ) Tj
+T*
+(site does not interpret raw CMS data directly. It fetches a validated page render bundle and) Tj
+T*
+( renders it through SSR. That separation is intentional because it reduces preview-versus-) Tj
+T*
+(production drift. The main tradeoff is increased application-level complexity, but the ) Tj
+T*
+(benefit is much stronger control over content correctness and publishing safety.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(PROJECT SCOPE AND BUSINESS PURPOSE) Tj
+T*
+() Tj
+T*
+(WHAT THE SYSTEM SOLVES) Tj
+T*
+() Tj
+T*
+(? lets internal users build and manage a website without touching raw code) Tj
+T*
+(? supports draft editing without affecting the live site) Tj
+T*
+(? allows preview before publish) Tj
+T*
+(? preserves content history through revisions) Tj
+T*
+(? keeps public rendering consistent through a canonical content contract) Tj
+T*
+() Tj
+T*
+(MAIN USER TYPES) Tj
+T*
+() Tj
+T*
+(? admin/editor users) Tj
+T*
+(? public visitors) Tj
+T*
+() Tj
+T*
+(MAIN USER JOURNEYS) Tj
+T*
+() Tj
+T*
+(ADMIN JOURNEY) Tj
+T*
+() Tj
+T*
+(1. log in) Tj
+T*
+(2. choose a page) Tj
+T*
+(3. edit layout/content) Tj
+T*
+(4. autosave or manually save draft) Tj
+T*
+(5. preview draft) Tj
+T*
+(6. publish approved revision) Tj
+T*
+() Tj
+T*
+(PUBLIC JOURNEY) Tj
+T*
+() Tj
+T*
+(1. request route on website) Tj
+T*
+(2. server fetches published content) Tj
+T*
+(3. page is rendered server-side) Tj
+T*
+(4. final HTML is sent to browser) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(FULL SYSTEM ARCHITECTURE) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1101 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(MAIN APPLICATIONS) Tj
+T*
+() Tj
+T*
+(`ADMIN`) Tj
+T*
+() Tj
+T*
+(Owns:) Tj
+T*
+() Tj
+T*
+(? page authoring) Tj
+T*
+(? autosave) Tj
+T*
+(? version history) Tj
+T*
+(? publish workflow) Tj
+T*
+(? templates) Tj
+T*
+(? media upload) Tj
+T*
+(? auth-protected management APIs) Tj
+T*
+() Tj
+T*
+(`SHARED`) Tj
+T*
+() Tj
+T*
+(Owns:) Tj
+T*
+() Tj
+T*
+(? block registry) Tj
+T*
+(? layout normalization) Tj
+T*
+(? canonical render contracts) Tj
+T*
+(? SEO normalization) Tj
+T*
+(? runtime validation) Tj
+T*
+(? page view shaping) Tj
+T*
+() Tj
+T*
+(`CURVEMETRICSWEBSITE`) Tj
+T*
+() Tj
+T*
+(Owns:) Tj
+T*
+() Tj
+T*
+(? public route handling) Tj
+T*
+(? SSR page rendering) Tj
+T*
+(? thin content fetch boundary) Tj
+T*
+(? public render shell) Tj
+T*
+() Tj
+T*
+(CORE DESIGN RULE) Tj
+T*
+() Tj
+T*
+(The system tries to enforce:) Tj
+T*
+() Tj
+T*
+(`admin writes -> shared interprets -> website renders`) Tj
+T*
+() Tj
+T*
+(That is the core architectural story of the whole project.) Tj
+T*
+() Tj
+T*
+(WHY THIS ARCHITECTURE EXISTS) Tj
+T*
+() Tj
+T*
+(Without a shared interpretation layer:) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 1367 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(? preview and public render would drift) Tj
+T*
+(? blocks would accumulate duplicate behavior) Tj
+T*
+(? frontend components would start repairing CMS data) Tj
+T*
+(? debugging would become much harder) Tj
+T*
+() Tj
+T*
+(MAIN ARCHITECTURAL TRADEOFFS) Tj
+T*
+() Tj
+T*
+(Benefits:) Tj
+T*
+() Tj
+T*
+(? strong content consistency) Tj
+T*
+(? safer publishing workflow) Tj
+T*
+(? reusable content contract) Tj
+T*
+(? easier reasoning about draft vs live state) Tj
+T*
+() Tj
+T*
+(Costs:) Tj
+T*
+() Tj
+T*
+(? more backend and shared-layer complexity) Tj
+T*
+(? tighter contract coordination across apps) Tj
+T*
+(? higher implementation effort than simple CRUD CMS) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(FRONTEND ARCHITECTURE) Tj
+T*
+() Tj
+T*
+(FRONTEND SPLIT) Tj
+T*
+() Tj
+T*
+(There are really two frontend systems:) Tj
+T*
+() Tj
+T*
+(? admin editor frontend) Tj
+T*
+(? public website frontend) Tj
+T*
+() Tj
+T*
+(ADMIN FRONTEND GOALS) Tj
+T*
+() Tj
+T*
+(? manage complex local editing state) Tj
+T*
+(? support drag and drop) Tj
+T*
+(? support undo/redo) Tj
+T*
+(? support autosave) Tj
+T*
+(? support preview/publish flows) Tj
+T*
+() Tj
+T*
+(PUBLIC FRONTEND GOALS) Tj
+T*
+() Tj
+T*
+(? stay thin) Tj
+T*
+(? render validated content) Tj
+T*
+(? preserve SEO via SSR) Tj
+T*
+(? avoid becoming a second content interpretation layer) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 1229 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(ADMIN COMPONENT HIERARCHY) Tj
+T*
+() Tj
+T*
+(High level:) Tj
+T*
+() Tj
+T*
+(? route) Tj
+T*
+(? error boundary) Tj
+T*
+(? page editor shell) Tj
+T*
+(? toolbar) Tj
+T*
+(? left sidebar) Tj
+T*
+(? canvas) Tj
+T*
+(? property panel) Tj
+T*
+(? version/template/json modals) Tj
+T*
+() Tj
+T*
+(PUBLIC COMPONENT HIERARCHY) Tj
+T*
+() Tj
+T*
+(High level:) Tj
+T*
+() Tj
+T*
+(? route) Tj
+T*
+(? SSR fetch layer) Tj
+T*
+(? public page shell) Tj
+T*
+(? header) Tj
+T*
+(? banner) Tj
+T*
+(? page sections) Tj
+T*
+(? footer) Tj
+T*
+() Tj
+T*
+(ADMIN RENDERING FLOW) Tj
+T*
+() Tj
+T*
+(1. load selected page and revision-backed layout) Tj
+T*
+(2. normalize layout into editor-compatible shape) Tj
+T*
+(3. store it in local state) Tj
+T*
+(4. render sections/rows/columns/components) Tj
+T*
+(5. resolve block renderer through registry) Tj
+T*
+(6. update local state on edits) Tj
+T*
+(7. persist through autosave/manual save) Tj
+T*
+() Tj
+T*
+(PUBLIC RENDERING FLOW) Tj
+T*
+() Tj
+T*
+(1. fetch page bundle from admin content API) Tj
+T*
+(2. validate bundle) Tj
+T*
+(3. derive public page view) Tj
+T*
+(4. render shell and block tree) Tj
+T*
+(5. send SSR HTML response) Tj
+T*
+() Tj
+T*
+(STATE MANAGEMENT STRATEGY) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 1547 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(The real editor state strategy is:) Tj
+T*
+() Tj
+T*
+(? local `useState`) Tj
+T*
+(? workflow-oriented custom hooks) Tj
+T*
+(? refs for async coordination) Tj
+T*
+(? Context for app-wide concerns, not core layout state) Tj
+T*
+() Tj
+T*
+(Main custom hooks:) Tj
+T*
+() Tj
+T*
+(? page data loading and persistence) Tj
+T*
+(? layout mutation logic) Tj
+T*
+(? undo/redo) Tj
+T*
+(? autosave) Tj
+T*
+(? UI shell state) Tj
+T*
+() Tj
+T*
+(WHY THIS STATE STRATEGY WAS CHOSEN) Tj
+T*
+() Tj
+T*
+(? fast to iterate) Tj
+T*
+(? editor is a self-contained domain) Tj
+T*
+(? reduced global store overhead) Tj
+T*
+(? behavior grouped by workflow) Tj
+T*
+() Tj
+T*
+(WEAKNESSES OF CURRENT FRONTEND STATE MODEL) Tj
+T*
+() Tj
+T*
+(? large top-level editor component) Tj
+T*
+(? heavy prop orchestration) Tj
+T*
+(? broad re-render potential) Tj
+T*
+(? difficult long-term scalability if feature count grows) Tj
+T*
+() Tj
+T*
+(DRAG-AND-DROP HANDLING) Tj
+T*
+() Tj
+T*
+(? based on `@dnd-kit`) Tj
+T*
+(? drag metadata encodes layout location) Tj
+T*
+(? mutations happen in layout action hooks) Tj
+T*
+(? nested structures make the logic significantly harder than flat sorting) Tj
+T*
+() Tj
+T*
+(FRONTEND PERFORMANCE BOTTLENECKS) Tj
+T*
+() Tj
+T*
+(? full-layout object updates) Tj
+T*
+(? snapshot-based undo/redo) Tj
+T*
+(? JSON serialization for autosave/history comparisons) Tj
+T*
+(? large editor shell owning too much state) Tj
+T*
+(? nested block rendering complexity) Tj
+T*
+() Tj
+T*
+(FRONTEND SCALABILITY CONCERNS) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 16 0 R >>
+endobj
+16 0 obj
+<< /Length 1297 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(? harder onboarding for new engineers) Tj
+T*
+(? more block types increase mutation complexity) Tj
+T*
+(? limited lazy loading in heavy editor paths) Tj
+T*
+(? preview/public shell duplication risk) Tj
+T*
+() Tj
+T*
+(FRONTEND IMPROVEMENT IDEAS) Tj
+T*
+() Tj
+T*
+(? split editor into smaller state-owning containers) Tj
+T*
+(? lazy-load history/templates/media panels) Tj
+T*
+(? isolate section-level rendering) Tj
+T*
+(? reduce whole-layout invalidation) Tj
+T*
+(? converge preview and public shells further) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(BACKEND ARCHITECTURE) Tj
+T*
+() Tj
+T*
+(WHAT THE BACKEND ACTUALLY IS) Tj
+T*
+() Tj
+T*
+(This is not a classic standalone Express server. It is a Node.js backend built mostly using:) Tj
+T*
+() Tj
+T*
+(? Next.js route handlers / API routes) Tj
+T*
+(? service layer) Tj
+T*
+(? repository layer) Tj
+T*
+(? MySQL) Tj
+T*
+(? NextAuth) Tj
+T*
+(? shared validation contracts) Tj
+T*
+() Tj
+T*
+(BACKEND LAYERING) Tj
+T*
+() Tj
+T*
+(ROUTE HANDLERS) Tj
+T*
+() Tj
+T*
+(Own:) Tj
+T*
+() Tj
+T*
+(? request parsing) Tj
+T*
+(? auth boundary entry) Tj
+T*
+(? status codes) Tj
+T*
+(? JSON responses) Tj
+T*
+() Tj
+T*
+(MIDDLEWARE) Tj
+T*
+() Tj
+T*
+(Owns:) Tj
+T*
+() Tj
+T*
+(? route protection for admin paths) Tj
+T*
+() Tj
+T*
+(SERVICES) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 18 0 R >>
+endobj
+18 0 obj
+<< /Length 1192 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(Own:) Tj
+T*
+() Tj
+T*
+(? save workflow) Tj
+T*
+(? publish workflow) Tj
+T*
+(? render-source assembly) Tj
+T*
+(? template application) Tj
+T*
+() Tj
+T*
+(REPOSITORIES) Tj
+T*
+() Tj
+T*
+(Own:) Tj
+T*
+() Tj
+T*
+(? page lookup) Tj
+T*
+(? revision lookup) Tj
+T*
+(? direct DB operations) Tj
+T*
+() Tj
+T*
+(SHARED CONTRACTS) Tj
+T*
+() Tj
+T*
+(Own:) Tj
+T*
+() Tj
+T*
+(? canonical layout meaning) Tj
+T*
+(? bundle validation) Tj
+T*
+(? block schemas/defaults) Tj
+T*
+() Tj
+T*
+(WHY SERVICE/REPOSITORY SEPARATION EXISTS) Tj
+T*
+() Tj
+T*
+(Because save, publish, preview, and public render are workflows, not plain CRUD operations.) Tj
+T*
+() Tj
+T*
+(MAIN BACKEND STRENGTH) Tj
+T*
+() Tj
+T*
+(The page pipeline is workflow-aware and contract-aware rather than just exposing database ) Tj
+T*
+(rows.) Tj
+T*
+() Tj
+T*
+(MAIN BACKEND WEAKNESS) Tj
+T*
+() Tj
+T*
+(Architecture is strongest for pages, but some other domains still rely on simpler generic ) Tj
+T*
+(CRUD patterns.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(AUTHENTICATION AND AUTHORIZATION) Tj
+T*
+() Tj
+T*
+(CURRENT AUTHENTICATION MODEL) Tj
+T*
+() Tj
+T*
+(? NextAuth credentials provider) Tj
+T*
+(? session-based auth) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 20 0 R >>
+endobj
+20 0 obj
+<< /Length 1116 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(? middleware for route groups) Tj
+T*
+(? server-side `requireAdmin\(\)` checks on sensitive APIs) Tj
+T*
+() Tj
+T*
+(WHY IT WAS LIKELY CHOSEN) Tj
+T*
+() Tj
+T*
+(? simple internal admin tool) Tj
+T*
+(? low setup cost) Tj
+T*
+(? easy integration with Next.js) Tj
+T*
+() Tj
+T*
+(STRENGTHS) Tj
+T*
+() Tj
+T*
+(? simple mental model) Tj
+T*
+(? server-side session checks) Tj
+T*
+(? protected authoring APIs) Tj
+T*
+() Tj
+T*
+(WEAKNESSES) Tj
+T*
+() Tj
+T*
+(? effectively admin-only model) Tj
+T*
+(? no mature user management) Tj
+T*
+(? no strong RBAC) Tj
+T*
+(? no robust audit trail) Tj
+T*
+() Tj
+T*
+(CURRENT AUTHORIZATION REALITY) Tj
+T*
+() Tj
+T*
+(This is closer to:) Tj
+T*
+() Tj
+T*
+(? authenticated admin required) Tj
+T*
+() Tj
+T*
+(than to:) Tj
+T*
+() Tj
+T*
+(? full multi-role RBAC) Tj
+T*
+() Tj
+T*
+(BETTER FUTURE RBAC MODEL) Tj
+T*
+() Tj
+T*
+(Suggested roles:) Tj
+T*
+() Tj
+T*
+(? editor) Tj
+T*
+(? publisher) Tj
+T*
+(? admin) Tj
+T*
+(? media manager) Tj
+T*
+() Tj
+T*
+(Suggested permissions:) Tj
+T*
+() Tj
+T*
+(? edit drafts) Tj
+T*
+(? publish pages) Tj
+T*
+(? restore revisions) Tj
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 22 0 R >>
+endobj
+22 0 obj
+<< /Length 1195 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(? manage globals) Tj
+T*
+(? manage media) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(API DESIGN) Tj
+T*
+() Tj
+T*
+(API STYLE) Tj
+T*
+() Tj
+T*
+(The backend uses resource routes plus workflow-specific action routes.) Tj
+T*
+() Tj
+T*
+(Examples:) Tj
+T*
+() Tj
+T*
+(? `/api/pages`) Tj
+T*
+(? `/api/pages/[page_id]`) Tj
+T*
+(? `/api/pages/[page_id]/autosave`) Tj
+T*
+(? `/api/pages/[page_id]/publish`) Tj
+T*
+(? `/api/page/[slug]`) Tj
+T*
+(? `/api/versions/list`) Tj
+T*
+(? `/api/versions/restore`) Tj
+T*
+() Tj
+T*
+(WHY THIS API STYLE MAKES SENSE) Tj
+T*
+() Tj
+T*
+(Publishing, autosave, and restore are not simple CRUD updates. They are domain commands.) Tj
+T*
+() Tj
+T*
+(TRADEOFFS) Tj
+T*
+() Tj
+T*
+(Pros:) Tj
+T*
+() Tj
+T*
+(? clearer workflow semantics) Tj
+T*
+(? easier to express domain actions) Tj
+T*
+() Tj
+T*
+(Cons:) Tj
+T*
+() Tj
+T*
+(? less ?pure REST?) Tj
+T*
+(? more endpoint variety) Tj
+T*
+() Tj
+T*
+(API VERSIONING REALITY) Tj
+T*
+() Tj
+T*
+(There is not strong explicit external versioning like `/v1`.) Tj
+T*
+() Tj
+T*
+(Versioning is more implicit through:) Tj
+T*
+() Tj
+T*
+(? shared bundle schema versioning) Tj
+T*
+(? coordinated app evolution) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 24 0 R >>
+endobj
+24 0 obj
+<< /Length 1309 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(FUTURE IMPROVEMENT) Tj
+T*
+() Tj
+T*
+(If external consumers or more independent clients are added:) Tj
+T*
+() Tj
+T*
+(? add API versioning) Tj
+T*
+(? formalize public contract guarantees) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(VALIDATION AND ERROR HANDLING) Tj
+T*
+() Tj
+T*
+(VALIDATION PHILOSOPHY) Tj
+T*
+() Tj
+T*
+(CMS content should be treated as untrusted input even if it comes from internal tools.) Tj
+T*
+() Tj
+T*
+(MAIN VALIDATION POINTS) Tj
+T*
+() Tj
+T*
+(? request body parsing) Tj
+T*
+(? save-time canonical layout validation) Tj
+T*
+(? publish-time validation) Tj
+T*
+(? public render bundle validation) Tj
+T*
+(? frontend fetch-time validation) Tj
+T*
+() Tj
+T*
+(WHY MULTI-STAGE VALIDATION IS GOOD) Tj
+T*
+() Tj
+T*
+(It prevents bad content from:) Tj
+T*
+() Tj
+T*
+(? entering storage unchecked) Tj
+T*
+(? reaching public rendering silently) Tj
+T*
+(? drifting across different consumers) Tj
+T*
+() Tj
+T*
+(ERROR HANDLING STYLE) Tj
+T*
+() Tj
+T*
+(Errors are structured with:) Tj
+T*
+() Tj
+T*
+(? code) Tj
+T*
+(? message) Tj
+T*
+(? optional details) Tj
+T*
+(? optional trace id) Tj
+T*
+() Tj
+T*
+(MAIN STATUS CODES USED) Tj
+T*
+() Tj
+T*
+(? `400` invalid request/layout) Tj
+T*
+(? `401` unauthenticated) Tj
+T*
+(? `403` forbidden) Tj
+T*
+(? `404` missing page/version) Tj
+ET
+endstream
+endobj
+25 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 26 0 R >>
+endobj
+26 0 obj
+<< /Length 1223 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(? `409` revision conflict) Tj
+T*
+(? `500` server/database failure) Tj
+T*
+(? `503` missing schema/table dependency) Tj
+T*
+() Tj
+T*
+(ERROR HANDLING WEAKNESS) Tj
+T*
+() Tj
+T*
+(Page lifecycle flows are better structured than some simpler CRUD domains.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(DATABASE DESIGN) Tj
+T*
+() Tj
+T*
+(CORE TABLES) Tj
+T*
+() Tj
+T*
+(? `pages`) Tj
+T*
+(? `page_revisions`) Tj
+T*
+(? `page_templates`) Tj
+T*
+(? `headers`) Tj
+T*
+(? `footers`) Tj
+T*
+(? `banners`) Tj
+T*
+(? `navigation_items`) Tj
+T*
+(? `media_library`) Tj
+T*
+() Tj
+T*
+(WHY `PAGES` AND `PAGE_REVISIONS` ARE SEPARATE) Tj
+T*
+() Tj
+T*
+(The page row stores identity and lifecycle pointers. Revisions store versioned content ) Tj
+T*
+(snapshots.) Tj
+T*
+() Tj
+T*
+(WHY LAYOUT IS STORED AS JSON) Tj
+T*
+() Tj
+T*
+(? nested page-builder structure) Tj
+T*
+(? fast schema evolution) Tj
+T*
+(? easy restore/history snapshots) Tj
+T*
+() Tj
+T*
+(TRADEOFFS OF JSON STORAGE) Tj
+T*
+() Tj
+T*
+(Pros:) Tj
+T*
+() Tj
+T*
+(? flexible) Tj
+T*
+(? revision-friendly) Tj
+T*
+(? simpler page-builder persistence) Tj
+T*
+() Tj
+T*
+(Cons:) Tj
+T*
+() Tj
+T*
+(? hard to query deeply) Tj
+T*
+(? app-layer validation required) Tj
+ET
+endstream
+endobj
+27 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 28 0 R >>
+endobj
+28 0 obj
+<< /Length 1379 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(? less DB-native structure enforcement) Tj
+T*
+() Tj
+T*
+(WHY GLOBALS ARE SEPARATE TABLES) Tj
+T*
+() Tj
+T*
+(Headers, footers, banners, and navigation are reusable shared content and should not be ) Tj
+T*
+(duplicated into every page snapshot.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(QUERY PATTERNS AND OPTIMIZATION) Tj
+T*
+() Tj
+T*
+(MAIN READ PATTERNS) Tj
+T*
+() Tj
+T*
+(? page by id) Tj
+T*
+(? page by slug) Tj
+T*
+(? revision history by page) Tj
+T*
+(? current/published revision lookup) Tj
+T*
+(? global content lookup for render bundle assembly) Tj
+T*
+() Tj
+T*
+(MAIN WRITE PATTERNS) Tj
+T*
+() Tj
+T*
+(? create revision snapshot) Tj
+T*
+(? update page revision pointer) Tj
+T*
+(? publish by creating new published revision) Tj
+T*
+(? media insert/update) Tj
+T*
+() Tj
+T*
+(IMPORTANT INDEXING PRIORITIES) Tj
+T*
+() Tj
+T*
+(? page slug lookup) Tj
+T*
+(? revisions by page id + revision number) Tj
+T*
+(? revisions by page id + created time) Tj
+T*
+(? navigation by header id) Tj
+T*
+(? any frequently joined assignment IDs) Tj
+T*
+() Tj
+T*
+(OPTIMIZATION OPPORTUNITIES) Tj
+T*
+() Tj
+T*
+(? strict slug-only public lookup) Tj
+T*
+(? prebuilt published bundles) Tj
+T*
+(? Redis/shared cache) Tj
+T*
+(? read-optimized published content model) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(SECURITY ANALYSIS) Tj
+T*
+() Tj
+T*
+(MAIN SECURITY WEAKNESSES) Tj
+ET
+endstream
+endobj
+29 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 30 0 R >>
+endobj
+30 0 obj
+<< /Length 1468 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(? simplistic env-based admin auth) Tj
+T*
+(? no strong RBAC) Tj
+T*
+(? upload validation not fully hardened) Tj
+T*
+(? sanitization could be stronger server-side) Tj
+T*
+(? public/admin runtime coupling increases blast radius) Tj
+T*
+(? generic CRUD routes can drift into weaker validation) Tj
+T*
+() Tj
+T*
+(HARDENING IDEAS) Tj
+T*
+() Tj
+T*
+(? DB-backed users and hashed passwords) Tj
+T*
+(? SSO/OAuth for admin) Tj
+T*
+(? role-based permissions) Tj
+T*
+(? audit logs) Tj
+T*
+(? file signature validation and malware scanning) Tj
+T*
+(? stronger CSP/security headers) Tj
+T*
+(? rate limiting) Tj
+T*
+(? centralized secret management) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(SCALABILITY ANALYSIS) Tj
+T*
+() Tj
+T*
+(BIGGEST ARCHITECTURAL RISK) Tj
+T*
+() Tj
+T*
+(Public content delivery depends on the admin/content runtime at request time.) Tj
+T*
+() Tj
+T*
+(WHY THAT IS DANGEROUS) Tj
+T*
+() Tj
+T*
+(Because the same runtime effectively serves:) Tj
+T*
+() Tj
+T*
+(? internal authoring workflows) Tj
+T*
+(? external public content reads) Tj
+T*
+() Tj
+T*
+(Those workloads have different scaling and reliability profiles.) Tj
+T*
+() Tj
+T*
+(READ LOAD CONCERNS) Tj
+T*
+() Tj
+T*
+(? repeated runtime bundle assembly) Tj
+T*
+(? live dependency on admin service availability) Tj
+T*
+(? process-local cache only) Tj
+T*
+() Tj
+T*
+(WRITE LOAD CONCERNS) Tj
+T*
+() Tj
+T*
+(? frequent autosave revisions) Tj
+T*
+(? large JSON payloads) Tj
+ET
+endstream
+endobj
+31 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 32 0 R >>
+endobj
+32 0 obj
+<< /Length 1321 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(? revision storage growth) Tj
+T*
+() Tj
+T*
+(STATELESSNESS CONCERNS) Tj
+T*
+() Tj
+T*
+(The backend is mostly stateless, but process-local in-memory cache reduces horizontal ) Tj
+T*
+(scaling quality.) Tj
+T*
+() Tj
+T*
+(BETTER LONG-TERM SCALING DIRECTION) Tj
+T*
+() Tj
+T*
+(? separate published content delivery from admin runtime) Tj
+T*
+(? precompute published bundles) Tj
+T*
+(? use shared cache like Redis) Tj
+T*
+(? possibly introduce CQRS-style read model) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(DEPLOYMENT, CI/CD, AND OPS) Tj
+T*
+() Tj
+T*
+(DEPLOYMENT SHAPE) Tj
+T*
+() Tj
+T*
+(Likely deployments:) Tj
+T*
+() Tj
+T*
+(? admin app) Tj
+T*
+(? public website app) Tj
+T*
+(? database) Tj
+T*
+() Tj
+T*
+(MAIN DEPLOYMENT RISK) Tj
+T*
+() Tj
+T*
+(Shared contract changes require release coordination between apps.) Tj
+T*
+() Tj
+T*
+(PRODUCTION CONSIDERATIONS) Tj
+T*
+() Tj
+T*
+(? env validation) Tj
+T*
+(? startup safety checks) Tj
+T*
+(? migration sequencing) Tj
+T*
+(? health checks) Tj
+T*
+(? rollback strategy) Tj
+T*
+() Tj
+T*
+(STRONG CI/CD PIPELINE SHOULD INCLUDE) Tj
+T*
+() Tj
+T*
+(? install dependencies) Tj
+T*
+(? lint/type/build) Tj
+T*
+(? shared contract tests) Tj
+T*
+(? migration verification) Tj
+T*
+(? staging deploy) Tj
+T*
+(? smoke tests for save/preview/publish/public render) Tj
+ET
+endstream
+endobj
+33 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 34 0 R >>
+endobj
+34 0 obj
+<< /Length 1021 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(? production promotion) Tj
+T*
+() Tj
+T*
+(MONITORING SHOULD INCLUDE) Tj
+T*
+() Tj
+T*
+(? page API latency) Tj
+T*
+(? publish failure rate) Tj
+T*
+(? validation failures) Tj
+T*
+(? error rates) Tj
+T*
+(? cache hit rates) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(TECHNOLOGY CHOICES AND TRADEOFFS) Tj
+T*
+() Tj
+T*
+(REACT) Tj
+T*
+() Tj
+T*
+(Used because:) Tj
+T*
+() Tj
+T*
+(? component-driven UI) Tj
+T*
+(? strong editor ecosystem) Tj
+T*
+(? easy integration with Next.js) Tj
+T*
+() Tj
+T*
+(Alternatives:) Tj
+T*
+() Tj
+T*
+(? Vue) Tj
+T*
+(? Angular) Tj
+T*
+(? Svelte) Tj
+T*
+() Tj
+T*
+(Tradeoff:) Tj
+T*
+() Tj
+T*
+(? very flexible, but requires stronger architectural discipline) Tj
+T*
+() Tj
+T*
+(NEXT.JS) Tj
+T*
+() Tj
+T*
+(Used because:) Tj
+T*
+() Tj
+T*
+(? SSR support) Tj
+T*
+(? route-based app structure) Tj
+T*
+(? integrated API/backend capabilities) Tj
+T*
+() Tj
+T*
+(Alternatives:) Tj
+T*
+() Tj
+T*
+(? Remix) Tj
+T*
+(? Vite + React Router) Tj
+T*
+(? standalone React + Express) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+35 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 36 0 R >>
+endobj
+36 0 obj
+<< /Length 1113 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(Tradeoff:) Tj
+T*
+() Tj
+T*
+(? productive and integrated, but framework coupling is higher) Tj
+T*
+() Tj
+T*
+(MYSQL) Tj
+T*
+() Tj
+T*
+(Used because:) Tj
+T*
+() Tj
+T*
+(? structured relational data) Tj
+T*
+(? transactional workflow support) Tj
+T*
+(? practical and familiar) Tj
+T*
+() Tj
+T*
+(Alternatives:) Tj
+T*
+() Tj
+T*
+(? PostgreSQL) Tj
+T*
+(? MongoDB) Tj
+T*
+() Tj
+T*
+(Tradeoff:) Tj
+T*
+() Tj
+T*
+(? strong for relational workflows, but JSON-heavy querying is less elegant than ) Tj
+T*
+(   PostgreSQL in some cases) Tj
+T*
+() Tj
+T*
+(NEXTAUTH) Tj
+T*
+() Tj
+T*
+(Used because:) Tj
+T*
+() Tj
+T*
+(? quick session-based auth integration) Tj
+T*
+(? protected route support) Tj
+T*
+() Tj
+T*
+(Alternatives:) Tj
+T*
+() Tj
+T*
+(? custom auth) Tj
+T*
+(? Auth0) Tj
+T*
+(? Clerk) Tj
+T*
+() Tj
+T*
+(Tradeoff:) Tj
+T*
+() Tj
+T*
+(? reduced auth plumbing, but current usage is too simple for large-scale production ) Tj
+T*
+(   needs) Tj
+T*
+() Tj
+T*
+(DIRECT SQL) Tj
+T*
+() Tj
+T*
+(Used because:) Tj
+T*
+() Tj
+T*
+(? explicit transaction and query control) Tj
+T*
+(? clear revision workflow logic) Tj
+ET
+endstream
+endobj
+37 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 38 0 R >>
+endobj
+38 0 obj
+<< /Length 1435 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(Alternatives:) Tj
+T*
+() Tj
+T*
+(? Prisma) Tj
+T*
+(? Sequelize) Tj
+T*
+(? TypeORM) Tj
+T*
+() Tj
+T*
+(Tradeoff:) Tj
+T*
+() Tj
+T*
+(? more boilerplate, but fewer ORM abstraction surprises) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(SMALL ANSWER BANK) Tj
+T*
+() Tj
+T*
+(WHAT PROBLEM DOES THE PROJECT SOLVE?) Tj
+T*
+() Tj
+T*
+(It gives internal users a safe way to manage and publish website content with drafts, ) Tj
+T*
+(preview, revisions, and a clear separation between editing and live delivery.) Tj
+T*
+() Tj
+T*
+(WHAT IS THE STRONGEST TECHNICAL DECISION?) Tj
+T*
+() Tj
+T*
+(The revision-based content lifecycle combined with shared validation.) Tj
+T*
+() Tj
+T*
+(WHAT IS THE BIGGEST WEAKNESS?) Tj
+T*
+() Tj
+T*
+(Public page delivery still depends on the admin/content service at runtime.) Tj
+T*
+() Tj
+T*
+(WHY IS THE SHARED LAYER IMPORTANT?) Tj
+T*
+() Tj
+T*
+(Because it prevents preview and production from interpreting content differently.) Tj
+T*
+() Tj
+T*
+(WHY USE SSR ON THE PUBLIC SITE?) Tj
+T*
+() Tj
+T*
+(For SEO, first-response correctness, and content-driven rendering.) Tj
+T*
+() Tj
+T*
+(WHY STORE LAYOUTS AS JSON?) Tj
+T*
+() Tj
+T*
+(Because page-builder content is nested and changes shape over time.) Tj
+T*
+() Tj
+T*
+(WHY USE REVISIONS?) Tj
+T*
+() Tj
+T*
+(To support draft isolation, restore, preview, publish, and safer history tracking.) Tj
+T*
+() Tj
+T*
+(WHY NOT JUST UPDATE THE PAGE ROW DIRECTLY?) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+39 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 40 0 R >>
+endobj
+40 0 obj
+<< /Length 2906 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(Because live content should not be overwritten by in-progress edits.) Tj
+T*
+() Tj
+T*
+(WHY NOT LET THE FRONTEND SHAPE CMS DATA ITSELF?) Tj
+T*
+() Tj
+T*
+(Because that would create multiple sources of truth for content interpretation.) Tj
+T*
+() Tj
+T*
+(HOW DO YOU HANDLE CONCURRENT EDITS?) Tj
+T*
+() Tj
+T*
+(Optimistic concurrency using revision baselines.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(LONG ANSWER BANK) Tj
+T*
+() Tj
+T*
+(EXPLAIN THE PROJECT END-TO-END) Tj
+T*
+() Tj
+T*
+(The system is a CMS-style web platform. Admin users authenticate into an authoring ) Tj
+T*
+(application and edit pages through a visual page builder. The editor stores content as ) Tj
+T*
+(structured layout data composed of sections, rows, columns, and blocks. Draft changes are ) Tj
+T*
+(autosaved and manually saveable as revisions rather than being applied directly to the live ) Tj
+T*
+(site. When a page is previewed, the system loads draft revision data and renders it through ) Tj
+T*
+(the shared layout and bundle pipeline. When a page is published, the current draft is ) Tj
+T*
+(validated for public use, stored as a published revision, and referenced as the live version) Tj
+T*
+( of that page. On the read side, the public website requests the page bundle by slug, the ) Tj
+T*
+(backend assembles page metadata, the published revision, and any global content like ) Tj
+T*
+(header/footer/banner, validates the canonical render bundle, and the website server-renders ) Tj
+T*
+(the result. The design intentionally separates writing, interpretation, and rendering ) Tj
+T*
+(responsibilities to reduce drift and improve lifecycle safety.) Tj
+T*
+() Tj
+T*
+(EXPLAIN THE FRONTEND ARCHITECTURE END-TO-END) Tj
+T*
+() Tj
+T*
+(The admin frontend is a rich React editor built around local state and custom hooks. It ) Tj
+T*
+(loads revision-backed layout data, renders it dynamically through a registry, and supports ) Tj
+T*
+(interactions like drag-and-drop, property editing, autosave, undo/redo, preview, version ) Tj
+T*
+(history, and template application. Its biggest strength is workflow grouping through hooks, ) Tj
+T*
+(and its biggest weakness is orchestration density in the top-level editor container. The ) Tj
+T*
+(public frontend is much thinner. It uses SSR to fetch a validated page bundle, derive a ) Tj
+T*
+(public page view, and render a stable page shell. The public app intentionally avoids ) Tj
+T*
+(becoming a content interpretation layer.) Tj
+T*
+() Tj
+T*
+(EXPLAIN THE BACKEND ARCHITECTURE END-TO-END) Tj
+T*
+() Tj
+T*
+(The backend is built around Next.js route handlers, services, repositories, shared ) Tj
+T*
+(validation, and MySQL persistence. Sensitive routes are protected through middleware and ) Tj
+T*
+(server-side auth checks. Save and publish workflows are handled in services, not in raw ) Tj
+T*
+(route handlers, because they involve validation, transactions, revision creation, and page-) Tj
+ET
+endstream
+endobj
+41 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 42 0 R >>
+endobj
+42 0 obj
+<< /Length 2429 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(pointer updates. The public content API builds a canonical render bundle rather than ) Tj
+T*
+(returning raw DB records. This gives the frontend a stable rendering contract while keeping ) Tj
+T*
+(content meaning centralized. The strongest part of the backend is the revision-first page ) Tj
+T*
+(pipeline. The biggest architectural weakness is that public delivery still depends on the ) Tj
+T*
+(authoring runtime at request time.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(TOUGH INTERVIEW QUESTIONS WITH STRONG DIRECTION) Tj
+T*
+() Tj
+T*
+(WHY IS RUNTIME DEPENDENCY BETWEEN PUBLIC SITE AND ADMIN DANGEROUS?) Tj
+T*
+() Tj
+T*
+(Because public traffic becomes dependent on the same backend that serves authoring ) Tj
+T*
+(workflows. That creates availability coupling, scaling tension, and operational risk. If ) Tj
+T*
+(public traffic spikes, it can affect content editors. If admin/content assembly slows down, ) Tj
+T*
+(it directly impacts public latency. A stronger design would separate published-content ) Tj
+T*
+(delivery into a read-optimized path or precomputed artifact.) Tj
+T*
+() Tj
+T*
+(WHY DIDN?T YOU JUST USE WORDPRESS OR A NORMAL CMS?) Tj
+T*
+() Tj
+T*
+(Because the main challenge wasn?t just content fields, it was lifecycle control and render ) Tj
+T*
+(contract consistency. I wanted revision-based draft/preview/publish flow and a shared ) Tj
+T*
+(interpretation layer that keeps preview and production aligned.) Tj
+T*
+() Tj
+T*
+(IF TRAFFIC BECAME 100X LARGER, WHAT WOULD YOU CHANGE FIRST?) Tj
+T*
+() Tj
+T*
+(I would first decouple public content delivery from the admin runtime. That gives the ) Tj
+T*
+(biggest immediate improvement to scalability and public reliability. After that, I?d add ) Tj
+T*
+(shared caching, read-optimized published bundles, and stronger observability.) Tj
+T*
+() Tj
+T*
+(WHAT WOULD YOU IMPROVE FIRST FOR PRODUCTION SECURITY?) Tj
+T*
+() Tj
+T*
+(I would replace the current admin-only auth model with real users, hashed credentials or ) Tj
+T*
+(SSO, stronger role-based authorization, and audit logging. I would also harden uploads and ) Tj
+T*
+(content sanitization.) Tj
+T*
+() Tj
+T*
+(WHAT WOULD YOU IMPROVE FIRST FOR FRONTEND MAINTAINABILITY?) Tj
+T*
+() Tj
+T*
+(I would split the editor shell into smaller state-owning modules and improve lazy loading ) Tj
+T*
+(for heavy editor features.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(TECHNOLOGY CHOICE Q&A) Tj
+T*
+() Tj
+T*
+(WHY REACT?) Tj
+ET
+endstream
+endobj
+43 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 44 0 R >>
+endobj
+44 0 obj
+<< /Length 2168 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(React was the right fit because the admin experience is deeply interactive and component-) Tj
+T*
+(driven, and the public site also benefits from reusable rendering components. Vue or Angular) Tj
+T*
+( could also have worked, but React plus Next.js gave a strong ecosystem fit for this ) Tj
+T*
+(project.) Tj
+T*
+() Tj
+T*
+(WHY NEXT.JS?) Tj
+T*
+() Tj
+T*
+(Next.js gave SSR for the public site, route-based structure, and integrated backend ) Tj
+T*
+(capabilities through route handlers. That helped unify the frontend/backend development ) Tj
+T*
+(model.) Tj
+T*
+() Tj
+T*
+(WHY NODE.JS?) Tj
+T*
+() Tj
+T*
+(Using Node.js let the team use the same language across backend and frontend concerns, which) Tj
+T*
+( simplifies shared contracts and reduces context switching.) Tj
+T*
+() Tj
+T*
+(WHY MYSQL?) Tj
+T*
+() Tj
+T*
+(MySQL is a practical choice for structured content relationships and transactions. It ) Tj
+T*
+(handles page metadata, revision pointers, and related entities well. The tradeoff is that ) Tj
+T*
+(deeply querying layout JSON is less elegant than in some other databases.) Tj
+T*
+() Tj
+T*
+(WHY NEXTAUTH?) Tj
+T*
+() Tj
+T*
+(NextAuth reduced the amount of custom session/auth infrastructure needed. For an internal ) Tj
+T*
+(admin setup, it was a reasonable speed-vs-complexity tradeoff.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(100 HIGH-PROBABILITY QUESTIONS AND ANSWERS) Tj
+T*
+() Tj
+T*
+(1. WHAT PROBLEM DOES THIS PROJECT SOLVE?) Tj
+T*
+(It solves safe content management for a website by separating draft editing from live ) Tj
+T*
+(content and adding preview, publish, and revision history.) Tj
+T*
+() Tj
+T*
+(2. WHAT ARE THE MAJOR PARTS OF THE SYSTEM?) Tj
+T*
+(The major parts are the admin authoring app, the shared content contract layer, and the ) Tj
+T*
+(public SSR website.) Tj
+T*
+() Tj
+T*
+(3. WHY SPLIT ADMIN AND PUBLIC?) Tj
+T*
+(Because editing workflows and public rendering have different concerns and should not share ) Tj
+T*
+(the same runtime responsibilities too tightly.) Tj
+T*
+() Tj
+T*
+(4. WHY IS THE SHARED LAYER NECESSARY?) Tj
+T*
+(It gives one canonical interpretation of blocks and layouts so preview and public rendering ) Tj
+ET
+endstream
+endobj
+45 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 46 0 R >>
+endobj
+46 0 obj
+<< /Length 2091 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(stay aligned.) Tj
+T*
+() Tj
+T*
+(5. HOW DOES A PAGE MOVE FROM DRAFT TO LIVE?) Tj
+T*
+(An editor saves draft revisions, previews them, and publishes the selected draft as the ) Tj
+T*
+(current live revision. The public site only reads the published revision.) Tj
+T*
+() Tj
+T*
+(6. WHY USE REVISIONS?) Tj
+T*
+(Revisions support autosave, restore, preview, rollback, and safe publishing.) Tj
+T*
+() Tj
+T*
+(7. WHY NOT UPDATE CONTENT DIRECTLY?) Tj
+T*
+(Because editing in-progress content directly into live state is risky and removes safe ) Tj
+T*
+(rollback boundaries.) Tj
+T*
+() Tj
+T*
+(8. WHY STORE LAYOUTS AS JSON?) Tj
+T*
+(Because page-builder structures are nested and change over time.) Tj
+T*
+() Tj
+T*
+(9. WHY SSR?) Tj
+T*
+(Because SEO and first-response correctness matter for public content pages.) Tj
+T*
+() Tj
+T*
+(10. WHY USE ROUTE HANDLERS INSTEAD OF A SEPARATE BACKEND AT FIRST?) Tj
+T*
+(Because it was faster to build and aligned well with the project?s full stack structure.) Tj
+T*
+() Tj
+T*
+(11. WHAT IS THE BIGGEST BACKEND WEAKNESS?) Tj
+T*
+(Public delivery depending on the admin/content runtime.) Tj
+T*
+() Tj
+T*
+(12. WHAT IS THE BIGGEST FRONTEND WEAKNESS?) Tj
+T*
+(The editor shell owns too much orchestration and state.) Tj
+T*
+() Tj
+T*
+(13. WHAT IS THE BIGGEST SECURITY WEAKNESS?) Tj
+T*
+(Auth and authorization are too simple for broader production use.) Tj
+T*
+() Tj
+T*
+(14. HOW DO YOU PREVENT INVALID CONTENT FROM REACHING PRODUCTION?) Tj
+T*
+(Through save-time and render-time validation.) Tj
+T*
+() Tj
+T*
+(15. WHY VALIDATE MORE THAN ONCE?) Tj
+T*
+(Because data can drift, migrate, or become invalid after persistence too.) Tj
+T*
+() Tj
+T*
+(16. WHAT HAPPENS IF TWO USERS EDIT THE SAME PAGE?) Tj
+T*
+(Optimistic concurrency causes the stale save to fail rather than silently overwrite.) Tj
+T*
+() Tj
+T*
+(17. WHY USE OPTIMISTIC CONCURRENCY?) Tj
+T*
+(Because it?s simpler than locking and works well when conflicts are uncommon.) Tj
+T*
+() Tj
+T*
+(18. WHAT ARE THE MAIN DB TABLES?) Tj
+T*
+(Pages, page revisions, templates, globals, navigation, and media.) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+47 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 48 0 R >>
+endobj
+48 0 obj
+<< /Length 2070 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(19. WHAT IS THE ROLE OF THE PAGE TABLE?) Tj
+T*
+(Identity, metadata, and pointers to revision states.) Tj
+T*
+() Tj
+T*
+(20. WHAT IS THE ROLE OF THE REVISIONS TABLE?) Tj
+T*
+(Immutable snapshots of layout content over time.) Tj
+T*
+() Tj
+T*
+(21. WHY SEPARATE GLOBALS LIKE HEADER AND FOOTER?) Tj
+T*
+(Because they are reusable and should not be duplicated per page.) Tj
+T*
+() Tj
+T*
+(22. HOW IS NAVIGATION MODELED?) Tj
+T*
+(Through navigation items, which are later assembled into a tree.) Tj
+T*
+() Tj
+T*
+(23. HOW DOES THE EDITOR STATE WORK?) Tj
+T*
+(Local state plus custom hooks for page loading, mutation, autosave, and history.) Tj
+T*
+() Tj
+T*
+(24. WHY NOT REDUX?) Tj
+T*
+(At this stage, local workflow hooks were simpler and faster to iterate with.) Tj
+T*
+() Tj
+T*
+(25. WHY USE A REGISTRY FOR BLOCKS?) Tj
+T*
+(To make block rendering extensible and centralized.) Tj
+T*
+() Tj
+T*
+(26. WHAT IS THE HARDEST FRONTEND PROBLEM HERE?) Tj
+T*
+(Nested layout state management with drag-and-drop plus persistence and history.) Tj
+T*
+() Tj
+T*
+(27. WHAT IS THE HARDEST BACKEND PROBLEM HERE?) Tj
+T*
+(Maintaining a clean canonical content contract across save, preview, publish, and public ) Tj
+T*
+(render.) Tj
+T*
+() Tj
+T*
+(28. HOW DO YOU RENDER PAGES PUBLICLY?) Tj
+T*
+(Fetch the bundle, validate it, derive a public view, SSR the final page.) Tj
+T*
+() Tj
+T*
+(29. WHY NOT LET THE FRONTEND FIX BAD CMS DATA?) Tj
+T*
+(Because that creates another interpretation layer and increases drift risk.) Tj
+T*
+() Tj
+T*
+(30. WHAT WOULD YOU IMPROVE FIRST AT SCALE?) Tj
+T*
+(Separate published-content delivery from admin runtime.) Tj
+T*
+() Tj
+T*
+(31. WHAT WOULD YOU IMPROVE FIRST FOR ENTERPRISE READINESS?) Tj
+T*
+(User system, RBAC, audit logging, and stronger auth.) Tj
+T*
+() Tj
+T*
+(32. WHY USE MYSQL OVER MONGODB?) Tj
+T*
+(Because the workflow is still strongly relational even though layouts are JSON-like.) Tj
+T*
+() Tj
+T*
+(33. WHY NOT POSTGRESQL?) Tj
+T*
+(PostgreSQL would also have been a strong choice; MySQL was still reasonable for the current ) Tj
+T*
+(constraints.) Tj
+ET
+endstream
+endobj
+49 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 50 0 R >>
+endobj
+50 0 obj
+<< /Length 2033 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(34. WHAT IS ONE GOOD REASON FOR DIRECT SQL?) Tj
+T*
+(Explicit control over revision and transaction behavior.) Tj
+T*
+() Tj
+T*
+(35. WHAT IS ONE DOWNSIDE OF DIRECT SQL?) Tj
+T*
+(More manual query and schema maintenance.) Tj
+T*
+() Tj
+T*
+(36. WHY USE NEXTAUTH?) Tj
+T*
+(To reduce custom auth plumbing and integrate sessions quickly.) Tj
+T*
+() Tj
+T*
+(37. WHAT IS WRONG WITH ENV-BASED ADMIN CREDENTIALS?) Tj
+T*
+(They do not scale operationally to real multi-user, secure production use.) Tj
+T*
+() Tj
+T*
+(38. WHAT IS YOUR LOGGING STRATEGY TODAY?) Tj
+T*
+(Basic logs plus structured error boundaries, but observability should be improved.) Tj
+T*
+() Tj
+T*
+(39. WHAT OBSERVABILITY WOULD YOU ADD?) Tj
+T*
+(Structured logs, metrics, alerts, and request correlation IDs.) Tj
+T*
+() Tj
+T*
+(40. HOW WOULD YOU CACHE PUBLIC CONTENT?) Tj
+T*
+(Use Redis or precomputed published bundles rather than process-local memory.) Tj
+T*
+() Tj
+T*
+(41. WHY IS IN-MEMORY CACHE WEAK?) Tj
+T*
+(Because it does not scale horizontally and is instance-local.) Tj
+T*
+() Tj
+T*
+(42. WHAT IS THE ROLE OF TEMPLATES?) Tj
+T*
+(Reusable layout starting points for faster content creation.) Tj
+T*
+() Tj
+T*
+(43. WHAT IS THE ROLE OF AUTOSAVE?) Tj
+T*
+(Protect user work without requiring constant manual saves.) Tj
+T*
+() Tj
+T*
+(44. WHAT IS THE DOWNSIDE OF AUTOSAVE?) Tj
+T*
+(More write traffic and more concurrency complexity.) Tj
+T*
+() Tj
+T*
+(45. WHAT HAPPENS DURING PUBLISH FAILURE?) Tj
+T*
+(The API returns a clear error and the public site remains unchanged because published state ) Tj
+T*
+(did not advance.) Tj
+T*
+() Tj
+T*
+(46. HOW IS PREVIEW PROTECTED?) Tj
+T*
+(Through admin access control and preview-mode content resolution.) Tj
+T*
+() Tj
+T*
+(47. WHAT IS THE ROLE OF THE SHARED PAGE RENDER BUNDLE?) Tj
+T*
+(It is the canonical payload that bridges backend content assembly and public rendering.) Tj
+T*
+() Tj
+T*
+(48. WHAT IS THE ROLE OF SCHEMA VERSIONING IN SHARED CONTENT?) Tj
+T*
+(It gives a path for evolving content contracts more safely.) Tj
+ET
+endstream
+endobj
+51 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 52 0 R >>
+endobj
+52 0 obj
+<< /Length 2075 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(49. WHAT IS THE ROLE OF NORMALIZATION?) Tj
+T*
+(To convert flexible incoming/editor content shapes into one canonical structure.) Tj
+T*
+() Tj
+T*
+(50. WHY IS CANONICAL STRUCTURE IMPORTANT?) Tj
+T*
+(Because rendering and validation become much simpler when the shape is consistent.) Tj
+T*
+() Tj
+T*
+(51. WHAT WOULD YOU SAY IS THE SYSTEM?S BEST DESIGN CHOICE?) Tj
+T*
+(Revision-first page lifecycle plus shared validation.) Tj
+T*
+() Tj
+T*
+(52. WHAT WOULD YOU SAY IS THE SYSTEM?S WEAKEST DESIGN CHOICE?) Tj
+T*
+(Public request-time dependency on the admin/content runtime.) Tj
+T*
+() Tj
+T*
+(53. HOW WOULD YOU EXPLAIN THE PROJECT TO A NON-TECHNICAL STAKEHOLDER?) Tj
+T*
+(It?s a system that lets the team safely edit and publish website content without directly ) Tj
+T*
+(touching live pages.) Tj
+T*
+() Tj
+T*
+(54. HOW WOULD YOU EXPLAIN IT TO A SENIOR ENGINEER?) Tj
+T*
+(It?s a revision-based CMS platform with a shared canonical content layer and SSR public ) Tj
+T*
+(rendering.) Tj
+T*
+() Tj
+T*
+(55. WHY USE CUSTOM HOOKS IN THE EDITOR?) Tj
+T*
+(To organize workflow logic like save, history, and layout mutation.) Tj
+T*
+() Tj
+T*
+(56. WHAT IS STILL TOO BIG IN THE FRONTEND?) Tj
+T*
+(The unified page editor shell.) Tj
+T*
+() Tj
+T*
+(57. WHAT IS STILL TOO COUPLED IN THE BACKEND?) Tj
+T*
+(Public content delivery and admin runtime.) Tj
+T*
+() Tj
+T*
+(58. WHAT IS THE ROLE OF MIDDLEWARE?) Tj
+T*
+(To protect route groups and improve admin navigation security flow.) Tj
+T*
+() Tj
+T*
+(59. WHY DO APIS STILL CHECK AUTH IF MIDDLEWARE EXISTS?) Tj
+T*
+(Because APIs are the actual server-side trust boundary.) Tj
+T*
+() Tj
+T*
+(60. HOW ARE MEDIA UPLOADS STORED?) Tj
+T*
+(Locally in uploads plus metadata in the media library.) Tj
+T*
+() Tj
+T*
+(61. WHAT IS THE DOWNSIDE OF LOCAL UPLOAD STORAGE?) Tj
+T*
+(Weaker scalability and durability than object storage.) Tj
+T*
+() Tj
+T*
+(62. WHAT WOULD BE BETTER LATER FOR UPLOADS?) Tj
+T*
+(Object storage like S3 or Cloudinary-style delivery.) Tj
+T*
+() Tj
+T*
+(63. WHAT IS THE ROLE OF TEMPLATES IN SCALING CONTENT OPERATIONS?) Tj
+ET
+endstream
+endobj
+53 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 54 0 R >>
+endobj
+54 0 obj
+<< /Length 2095 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(They reduce repeated editor effort and standardize starting structures.) Tj
+T*
+() Tj
+T*
+(64. WHAT IS THE ROLE OF PAGE HISTORY IN OPERATIONAL SAFETY?) Tj
+T*
+(It allows recovery and rollback when content changes go wrong.) Tj
+T*
+() Tj
+T*
+(65. WHAT WOULD YOU CHANGE FIRST IN THE DATABASE AT LARGER SCALE?) Tj
+T*
+(Introduce a read-optimized published content model or cache layer.) Tj
+T*
+() Tj
+T*
+(66. WHAT IS THE FRONTEND?S STRONGEST BOUNDARY?) Tj
+T*
+(Public rendering staying thin and contract-driven.) Tj
+T*
+() Tj
+T*
+(67. WHAT IS THE BACKEND?S STRONGEST BOUNDARY?) Tj
+T*
+(Canonical validation around page lifecycle workflows.) Tj
+T*
+() Tj
+T*
+(68. WHAT COULD GO WRONG DURING DEPLOY?) Tj
+T*
+(Contract mismatch, schema mismatch, or public rendering breakage if releases are not ) Tj
+T*
+(compatible.) Tj
+T*
+() Tj
+T*
+(69. HOW WOULD YOU REDUCE DEPLOY RISK?) Tj
+T*
+(Backward-compatible changes, contract tests, staging smoke tests.) Tj
+T*
+() Tj
+T*
+(70. WHAT WOULD YOUR SMOKE TEST COVER?) Tj
+T*
+(Create/edit/save/preview/publish/public render.) Tj
+T*
+() Tj
+T*
+(71. WHAT IS THE VALUE OF A SHARED REPO HERE?) Tj
+T*
+(Easier refactors and coordinated evolution across apps and contracts.) Tj
+T*
+() Tj
+T*
+(72. WHAT IS THE RISK OF A SHARED REPO?) Tj
+T*
+(Boundaries can blur if discipline is weak.) Tj
+T*
+() Tj
+T*
+(73. WHY IS PAGE CONTENT NOT JUST PLAIN HTML STORAGE?) Tj
+T*
+(Because structured blocks are more reusable, safer, and easier to validate.) Tj
+T*
+() Tj
+T*
+(74. WHEN WOULD PLAIN HTML STORAGE BE TEMPTING?) Tj
+T*
+(For very simple publishing systems without complex block semantics.) Tj
+T*
+() Tj
+T*
+(75. WHY KEEP PUBLIC FRONTEND THIN?) Tj
+T*
+(To avoid duplication of content meaning.) Tj
+T*
+() Tj
+T*
+(76. WHY KEEP ADMIN BACKEND WORKFLOW-RICH?) Tj
+T*
+(Because content lifecycle safety requires explicit workflow handling.) Tj
+T*
+() Tj
+T*
+(77. WHAT WOULD YOU SAY IF ASKED ?DID YOU OVERENGINEER THIS??) Tj
+T*
+(I?d say the complexity is deliberate around the page lifecycle, because content publishing ) Tj
+T*
+(is where silent failure is most costly.) Tj
+T*
+() Tj
+ET
+endstream
+endobj
+55 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 56 0 R >>
+endobj
+56 0 obj
+<< /Length 2181 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+(78. WHAT PARTS ARE MAYBE UNDERENGINEERED?) Tj
+T*
+(Auth, RBAC, observability, and public delivery scaling.) Tj
+T*
+() Tj
+T*
+(79. WHAT MAKES THIS A STRONG INTERVIEW PROJECT?) Tj
+T*
+(It shows system design thinking across frontend, backend, data modeling, and content ) Tj
+T*
+(lifecycle.) Tj
+T*
+() Tj
+T*
+(80. WHAT MAKES IT VULNERABLE IN INTERVIEWS?) Tj
+T*
+(If I overclaim production readiness in auth, RBAC, or scaling.) Tj
+T*
+() Tj
+T*
+(81. WHAT SHOULD YOU BE HONEST ABOUT?) Tj
+T*
+(That the page architecture is stronger than some surrounding domains and that some parts are) Tj
+T*
+( still evolving.) Tj
+T*
+() Tj
+T*
+(82. WHAT ARE THE TOP FUTURE IMPROVEMENTS?) Tj
+T*
+(Published-content delivery separation, auth/RBAC hardening, editor modularization.) Tj
+T*
+() Tj
+T*
+(83. WHAT IS THE RIGHT WAY TO EXPLAIN THE BIGGEST TRADEOFF?) Tj
+T*
+(We accepted more application complexity to get safer content lifecycle and shared rendering ) Tj
+T*
+(correctness.) Tj
+T*
+() Tj
+T*
+(84. WHAT?S THE WRONG WAY TO EXPLAIN THE TRADEOFF?) Tj
+T*
+(Pretending there were no downsides or that the current system is fully enterprise-grade.) Tj
+T*
+() Tj
+T*
+(85. WHY DO INTERVIEWER FOLLOW-UPS HAPPEN SO MUCH ON THIS PROJECT?) Tj
+T*
+(Because the architecture makes strong claims around workflow, consistency, and lifecycle ) Tj
+T*
+(safety.) Tj
+T*
+() Tj
+T*
+(86. WHAT IS ONE SIGN YOU REALLY UNDERSTAND THE PROJECT?) Tj
+T*
+(You can explain the exact difference between save, preview, and publish.) Tj
+T*
+() Tj
+T*
+(87. WHAT IS ANOTHER SIGN?) Tj
+T*
+(You can explain why the shared layer exists and what would break without it.) Tj
+T*
+() Tj
+T*
+(88. WHAT IS ANOTHER SIGN?) Tj
+T*
+(You can explain why public rendering should not repair CMS data.) Tj
+T*
+() Tj
+T*
+(89. WHAT IS ANOTHER SIGN?) Tj
+T*
+(You can explain why revisions are better than updating live state directly.) Tj
+T*
+() Tj
+T*
+(90. WHAT IS ANOTHER SIGN?) Tj
+T*
+(You can explain what happens when two editors collide.) Tj
+T*
+() Tj
+T*
+(91. WHAT SHOULD YOU SAY IF ASKED ?WHY NOT WORDPRESS??) Tj
+T*
+(Because the core need was controlled block-based lifecycle and rendering semantics, not just) Tj
+T*
+( simple content entry.) Tj
+ET
+endstream
+endobj
+57 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 58 0 R >>
+endobj
+58 0 obj
+<< /Length 1948 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(92. WHAT SHOULD YOU SAY IF ASKED ?WHY NOT GRAPHQL??) Tj
+T*
+(Because the current consumers are known and the workflow-heavy API was simpler with REST-) Tj
+T*
+(like routes.) Tj
+T*
+() Tj
+T*
+(93. WHAT SHOULD YOU SAY IF ASKED ?WHY NOT PRISMA??) Tj
+T*
+(Direct SQL gave explicit control over revision and transactional workflows, though Prisma ) Tj
+T*
+(could be a valid future option.) Tj
+T*
+() Tj
+T*
+(94. WHAT SHOULD YOU SAY IF ASKED ?WHY NOT MONGODB??) Tj
+T*
+(Even though layouts are JSON-like, the rest of the system is still strongly relational and ) Tj
+T*
+(transactional.) Tj
+T*
+() Tj
+T*
+(95. WHAT SHOULD YOU SAY IF ASKED ?WHY NOT STATIC SITE GENERATION??) Tj
+T*
+(It would be attractive later, but dynamic preview and early workflow speed were stronger ) Tj
+T*
+(initial priorities.) Tj
+T*
+() Tj
+T*
+(96. WHAT SHOULD YOU SAY IF ASKED ?WHAT FAILS FIRST AT SCALE??) Tj
+T*
+(Public runtime coupling to admin/content service.) Tj
+T*
+() Tj
+T*
+(97. WHAT SHOULD YOU SAY IF ASKED ?WHAT FAILS FIRST SECURITY-WISE??) Tj
+T*
+(The simplistic auth/authorization model.) Tj
+T*
+() Tj
+T*
+(98. WHAT SHOULD YOU SAY IF ASKED ?WHAT FAILS FIRST FRONTEND-WISE??) Tj
+T*
+(Editor maintainability and render isolation on large pages.) Tj
+T*
+() Tj
+T*
+(99. WHAT SHOULD YOU SAY IF ASKED ?WHAT ARE YOU MOST PROUD OF??) Tj
+T*
+(The revision-first content lifecycle and shared contract direction.) Tj
+T*
+() Tj
+T*
+(100. WHAT SHOULD YOU SAY IF ASKED ?WHAT WOULD YOU DO NEXT??) Tj
+T*
+(Decouple published delivery, improve auth/RBAC, and modularize the editor further.) Tj
+T*
+() Tj
+T*
+(---) Tj
+T*
+() Tj
+T*
+(FINAL ADVICE) Tj
+T*
+() Tj
+T*
+(The interview goal is not to sound perfect.) Tj
+T*
+(The goal is to sound:) Tj
+T*
+() Tj
+T*
+(? structured) Tj
+T*
+(? honest) Tj
+T*
+(? technically deep) Tj
+T*
+(? aware of tradeoffs) Tj
+T*
+(? aware of what should happen next) Tj
+T*
+() Tj
+T*
+(The strongest pattern is:) Tj
+ET
+endstream
+endobj
+59 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 61 0 R >> >> /Contents 60 0 R >>
+endobj
+60 0 obj
+<< /Length 227 >>
+stream
+BT
+/F1 10 Tf
+50 748 Td
+14 TL
+() Tj
+T*
+(1. what it does) Tj
+T*
+(2. why it exists) Tj
+T*
+(3. tradeoff) Tj
+T*
+(4. future improvement) Tj
+T*
+() Tj
+T*
+(If you keep answering in that structure, you will sound much more senior.) Tj
+ET
+endstream
+endobj
+61 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 62
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000315 00000 n 
+0000000442 00000 n 
+0000003024 00000 n 
+0000003151 00000 n 
+0000004972 00000 n 
+0000005099 00000 n 
+0000006218 00000 n 
+0000006346 00000 n 
+0000007722 00000 n 
+0000007851 00000 n 
+0000009103 00000 n 
+0000009232 00000 n 
+0000010780 00000 n 
+0000010909 00000 n 
+0000012219 00000 n 
+0000012348 00000 n 
+0000013569 00000 n 
+0000013698 00000 n 
+0000014825 00000 n 
+0000014954 00000 n 
+0000016168 00000 n 
+0000016297 00000 n 
+0000017623 00000 n 
+0000017752 00000 n 
+0000018990 00000 n 
+0000019119 00000 n 
+0000020513 00000 n 
+0000020642 00000 n 
+0000022121 00000 n 
+0000022250 00000 n 
+0000023586 00000 n 
+0000023715 00000 n 
+0000024751 00000 n 
+0000024880 00000 n 
+0000026016 00000 n 
+0000026145 00000 n 
+0000027625 00000 n 
+0000027754 00000 n 
+0000030713 00000 n 
+0000030842 00000 n 
+0000033318 00000 n 
+0000033447 00000 n 
+0000035668 00000 n 
+0000035797 00000 n 
+0000037937 00000 n 
+0000038066 00000 n 
+0000040189 00000 n 
+0000040318 00000 n 
+0000042404 00000 n 
+0000042533 00000 n 
+0000044653 00000 n 
+0000044782 00000 n 
+0000046920 00000 n 
+0000047049 00000 n 
+0000049277 00000 n 
+0000049406 00000 n 
+0000051361 00000 n 
+0000051490 00000 n 
+0000051769 00000 n 
+trailer
+<< /Size 62 /Root 1 0 R >>
+startxref
+51840
+%%EOF
