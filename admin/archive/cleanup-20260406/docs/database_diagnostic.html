@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend & Database Diagnostic</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+        .warning { background: #fff3cd; }
+        button { padding: 10px 20px; margin: 5px; }
+        pre { background: #f8f9fa; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Backend & Database Diagnostic Tool</h1>
+    
+    <div class="test">
+        <h3>Test 1: Check Backend Server</h3>
+        <button onclick="testBackend()">Test Backend Connection</button>
+        <div id="backendResult"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Test 2: Test Page Creation API</h3>
+        <button onclick="testCreatePage()">Test /api/create-page</button>
+        <div id="createPageResult"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Test 3: Test Get Pages API</h3>
+        <button onclick="testGetPages()">Test /api/get-pages</button>
+        <div id="getPagesResult"></div>
+    </div>
+    
+    <script>
+        const backendUrl = 'http://localhost:3001'; // Change if different
+        
+        async function testBackend() {
+            const resultDiv = document.getElementById('backendResult');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch(backendUrl + '/api/create-page', { 
+                    method: 'OPTIONS' 
+                });
+                resultDiv.innerHTML = 
+                    <div class="success">
+                        <strong>✅ Backend is reachable</strong><br>
+                        Status: <br>
+                        Headers: 
+                    </div>
+                ;
+            } catch (error) {
+                resultDiv.innerHTML = 
+                    <div class="error">
+                        <strong>❌ Backend not reachable at </strong><br>
+                        Error: <br>
+                        <small>Try: http://localhost:3000 or check your backend server</small>
+                    </div>
+                ;
+            }
+        }
+        
+        async function testCreatePage() {
+            const resultDiv = document.getElementById('createPageResult');
+            resultDiv.innerHTML = 'Testing...';
+            
+            const testData = [
+                { name: "Diagnostic Test Page 1" },
+                { title: "Diagnostic Test Page 2" },
+                { name: "Test", title: "Test Page" },
+                {} // Empty test
+            ];
+            
+            let results = [];
+            
+            for (let i = 0; i < testData.length; i++) {
+                try {
+                    const response = await fetch(backendUrl + '/api/create-page', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(testData[i])
+                    });
+                    
+                    const data = await response.json();
+                    results.push({
+                        test: Test : ,
+                        status: response.status,
+                        success: data.success,
+                        error: data.error,
+                        page: data.page
+                    });
+                } catch (error) {
+                    results.push({
+                        test: Test : ,
+                        error: error.message
+                    });
+                }
+            }
+            
+            let html = '<div class="warning"><strong>API Test Results:</strong><br>';
+            results.forEach(r => {
+                html += <hr><strong></strong><br>;
+                if (r.success) {
+                    html += ✅ Success: Page ID , Slug: <br>;
+                } else if (r.error) {
+                    html += ❌ Error: <br>;
+                } else {
+                    html += ⚠️ Unknown response<br>;
+                }
+            });
+            html += '</div>';
+            
+            resultDiv.innerHTML = html;
+        }
+        
+        async function testGetPages() {
+            const resultDiv = document.getElementById('getPagesResult');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch(backendUrl + '/api/get-pages');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = 
+                        <div class="success">
+                            <strong>✅ Get Pages Successful</strong><br>
+                            Total Pages: <br>
+                            <pre></pre>
+                        </div>
+                    ;
+                } else {
+                    resultDiv.innerHTML = 
+                        <div class="error">
+                            <strong>❌ Get Pages Failed</strong><br>
+                            Error: 
+                        </div>
+                    ;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = 
+                    <div class="error">
+                        <strong>❌ API Call Failed</strong><br>
+                        Error: 
+                    </div>
+                ;
+            }
+        }
+        
+        // Auto-run first test
+        setTimeout(testBackend, 500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+src/app/api\versions\save\route.js:4:export async function POST(request) {
+src/app/api\blog\route.js:3:export async function GET() {
+src/app/api\versions\restore\route.js:3:export async function POST(request) {
+src/app/api\banners\route.js:12:export async function GET() {
+src/app/api\versions\list\route.js:3:export async function GET(request) {
+src/app/api\awards\route.js:3:export async function GET() {
+src/app/api\trust-points\route.js:3:export async function GET() {
+src/app/api\timeline\route.js:3:export async function GET() {
+src/app/api\testimonials\route.js:3:export async function GET() {
+src/app/api\client-logos\route.js:3:export async function GET() {
+src/app/api\templates\update\route.js:3:export async function PUT(request) {
+src/app/api\choose\route.js:3:export async function GET() {
+src/app/api\templates\list\route.js:3:export async function GET(request) {
+src/app/api\contact\route.js:3:export async function GET() {
+src/app/api\templates\delete\route.js:3:export async function DELETE(request) {
+src/app/api\create-page\route.js:4:export async function POST(request) {
+src/app/api\templates\create\route.js:4:export async function POST(request) {
+src/app/api\team\route.js:3:export async function GET() {
+src/app/api\pages\[page_id]\route.js:3:export async function GET(request, { params }) {
+src/app/api\pages\[page_id]\route.js:52:export async function DELETE(request, { params }) {
+src/app/api\stats\route.js:3:export async function GET() {
+src/app/api\pages\[page_id]\header-footer\route.js:4:export async function PUT(request, { params }) {
+src/app/api\social\route.js:3:export async function GET() {
+src/app/api\pages\[page_id]\disable\route.js:3:export async function POST(request, { params }) {
+src/app/api\services\route.js:3:export async function GET() {
+src/app/api\pages\[page_id]\banner\route.ts:5:export async function PUT(request: Request, { params }: { params: { page_id: string } }) {
+src/app/api\pages\[page_id]\banner\route.ts:43:export async function OPTIONS() {
+src/app/api\save-page-layout\route.js.original:3:export async function POST(request) {
+src/app/api\save-page-layout\route.js.old2:3:export async function POST(request) {
+src/app/api\save-page-layout\route.js.backup-20251207-212359:4:export async function POST(request) {
+src/app/api\save-page-layout\route.js:3:export async function POST(request) {
+src/app/api\save-page\route.js:3:export async function POST(request) {
+src/app/api\page\[slug]\sections\route.js:20:export async function GET(request, { params }) {
+src/app/api\page\[slug]\sections\route.js:54:export async function PATCH(request, { params }) {
+src/app/api\page\[slug]\sections\route.js:106:export async function POST(request, { params }) {
+src/app/api\page\[slug]\sections\route.js:142:export async function PUT(request, { params }) {
+src/app/api\page\[slug]\sections\route.js:202:export async function DELETE(request, { params }) {
+src/app/api\page\[slug]\route.js:15:export async function GET(request, { params }) {
+src/app/api\projects\route.js:3:export async function GET() {
+src/app/api\pricing\route.js:3:export async function GET() {
+src/app/api\media\upload\route.js:6:export async function POST(request) {
+src/app/api\partners\route.js:3:export async function GET() {
+src/app/api\media\update\route.js:3:export async function PUT(request) {
+src/app/api\media\list\route.js:3:export async function GET(request) {
+src/app/api\get-page-layout\route.js.backup:3:export async function GET(request) {
+src/app/api\get-page-layout\route.js:48:export async function GET(request) {
+src/app/api\media\delete\route.js:5:export async function DELETE(request) {
+src/app/api\get-page\route.js:22:export async function GET(request) {
+src/app/api\get-page\route.js:72:export async function OPTIONS() {
+src/app/api\headers\route.js:4:export async function GET(request) {
+src/app/api\gallery\route.js:3:export async function GET() {
+src/app/api\footers\route.js:4:export async function GET(request) {
+src/app/api\features\route.js:3:export async function GET() {
+src/app/api\faqs\route.js:3:export async function GET() {
+src/app/api\get-pages\route.js:5:export async function GET() {
+src/app/api\get-pages\route.js:49:export async function OPTIONS() {

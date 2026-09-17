@@ -1,0 +1,797 @@
+/* Page editor exact-skin override
+   Imported after globals.css so it wins over the legacy admin/editor theme. */
+
+:root {
+  --pe-bg: #0d0f14;
+  --pe-surface: #13161e;
+  --pe-surface-2: #1a1d28;
+  --pe-surface-3: #22263a;
+  --pe-border: rgba(255, 255, 255, 0.07);
+  --pe-border-2: rgba(255, 255, 255, 0.13);
+  --pe-accent: #7c6dfa;
+  --pe-accent-2: #a594ff;
+  --pe-accent-bg: rgba(124, 109, 250, 0.12);
+  --pe-accent-bg-2: rgba(124, 109, 250, 0.06);
+  --pe-green: #3ecf8e;
+  --pe-red: #f87171;
+  --pe-text: #e8eaf0;
+  --pe-text-2: #8b90a8;
+  --pe-radius: 8px;
+}
+
+html,
+body,
+#__next_splash {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--pe-bg);
+  color: var(--pe-text);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.cm-admin-shell {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--pe-bg);
+}
+
+.cm-admin-shell .gnav {
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 12px !important;
+  background: rgba(19, 22, 30, 0.98) !important;
+  border-bottom: 1px solid var(--pe-border) !important;
+  box-shadow: none !important;
+}
+
+.cm-admin-shell .body,
+.cm-admin-shell .main-panel,
+.cm-admin-shell .main-panel.active {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.cm-page-editor.editor-shell {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--pe-bg);
+  color: var(--pe-text);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.cm-page-editor .cm-topnav {
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 12px !important;
+  border-bottom: 1px solid var(--pe-border) !important;
+  background: rgba(19, 22, 30, 0.98) !important;
+  box-shadow: none !important;
+}
+
+.cm-page-editor .cm-brand {
+  gap: 10px !important;
+}
+
+.cm-page-editor .cm-brand-box {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 6px !important;
+  background: var(--pe-accent) !important;
+  box-shadow: none !important;
+}
+
+.cm-page-editor .cm-brand-copy {
+  color: var(--pe-text) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cm-page-editor .cm-mainnav {
+  gap: 4px !important;
+}
+
+.cm-page-editor .cm-navtab,
+.cm-page-editor .gbtn,
+.cm-page-editor .pgpill,
+.cm-page-editor .lptab,
+.cm-page-editor .rptab,
+.cm-page-editor .tool,
+.cm-page-editor .zbtn,
+.cm-page-editor .sact-btn,
+.cm-page-editor .column-action-btn,
+.cm-page-editor .dc-action-btn {
+  border-radius: 8px !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.cm-page-editor .cm-navtab {
+  min-height: 26px !important;
+  padding: 4px 10px !important;
+  color: var(--pe-text-2) !important;
+  background: transparent !important;
+}
+
+.cm-page-editor .cm-navtab.active {
+  background: #171a24 !important;
+  color: var(--pe-text) !important;
+  border-color: var(--pe-border) !important;
+}
+
+.cm-page-editor .cm-live-pill {
+  height: 26px !important;
+  background: rgba(62, 207, 142, 0.1) !important;
+  border: 1px solid rgba(62, 207, 142, 0.18) !important;
+  color: var(--pe-green) !important;
+}
+
+.cm-page-editor .cm-avatar,
+.cm-page-editor .g-avatar {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 999px !important;
+}
+
+.cm-page-editor .ed-body {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: stretch !important;
+  background: var(--pe-bg) !important;
+}
+
+.cm-page-editor .left-col,
+.cm-page-editor .right-col {
+  min-height: 0 !important;
+  background: var(--pe-surface) !important;
+  overflow: hidden !important;
+}
+
+.cm-page-editor .left-col.open {
+  flex: 0 0 248px !important;
+  max-width: 248px !important;
+  border-right: 1px solid var(--pe-border) !important;
+}
+
+.cm-page-editor .left-col.closed {
+  flex: 0 0 0 !important;
+  max-width: 0 !important;
+}
+
+.cm-page-editor .right-col.open {
+  flex: 0 0 306px !important;
+  max-width: 306px !important;
+  border-left: 1px solid var(--pe-border) !important;
+}
+
+.cm-page-editor .right-col.closed {
+  flex: 0 0 0 !important;
+  max-width: 0 !important;
+}
+
+.cm-page-editor .left-inner,
+.cm-page-editor .right-inner {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: var(--pe-surface) !important;
+}
+
+.cm-page-editor .toggle-btn {
+  width: 28px !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--pe-text-2) !important;
+}
+
+.cm-page-editor .toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--pe-text) !important;
+}
+
+.cm-page-editor .toggle-arrow {
+  font-size: 12px !important;
+}
+
+.cm-page-editor .tb-label {
+  font-size: 10px !important;
+  letter-spacing: 0.04em !important;
+  color: var(--pe-text-2) !important;
+}
+
+.cm-page-editor .lp-tabs,
+.cm-page-editor .rp-tabs {
+  padding: 0 16px !important;
+  gap: 8px !important;
+  border-bottom: 1px solid var(--pe-border) !important;
+}
+
+.cm-page-editor .lptab,
+.cm-page-editor .rptab {
+  min-height: 30px !important;
+  padding: 6px 10px !important;
+  color: var(--pe-text-2) !important;
+  background: transparent !important;
+}
+
+.cm-page-editor .lptab.active,
+.cm-page-editor .rptab.active {
+  color: var(--pe-text) !important;
+  background: rgba(124, 109, 250, 0.08) !important;
+  border-color: rgba(124, 109, 250, 0.18) !important;
+}
+
+.cm-page-editor .lp-srch {
+  margin: 12px 16px 14px !important;
+  background: #171a24 !important;
+  border: 1px solid var(--pe-border) !important;
+  border-radius: 8px !important;
+}
+
+.cm-page-editor .lp-srch input {
+  color: var(--pe-text) !important;
+  background: transparent !important;
+}
+
+.cm-page-editor .lp-srch input::placeholder {
+  color: #6f758b !important;
+}
+
+.cm-page-editor .lp-body {
+  padding: 0 16px 16px !important;
+}
+
+.cm-page-editor .cat {
+  color: #8a90a6 !important;
+  letter-spacing: 0.08em !important;
+}
+
+.cm-page-editor .cgrid {
+  gap: 8px !important;
+}
+
+.cm-page-editor .cc,
+.cm-page-editor .str-item {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.cm-page-editor .cc {
+  padding: 10px 10px 10px 8px !important;
+  border-radius: 8px !important;
+}
+
+.cm-page-editor .cc:hover,
+.cm-page-editor .str-item:hover,
+.cm-page-editor .str-item.on {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.cm-page-editor .cc-i {
+  width: 28px !important;
+  height: 20px !important;
+  background: var(--pe-surface-3) !important;
+  border-radius: 4px !important;
+}
+
+.cm-page-editor .cc-n,
+.cm-page-editor .str-empty,
+.cm-page-editor .str-index,
+.cm-page-editor .str-meta,
+.cm-page-editor .rp-sub,
+.cm-page-editor .scnt,
+.cm-page-editor .autosave {
+  color: var(--pe-text-2) !important;
+}
+
+.cm-page-editor .canvas-col {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: var(--pe-bg) !important;
+}
+
+.cm-page-editor .ed-bar {
+  min-height: 48px !important;
+  height: auto !important;
+  background: var(--pe-surface) !important;
+  border-bottom: 1px solid var(--pe-border) !important;
+  padding: 6px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  position: relative !important;
+  z-index: 30 !important;
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.cm-page-editor .ed-bar::-webkit-scrollbar {
+  display: none !important;
+}
+
+.cm-page-editor .canvas-toolbar {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  flex-wrap: nowrap !important;
+}
+
+.cm-page-editor .pg-pills {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+
+.cm-page-editor .autosave {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 11px !important;
+  color: var(--pe-text-2) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.cm-page-editor .ed-bar-mid {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 auto !important;
+  flex-shrink: 0 !important;
+}
+
+.cm-page-editor .ed-bar-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-left: auto !important;
+  flex-shrink: 0 !important;
+}
+
+.cm-page-editor .pgpill {
+  min-height: 24px !important;
+  padding: 3px 10px !important;
+  background: #1d2230 !important;
+  border-color: var(--pe-border) !important;
+  color: #8b90a8 !important;
+}
+
+.cm-page-editor .pgpill.active {
+  background: var(--pe-accent-bg) !important;
+  border-color: rgba(124, 109, 250, 0.28) !important;
+  color: var(--pe-accent-2) !important;
+}
+
+.cm-page-editor .tool,
+.cm-page-editor .zbtn {
+  color: #8b90a8 !important;
+  background: transparent !important;
+}
+
+.cm-page-editor .tool:hover,
+.cm-page-editor .tool.on,
+.cm-page-editor .zbtn:hover {
+  background: #1d2230 !important;
+  color: var(--pe-text) !important;
+}
+
+.cm-page-editor .zoom-box {
+  background: #1a1d28 !important;
+  border: 1px solid var(--pe-border) !important;
+}
+
+.cm-page-editor .canvas-scroll {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  overscroll-behavior: contain !important;
+  scrollbar-gutter: stable !important;
+  background: var(--pe-bg) !important;
+  padding: 24px 20px 72px !important;
+}
+
+.cm-page-editor .canvas-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cm-page-editor .canvas-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cm-page-editor .canvas-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.cm-page-editor .page-frame {
+  width: 100% !important;
+  max-width: 1240px !important;
+  min-width: 0 !important;
+  margin: 0 auto 32px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  background: #0d0f17 !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55) !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+  transition: max-width 0.25s ease, width 0.25s ease !important;
+}
+
+.cm-page-editor .page-sections {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+}
+
+.cm-page-editor .sf,
+.cm-page-editor .c-section {
+  position: relative !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0 !important;
+  background: #11141f !important;
+  box-shadow: none !important;
+  min-height: 200px !important;
+  padding: 24px 28px 40px !important;
+}
+
+.cm-page-editor .sf.sel,
+.cm-page-editor .c-section.selected {
+  outline: 2px solid var(--pe-accent) !important;
+  outline-offset: -2px !important;
+}
+
+.cm-page-editor .sf-stripe,
+.cm-page-editor .sf-overlay {
+  display: none !important;
+}
+
+.cm-page-editor .sf-lbl,
+.cm-page-editor .section-label,
+.cm-page-editor .sf-acts {
+  opacity: 0.85 !important;
+  transition: opacity 0.15s ease !important;
+}
+
+.cm-page-editor .sf:hover .sf-lbl,
+.cm-page-editor .sf.sel .sf-lbl,
+.cm-page-editor .sf:hover .sf-acts,
+.cm-page-editor .sf.sel .sf-acts,
+.cm-page-editor .c-section:hover .section-actions,
+.cm-page-editor .c-section.selected .section-actions {
+  opacity: 1 !important;
+}
+
+.cm-page-editor .sf-badge {
+  background: #7c6dfa !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+}
+
+.cm-page-editor .sf-type {
+  color: #8b90a8 !important;
+  font-size: 11px !important;
+}
+
+.cm-page-editor .column-dropzone {
+  overflow: visible !important;
+}
+
+.cm-page-editor .draggable-component {
+  position: relative !important;
+  margin-top: 26px !important;
+  margin-bottom: 16px !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: outline 0.12s ease, box-shadow 0.12s ease !important;
+}
+
+.cm-page-editor .draggable-component:hover {
+  outline: 1.5px dashed rgba(124, 109, 250, 0.5) !important;
+  outline-offset: 4px !important;
+  z-index: 40 !important;
+}
+
+.cm-page-editor .draggable-component.is-selected,
+.cm-page-editor .draggable-component[data-selected='true'] {
+  outline: 2px solid #7c6dfa !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 16px rgba(124, 109, 250, 0.25) !important;
+  z-index: 40 !important;
+}
+
+.cm-page-editor .dc-tag {
+  position: absolute !important;
+  left: -4px !important;
+  top: -24px !important;
+  display: none !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: #7c6dfa !important;
+  color: #ffffff !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  padding: 2px 8px !important;
+  border-radius: 4px 4px 0 0 !important;
+  z-index: 50 !important;
+  pointer-events: auto !important;
+  white-space: nowrap !important;
+}
+
+.cm-page-editor .dc-tag-handle {
+  cursor: grab !important;
+  opacity: 0.8 !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+
+.cm-page-editor .dc-tag-handle:hover {
+  opacity: 1 !important;
+}
+
+.cm-page-editor .draggable-component:hover .dc-tag,
+.cm-page-editor .draggable-component.is-selected .dc-tag {
+  display: flex !important;
+}
+
+.cm-page-editor .dc-actions {
+  position: absolute !important;
+  right: -4px !important;
+  top: -24px !important;
+  display: none !important;
+  align-items: center !important;
+  gap: 4px !important;
+  z-index: 50 !important;
+}
+
+.cm-page-editor .draggable-component:hover .dc-actions,
+.cm-page-editor .draggable-component.is-selected .dc-actions {
+  display: flex !important;
+}
+
+.cm-page-editor .sact,
+.cm-page-editor .dc-action-btn,
+.cm-page-editor .sact-btn,
+.cm-page-editor .column-action-btn {
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 4px !important;
+  background: #252a3d !important;
+  border: 1px solid #3d4460 !important;
+  color: #c8cce6 !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.cm-page-editor .sact:hover,
+.cm-page-editor .dc-action-btn:hover {
+  background: #7c6dfa !important;
+  border-color: #7c6dfa !important;
+  color: #ffffff !important;
+}
+
+.cm-page-editor .sact.del:hover,
+.cm-page-editor .dc-action-btn.is-danger:hover,
+.cm-page-editor .column-action-btn.is-danger:hover {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+.cm-page-editor .add-zone {
+  margin: 24px auto 40px !important;
+  max-width: 480px !important;
+  text-align: center !important;
+}
+
+.cm-page-editor .add-zone-btn {
+  width: 100% !important;
+  border: 1.5px dashed rgba(255, 255, 255, 0.15) !important;
+  border-radius: 8px !important;
+  background: rgba(22, 25, 38, 0.6) !important;
+  color: #94a3b8 !important;
+  padding: 10px 18px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.cm-page-editor .add-zone-btn:hover {
+  border-color: #7c6dfa !important;
+  background: rgba(124, 109, 250, 0.1) !important;
+  color: #c4b5fd !important;
+}
+
+.cm-page-editor .add-zone-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.cm-page-editor .dc-selected-dot {
+  position: absolute !important;
+  right: 44px !important;
+  top: 16px !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 999px !important;
+  background: var(--pe-accent) !important;
+}
+
+.cm-page-editor .dc-label {
+  color: var(--pe-text-2) !important;
+}
+
+.cm-page-editor .column-dropzone {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.cm-page-editor .column-dropzone.is-over {
+  background: rgba(124, 109, 250, 0.04) !important;
+  border-color: rgba(124, 109, 250, 0.18) !important;
+}
+
+.cm-page-editor .column-placeholder {
+  margin: 16px 0 !important;
+  padding: 18px 12px !important;
+  background: transparent !important;
+  border: 1px dashed rgba(15, 23, 42, 0.1) !important;
+  color: #64748b !important;
+}
+
+.cm-page-editor .column-placeholder-icon {
+  background: #ffffff !important;
+  color: var(--pe-accent) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+}
+
+.cm-page-editor .add-zone {
+  background: transparent !important;
+  border: 1px dashed rgba(255, 255, 255, 0.09) !important;
+}
+
+.cm-page-editor .add-zone-btn {
+  background: transparent !important;
+  color: var(--pe-text-2) !important;
+}
+
+.cm-page-editor .rp-top {
+  padding: 12px 12px 14px !important;
+  border-bottom: 1px solid var(--pe-border) !important;
+}
+
+.cm-page-editor .rp-eye {
+  background: rgba(62, 207, 142, 0.1) !important;
+  color: var(--pe-green) !important;
+}
+
+.cm-page-editor .rp-name {
+  color: var(--pe-text) !important;
+}
+
+.cm-page-editor .rp-tabs {
+  padding: 0 12px !important;
+}
+
+.cm-page-editor .rp-body,
+.cm-page-editor .rp-panel-scroll {
+  padding: 12px !important;
+}
+
+.cm-page-editor .fi,
+.cm-page-editor .ta,
+.cm-page-editor .css-mini,
+.cm-page-editor .ai-ta,
+.cm-page-editor .rp-body input,
+.cm-page-editor .rp-body select,
+.cm-page-editor .rp-body textarea {
+  background: #1a1d28 !important;
+  border: 1px solid var(--pe-border) !important;
+  border-radius: 6px !important;
+  color: var(--pe-text) !important;
+  box-shadow: none !important;
+}
+
+.cm-page-editor .fi:focus,
+.cm-page-editor .ta:focus,
+.cm-page-editor .css-mini:focus,
+.cm-page-editor .ai-ta:focus,
+.cm-page-editor .rp-body input:focus,
+.cm-page-editor .rp-body select:focus,
+.cm-page-editor .rp-body textarea:focus {
+  outline: 1px solid rgba(124, 109, 250, 0.18) !important;
+  border-color: rgba(124, 109, 250, 0.34) !important;
+  box-shadow: none !important;
+}
+
+.cm-page-editor .chip,
+.cm-page-editor .ai-tag,
+.cm-page-editor .swatch {
+  background: #1a1d28 !important;
+  border: 1px solid var(--pe-border) !important;
+  color: #8b90a8 !important;
+}
+
+.cm-page-editor .chip.on,
+.cm-page-editor .ai-tag.on,
+.cm-page-editor .swatch.on,
+.cm-page-editor .mini-toggle.on {
+  background: var(--pe-accent-bg) !important;
+  border-color: rgba(124, 109, 250, 0.24) !important;
+  color: var(--pe-accent-2) !important;
+}
+
+.cm-page-editor .ai-box {
+  background: #1a1d28 !important;
+  border: 1px solid var(--pe-border) !important;
+  border-radius: 12px !important;
+}
+
+.cm-page-editor .rp-empty {
+  background: transparent !important;
+  border-color: var(--pe-border) !important;
+}
+
+.cm-page-editor .editor-modal-backdrop {
+  background: rgba(15, 17, 23, 0.72) !important;
+}
+
+/* Make loading notice unobtrusive so the shell still matches the reference. */
+.cm-page-editor .cm-inline-notice {
+  margin: 8px 0 10px !important;
+  background: rgba(19, 22, 30, 0.95) !important;
+  border: 1px solid var(--pe-border) !important;
+  color: var(--pe-text-2) !important;
+  border-radius: 10px !important;
+}
+
+.cm-page-editor .cm-inline-notice.is-danger {
+  background: rgba(120, 34, 34, 0.2) !important;
+  border-color: rgba(248, 113, 113, 0.25) !important;
+  color: #ffb4b4 !important;
+}

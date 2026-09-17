@@ -1,0 +1,63 @@
+{
+  "totals": {
+    "pages": 3,
+    "page_revisions": 10,
+    "page_versions": 0,
+    "page_templates": 0,
+    "custom_templates": 0,
+    "headers": 5,
+    "footers": 5,
+    "banners": 5,
+    "navigation_items": 3,
+    "media_library": 4,
+    "sections": 0
+  },
+  "pageStatus": {
+    "draft": 2,
+    "published": 1,
+    "other": 0
+  },
+  "revisionCoverage": {
+    "total": 10,
+    "draft": 4,
+    "published": 1,
+    "autosave": 5
+  },
+  "templateCoverage": {
+    "page_templates": 0,
+    "custom_templates": 0
+  },
+  "relationCoverage": {
+    "headerSlugMatches": 3,
+    "footerSlugMatches": 3,
+    "bannerSlugMatches": 3,
+    "headerIdPopulated": 3,
+    "footerIdPopulated": 3,
+    "bannerIdPopulated": 3
+  },
+  "collationMismatches": [],
+  "dataQuality": {
+    "blankTitleOrName": [
+      {
+        "id": 2,
+        "slug": "home",
+        "title": "",
+        "name": ""
+      },
+      {
+        "id": 13,
+        "slug": "services",
+        "title": "Services",
+        "name": ""
+      },
+      {
+        "id": 14,
+        "slug": "about",
+        "title": "About",
+        "name": ""
+      }
+    ],
+    "missingCurrentRevision": [],
+    "missingPublishedRevisionForPublishedPages": []
+  }
+}

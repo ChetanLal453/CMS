@@ -1,0 +1,5 @@
+timestamp=20260406-195216
+database=admin
+full_backup=database\phase6\backups\full-20260406-195216.sql
+targeted_backup=database\phase6\backups\tables-20260406-195216.sql
+rollback_sql=database/phase6/ROLLBACK_RESTORE_DRAFT.sql

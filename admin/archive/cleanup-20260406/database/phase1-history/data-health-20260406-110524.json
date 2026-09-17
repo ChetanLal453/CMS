@@ -1,0 +1,79 @@
+{
+  "totals": {
+    "pages": 3,
+    "page_revisions": 0,
+    "page_versions": 0,
+    "page_templates": 0,
+    "custom_templates": 0,
+    "headers": 5,
+    "footers": 5,
+    "banners": 5,
+    "navigation_items": 3,
+    "media_library": 4,
+    "sections": 2
+  },
+  "pageStatus": {
+    "draft": 3,
+    "published": 0,
+    "other": 0
+  },
+  "revisionCoverage": {
+    "total": 0,
+    "draft": 0,
+    "published": 0,
+    "autosave": 0
+  },
+  "templateCoverage": {
+    "page_templates": 0,
+    "custom_templates": 0
+  },
+  "relationCoverage": {
+    "headerSlugMatches": 3,
+    "footerSlugMatches": 3,
+    "bannerSlugMatches": 3,
+    "headerIdPopulated": 3,
+    "footerIdPopulated": 3,
+    "bannerIdPopulated": 3
+  },
+  "collationMismatches": [],
+  "dataQuality": {
+    "blankTitleOrName": [
+      {
+        "id": 2,
+        "slug": "home",
+        "title": "",
+        "name": ""
+      },
+      {
+        "id": 13,
+        "slug": "services",
+        "title": "Services",
+        "name": ""
+      },
+      {
+        "id": 14,
+        "slug": "about",
+        "title": "About",
+        "name": ""
+      }
+    ],
+    "missingCurrentRevision": [
+      {
+        "id": 2,
+        "slug": "home",
+        "status": "draft"
+      },
+      {
+        "id": 13,
+        "slug": "services",
+        "status": "draft"
+      },
+      {
+        "id": 14,
+        "slug": "about",
+        "status": "draft"
+      }
+    ],
+    "missingPublishedRevisionForPublishedPages": []
+  }
+}
