@@ -1477,6 +1477,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
 
   const handleComponentEdit = useCallback(
     (componentId: string) => {
+      setRightSidebarVisible(true)
       // Simple find function
       let foundComponent: LayoutComponent | null = null
       let foundContext: any = null
@@ -1512,7 +1513,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
         setSelectedSectionId(foundContext.sectionId)
       }
     },
-    [layout],
+    [layout, setRightSidebarVisible],
   )
 
   const handleComponentUpdate = useCallback(
@@ -1650,6 +1651,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
       // ✅ CRITICAL: Set selectedSectionId and clear component
       setSelectedSectionId(sectionId)
       setSelectedComponent(null)
+      setRightSidebarVisible(true)
 
       // ✅ DEBUG LOG
       debugLog('✅ Section selected for editing:', {
@@ -1658,7 +1660,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
         componentCleared: true,
       })
     },
-    [setSelectedSectionId, setSelectedComponent, selectedSectionId, selectedComponent],
+    [setSelectedSectionId, setSelectedComponent, selectedSectionId, selectedComponent, setRightSidebarVisible],
   )
 
   // ✅✅✅ CRITICAL FIX: COMPLETELY FIXED handleSectionUpdate function

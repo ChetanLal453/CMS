@@ -142,6 +142,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isDeleted) {
+      onSelect?.(component, { sectionId, containerId, rowId, colId });
       onEdit?.(component.id);
     }
   }
@@ -177,10 +178,20 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
       {/* Action Buttons Top-Right */}
       <div className="dc-actions">
         <button
+          onClick={handleEditClick}
+          disabled={isDeleted}
+          className={`dc-action-btn is-edit ${isDeleted ? 'is-disabled' : ''}`}
+          title="Edit Component"
+          aria-label="Edit component"
+        >
+          <EditIcon size={13} />
+        </button>
+        <button
           onClick={handleDeleteClick}
           disabled={isDeleted}
           className={`dc-action-btn is-danger ${isDeleted ? 'is-disabled' : ''}`}
           title="Delete Component"
+          aria-label="Delete component"
         >
           <TrashIcon size={13} />
         </button>
