@@ -8,26 +8,7 @@ import type {
   ImageShape,
   ImageShadow,
 } from './types'
-
-function asString(value: unknown, fallback: string) {
-  const normalized = String(value ?? '').trim()
-  return normalized || fallback
-}
-
-function asBoolean(value: unknown, fallback: boolean) {
-  if (value === undefined || value === null) return fallback
-  if (typeof value === 'boolean') return value
-  const normalized = String(value).trim().toLowerCase()
-  if (['true', '1', 'yes', 'on'].includes(normalized)) return true
-  if (['false', '0', 'no', 'off'].includes(normalized)) return false
-  return Boolean(value)
-}
-
-function asNumber(value: unknown, fallback: number) {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  const parsed = Number.parseFloat(String(value ?? '').trim())
-  return Number.isFinite(parsed) ? parsed : fallback
-}
+import { asString, asBoolean, asNumber } from '../utils/merge'
 
 function asAlignment(value: unknown, fallback: ImageAlignment): ImageAlignment {
   const normalized = String(value ?? '').trim().toLowerCase()
@@ -66,14 +47,18 @@ function asGradientBorderType(value: unknown, fallback: ImageGradientBorderType)
 }
 
 export function normalizeImage(props: Record<string, any> = {}): ImageProps {
-  const source = props.src ?? props.image
+  const source = props.src ?? props.image ?? props.url ?? props.imageUrl
+  const alignment = asAlignment(props.alignment ?? props.textAlign ?? props.align, defaultImageProps.alignment || 'center')
 
   return {
     ...defaultImageProps,
     ...props,
     src: asString(source, defaultImageProps.src || ''),
+    url: asString(source, defaultImageProps.src || ''),
+    image: asString(source, defaultImageProps.src || ''),
+    imageUrl: asString(source, defaultImageProps.src || ''),
     alt: asString(props.alt, defaultImageProps.alt || 'Image'),
-    linkUrl: asString(props.linkUrl, defaultImageProps.linkUrl || ''),
+    linkUrl: asString(props.linkUrl ?? props.link ?? props.href, defaultImageProps.linkUrl || ''),
     openInNewTab: asBoolean(props.openInNewTab, defaultImageProps.openInNewTab ?? false),
     objectFit: asObjectFit(props.objectFit, defaultImageProps.objectFit || 'contain'),
     objectPosition: asString(props.objectPosition, defaultImageProps.objectPosition || 'center'),
@@ -90,7 +75,8 @@ export function normalizeImage(props: Record<string, any> = {}): ImageProps {
     height: asString(props.height, defaultImageProps.height || 'auto'),
     maxWidth: asString(props.maxWidth, defaultImageProps.maxWidth || '100%'),
     maxHeight: asString(props.maxHeight, defaultImageProps.maxHeight || 'none'),
-    alignment: asAlignment(props.alignment, defaultImageProps.alignment || 'center'),
+    alignment,
+    textAlign: alignment,
     componentPositionX: asString(props.componentPositionX, defaultImageProps.componentPositionX || '0px'),
     componentPositionY: asString(props.componentPositionY, defaultImageProps.componentPositionY || '0px'),
     imageZoom: asNumber(props.imageZoom, defaultImageProps.imageZoom || 1),

@@ -15,7 +15,7 @@ export function createVideoViewModel(props: Record<string, any> = {}): VideoView
     resolvedSource,
     isMp4: resolvedSource.kind === 'mp4',
     borderColorWithOpacity: applyAlphaToColor(normalizedWithResolvedSrc.borderColor || '#ffffff', Number(normalizedWithResolvedSrc.borderOpacity ?? 13)),
-    resolvedTitle: normalizedWithResolvedSrc.title,
+    resolvedTitle: normalizedWithResolvedSrc.title || '',
     shouldMute: Boolean(normalizedWithResolvedSrc.muted) || Boolean(normalizedWithResolvedSrc.autoplay),
   }
 }

@@ -131,6 +131,22 @@ export function createAdvancedCardView(
   props: AdvancedCardComponentProps,
   resolvedImage: string,
 ): AdvancedCardViewModel {
+  const resolvedTextAlignment = (props.textAlignment || card.layout.textAlignment || props.alignment || 'left') as LegacyAdvancedCardProps['textAlignment']
+  const resolvedTitleAlignment = (props.titleAlignment || card.layout.titleAlignment || resolvedTextAlignment || 'left') as LegacyAdvancedCardProps['titleAlignment']
+  const resolvedSubtitleAlign = (props.subtitleAlign || card.layout.subtitleAlignment || resolvedTextAlignment || 'left') as LegacyAdvancedCardProps['subtitleAlign']
+  const resolvedDescriptionAlign = (props.descriptionAlign || card.layout.descriptionAlignment || resolvedTextAlignment || 'left') as LegacyAdvancedCardProps['descriptionAlign']
+  const resolvedButtonAlignment = (props.buttonAlignment || card.layout.buttonAlignment || 'left') as LegacyAdvancedCardProps['buttonAlignment']
+  const resolvedButtonFullWidth = Boolean(
+    props.buttonFullWidth ??
+    card.layout.buttonFullWidth ??
+    (resolvedButtonAlignment === 'full-width' ||
+      resolvedButtonAlignment === 'full' ||
+      props.buttonAlignment === 'full-width' ||
+      props.buttonAlignment === 'full' ||
+      card.layout.buttonAlignment === 'full-width' ||
+      card.layout.buttonAlignment === 'full')
+  )
+
   return {
     id: card.id || '',
     variant: card.variant,
@@ -171,21 +187,21 @@ export function createAdvancedCardView(
     titleColor: card.style.text.title.color,
     titleFontSize: card.style.text.title.fontSize,
     titleFontFamily: card.style.text.title.fontFamily || card.style.text.fontFamily,
-    titleAlignment: card.layout.titleAlignment,
+    titleAlignment: resolvedTitleAlignment,
     titleHoverEffect: card.interaction.hover.text.title as AdvancedCardViewModel['titleHoverEffect'],
     showSubtitle: card.content.subtitle.visible,
     subtitle: card.content.subtitle.text,
     subtitleColor: card.style.text.subtitle.color,
     subtitleFontSize: card.style.text.subtitle.fontSize,
-    subtitleAlign: card.layout.subtitleAlignment,
+    subtitleAlign: resolvedSubtitleAlign,
     subtitleHoverEffect: card.interaction.hover.text.subtitle as AdvancedCardViewModel['subtitleHoverEffect'],
     showDescription: card.content.description.visible,
     description: card.content.description.text,
     descriptionColor: card.style.text.description.color,
     descriptionFontSize: card.style.text.description.fontSize,
-    descriptionAlign: card.layout.descriptionAlignment,
+    descriptionAlign: resolvedDescriptionAlign,
     descriptionHoverEffect: card.interaction.hover.text.description as AdvancedCardViewModel['descriptionHoverEffect'],
-    textAlignment: card.layout.textAlignment,
+    textAlignment: resolvedTextAlignment,
     lineHeight: card.style.text.lineHeight,
     textSpacing: card.style.text.letterSpacing,
     fontFamily: card.style.text.fontFamily,
@@ -202,11 +218,11 @@ export function createAdvancedCardView(
     buttonStyle: card.style.button.variant,
     buttonColor: card.style.button.color,
     buttonTextColor: card.style.button.textColor,
-    buttonAlignment: card.layout.buttonAlignment,
+    buttonAlignment: resolvedButtonAlignment,
     buttonIcon: card.content.button.icon,
     buttonSize: card.style.button.size,
     buttonRadius: card.style.button.radius,
-    buttonFullWidth: card.layout.buttonFullWidth,
+    buttonFullWidth: resolvedButtonFullWidth,
     buttonHoverEffect: card.interaction.hover.button.effect,
     buttonHoverColor: card.interaction.hover.button.color,
     buttonTextHoverColor: card.interaction.hover.button.textColor,

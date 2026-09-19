@@ -39,6 +39,7 @@ export const manualDefaultOptions: FilterOption[] = [
 export const filterDefaultProps: FilterProps = {
   filterType: 'dropdown',
   filterKey: 'filter',
+  bindTo: '',
   label: 'Filter',
   helpText: '',
   placeholder: 'Select option...',

@@ -10,26 +10,7 @@ import type {
   ButtonTextTransform,
   ButtonVariant,
 } from './types'
-
-function asString(value: unknown, fallback: string) {
-  const normalized = String(value ?? '').trim()
-  return normalized || fallback
-}
-
-function asBoolean(value: unknown, fallback: boolean) {
-  if (value === undefined || value === null) return fallback
-  if (typeof value === 'boolean') return value
-  const normalized = String(value).trim().toLowerCase()
-  if (['true', '1', 'yes', 'on'].includes(normalized)) return true
-  if (['false', '0', 'no', 'off'].includes(normalized)) return false
-  return Boolean(value)
-}
-
-function asNumber(value: unknown, fallback: number) {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  const parsed = Number.parseFloat(String(value ?? '').trim())
-  return Number.isFinite(parsed) ? parsed : fallback
-}
+import { asString, asBoolean, asNumber } from '../utils/merge'
 
 function asVariant(value: unknown, fallback: ButtonVariant): ButtonVariant {
   const normalized = String(value ?? '').trim().toLowerCase()
@@ -85,16 +66,93 @@ function normalizeClassName(props: Record<string, any>) {
   return asString(props.className ?? props.customClass, defaultButtonProps.className || '')
 }
 
+function parseBoxSpacing(val: unknown, fallback: { top: string; right: string; bottom: string; left: string }) {
+  if (!val || typeof val !== 'string') return fallback
+  const parts = val.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 1) {
+    return { top: parts[0], right: parts[0], bottom: parts[0], left: parts[0] }
+  }
+  if (parts.length === 2) {
+    return { top: parts[0], right: parts[1], bottom: parts[0], left: parts[1] }
+  }
+  if (parts.length === 3) {
+    return { top: parts[0], right: parts[1], bottom: parts[2], left: parts[1] }
+  }
+  if (parts.length >= 4) {
+    return { top: parts[0], right: parts[1], bottom: parts[2], left: parts[3] }
+  }
+  return fallback
+}
+
 export function normalizeButton(props: Record<string, any> = {}): ButtonProps {
   const primaryColor = asString(props.primaryColor ?? props.backgroundColor, defaultButtonProps.primaryColor || '#7C6DFA')
-  const width = asString(props.width, defaultButtonProps.width || 'auto')
-  const fullWidth = asBoolean(props.fullWidth, width === '100%' ? true : defaultButtonProps.fullWidth ?? false)
+
+  const rawFullWidth = props.fullWidth !== undefined && props.fullWidth !== null ? asBoolean(props.fullWidth, false) : undefined
+  const rawWidth = props.width !== undefined && props.width !== null ? String(props.width).trim() : undefined
+
+  let fullWidth = false
+  let width = 'auto'
+
+  if (rawFullWidth !== undefined) {
+    fullWidth = rawFullWidth
+    if (fullWidth) {
+      width = '100%'
+    } else {
+      width = rawWidth && rawWidth !== '100%' ? rawWidth : 'auto'
+    }
+  } else if (rawWidth !== undefined) {
+    if (rawWidth === '100%') {
+      fullWidth = true
+      width = '100%'
+    } else {
+      fullWidth = false
+      width = rawWidth || 'auto'
+    }
+  } else {
+    fullWidth = defaultButtonProps.fullWidth ?? false
+    width = defaultButtonProps.width || 'auto'
+  }
+
+  const rawMargin = props.margin !== undefined && props.margin !== null ? String(props.margin).trim() : undefined
+  const defaultMarginBox = {
+    top: defaultButtonProps.marginTop || '0px',
+    right: defaultButtonProps.marginRight || '0px',
+    bottom: defaultButtonProps.marginBottom || '0px',
+    left: defaultButtonProps.marginLeft || '0px',
+  }
+  const parsedMargin = rawMargin ? parseBoxSpacing(rawMargin, defaultMarginBox) : defaultMarginBox
+
+  const marginTop = asString(props.marginTop ?? parsedMargin.top, '0px')
+  const marginRight = asString(props.marginRight ?? parsedMargin.right, '0px')
+  const marginBottom = asString(props.marginBottom ?? parsedMargin.bottom, '0px')
+  const marginLeft = asString(props.marginLeft ?? parsedMargin.left, '0px')
+  const margin = rawMargin ?? (props.marginTop || props.marginRight || props.marginBottom || props.marginLeft
+    ? `${marginTop} ${marginRight} ${marginBottom} ${marginLeft}`
+    : defaultButtonProps.margin || '0px')
+
+  const rawPadding = props.padding !== undefined && props.padding !== null ? String(props.padding).trim() : undefined
+  const defaultPaddingBox = {
+    top: defaultButtonProps.paddingTop || '14px',
+    right: defaultButtonProps.paddingRight || '28px',
+    bottom: defaultButtonProps.paddingBottom || '14px',
+    left: defaultButtonProps.paddingLeft || '28px',
+  }
+  const parsedPadding = rawPadding ? parseBoxSpacing(rawPadding, defaultPaddingBox) : defaultPaddingBox
+
+  const paddingTop = asString(props.paddingTop ?? parsedPadding.top, '14px')
+  const paddingRight = asString(props.paddingRight ?? parsedPadding.right, '28px')
+  const paddingBottom = asString(props.paddingBottom ?? parsedPadding.bottom, '14px')
+  const paddingLeft = asString(props.paddingLeft ?? parsedPadding.left, '28px')
+  const padding = rawPadding ?? (props.paddingTop || props.paddingRight || props.paddingBottom || props.paddingLeft
+    ? `${paddingTop} ${paddingRight} ${paddingBottom} ${paddingLeft}`
+    : defaultButtonProps.padding || '14px 28px')
 
   return {
     ...defaultButtonProps,
     ...props,
-    text: asString(props.text, defaultButtonProps.text || 'Click Me'),
-    link: asString(props.link, defaultButtonProps.link || '#'),
+    text: asString(props.text ?? props.label, defaultButtonProps.text || 'Click Me'),
+    link: asString(props.link ?? props.linkUrl ?? props.url ?? props.href, defaultButtonProps.link || '#'),
+    linkUrl: asString(props.linkUrl ?? props.link ?? props.url ?? props.href, defaultButtonProps.link || '#'),
     openInNewTab: asBoolean(props.openInNewTab, defaultButtonProps.openInNewTab ?? false),
     variant: asVariant(props.variant, defaultButtonProps.variant || 'primary'),
     size: asSize(props.size, defaultButtonProps.size || 'medium'),
@@ -111,17 +169,20 @@ export function normalizeButton(props: Record<string, any> = {}): ButtonProps {
     borderRadius: asString(props.borderRadius, defaultButtonProps.borderRadius || '8px'),
     borderWidth: asString(props.borderWidth, defaultButtonProps.borderWidth || '2px'),
     shadow: asShadow(props.shadow, defaultButtonProps.shadow || 'md'),
-    alignment: asAlignment(props.alignment, defaultButtonProps.alignment || 'left'),
+    alignment: asAlignment(props.alignment ?? props.textAlign ?? props.align, defaultButtonProps.alignment || 'left'),
+    textAlign: asAlignment(props.textAlign ?? props.alignment ?? props.align, defaultButtonProps.alignment || 'left'),
     fullWidth,
-    width: fullWidth ? '100%' : width,
-    marginTop: asString(props.marginTop, defaultButtonProps.marginTop || '0px'),
-    marginRight: asString(props.marginRight, defaultButtonProps.marginRight || '0px'),
-    marginBottom: asString(props.marginBottom, defaultButtonProps.marginBottom || '0px'),
-    marginLeft: asString(props.marginLeft, defaultButtonProps.marginLeft || '0px'),
-    paddingTop: asString(props.paddingTop, defaultButtonProps.paddingTop || '14px'),
-    paddingRight: asString(props.paddingRight, defaultButtonProps.paddingRight || '28px'),
-    paddingBottom: asString(props.paddingBottom, defaultButtonProps.paddingBottom || '14px'),
-    paddingLeft: asString(props.paddingLeft, defaultButtonProps.paddingLeft || '28px'),
+    width,
+    margin,
+    padding,
+    marginTop,
+    marginRight,
+    marginBottom,
+    marginLeft,
+    paddingTop,
+    paddingRight,
+    paddingBottom,
+    paddingLeft,
     fontFamily: asString(props.fontFamily, defaultButtonProps.fontFamily || 'inherit'),
     fontSize: asString(props.fontSize, defaultButtonProps.fontSize || '16px'),
     fontWeight: asString(props.fontWeight, defaultButtonProps.fontWeight || '600'),

@@ -264,12 +264,18 @@ function renderSimpleAdminBlock(type: BlockTypeKey, props: Record<string, unknow
       )
     case 'button':
       return React.createElement(
-        'button',
+        'div',
         {
-          type: 'button',
-          style: (viewModel.buttonStyle as React.CSSProperties) || {},
+          style: (viewModel.containerStyle as React.CSSProperties) || {},
         },
-        String(viewModel.label || viewModel.text || 'Click Me'),
+        React.createElement(
+          'button',
+          {
+            type: 'button',
+            style: (viewModel.buttonStyle as React.CSSProperties) || {},
+          },
+          String(viewModel.label || viewModel.text || 'Click Me'),
+        ),
       )
     case 'quote':
       return React.createElement(
@@ -600,7 +606,7 @@ export const blockRegistry: Record<BlockTypeKey, BlockDefinition> = {
     label: 'Card',
     description: 'Render advanced card-based layouts.',
     libraryGroup: 'advanced',
-    aliases: ['advancedcard', 'advancedcardcomponent', 'advancedCard'],
+    aliases: ['advancedcard', 'advancedcardcomponent', 'advancedCard', 'card'],
     contract: advancedCardContract,
     admin: { componentId: 'advancedCard', type: 'advancedCard', glyphKey: 'chart' },
     website: { rendererKey: 'advancedcard' },

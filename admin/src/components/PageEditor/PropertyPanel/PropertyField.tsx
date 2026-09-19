@@ -147,7 +147,8 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
         </div>
       )
 
-    case 'color':
+    case 'color': {
+      const palette = ['#7c6dfa', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#ffffff', '#94a3b8', '#1e293b', '#0f172a']
       return (
         <div className="rp-field frow">
           <label className="flbl">{config.label}</label>
@@ -155,8 +156,29 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
             <input type="color" value={getColorInputValue(value)} onChange={handleImmediateChange} className="colorinp" />
             <input type="text" value={value ?? '#000000'} onChange={handleImmediateChange} className="rp-input fi" />
           </div>
+          <div className="color-quick-swatches" style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+            {palette.map((swatch) => (
+              <button
+                key={swatch}
+                type="button"
+                onClick={() => onChange(swatch)}
+                style={{
+                  width: 18,
+                  height: 18,
+                  borderRadius: 4,
+                  backgroundColor: swatch,
+                  border: value === swatch ? '2px solid #7c6dfa' : '1px solid rgba(255,255,255,0.12)',
+                  cursor: 'pointer',
+                  padding: 0,
+                  outline: 'none',
+                }}
+                title={swatch}
+              />
+            ))}
+          </div>
         </div>
       )
+    }
 
     case 'number':
       return (
@@ -165,7 +187,15 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
           <input
             type="number"
             value={value ?? ''}
-            onChange={handleImmediateChange}
+            onChange={(e) => {
+              const val = e.target.value
+              if (val === '') {
+                onChange('')
+              } else {
+                const parsed = Number(val)
+                onChange(Number.isNaN(parsed) ? val : parsed)
+              }
+            }}
             min={config.min}
             max={config.max}
             step={config.step}

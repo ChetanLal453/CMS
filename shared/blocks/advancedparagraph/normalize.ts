@@ -9,112 +9,8 @@ import type {
   DeepPartial,
   LegacyAdvancedParagraphProps,
 } from './types'
+import { deepMerge, asString, asBoolean, asNumber, asStringArray } from '../utils/merge'
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return Object.prototype.toString.call(value) === '[object Object]'
-}
-
-function cloneValue<T>(value: T): T {
-  if (Array.isArray(value)) {
-    return value.map((item) => cloneValue(item)) as T
-  }
-
-  if (isPlainObject(value)) {
-    const output: Record<string, unknown> = {}
-    Object.entries(value).forEach(([key, nestedValue]) => {
-      output[key] = cloneValue(nestedValue)
-    })
-    return output as T
-  }
-
-  return value
-}
-
-function deepMerge<T>(...sources: Array<DeepPartial<T> | T | undefined>): T {
-  const result: Record<string, unknown> = {}
-
-  sources.forEach((source) => {
-    if (!source || !isPlainObject(source)) {
-      return
-    }
-
-    Object.entries(source).forEach(([key, value]) => {
-      const current = result[key]
-
-      if (Array.isArray(value)) {
-        result[key] = value.map((item) => cloneValue(item))
-        return
-      }
-
-      if (isPlainObject(value)) {
-        result[key] = isPlainObject(current)
-          ? deepMerge(current as Record<string, unknown>, value as Record<string, unknown>)
-          : deepMerge({}, value as Record<string, unknown>)
-        return
-      }
-
-      if (value !== undefined) {
-        result[key] = value
-      }
-    })
-  })
-
-  return result as T
-}
-
-function asString(value: unknown, fallback: string): string {
-  const normalized = String(value ?? '').trim()
-  return normalized || fallback
-}
-
-function asBoolean(value: unknown, fallback: boolean): boolean {
-  if (value === undefined || value === null) {
-    return fallback
-  }
-
-  if (typeof value === 'boolean') {
-    return value
-  }
-
-  const normalized = String(value).trim().toLowerCase()
-  if (!normalized) {
-    return fallback
-  }
-
-  if (['true', '1', 'yes', 'on'].includes(normalized)) return true
-  if (['false', '0', 'no', 'off'].includes(normalized)) return false
-  return Boolean(value)
-}
-
-function asNumber(value: unknown, fallback: number): number {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value
-  }
-
-  const parsed = Number.parseFloat(String(value ?? '').trim())
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
-function asStringArray(value: unknown, fallback: string[]): string[] {
-  if (Array.isArray(value)) {
-    const normalized = value
-      .map((item) => String(item ?? '').trim())
-      .filter(Boolean)
-
-    return normalized.length ? normalized : [...fallback]
-  }
-
-  if (typeof value === 'string') {
-    const normalized = value
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean)
-
-    return normalized.length ? normalized : [...fallback]
-  }
-
-  return [...fallback]
-}
 
 function asAlignment(value: unknown, fallback: AdvancedParagraphAlignment): AdvancedParagraphAlignment {
   const normalized = String(value ?? '').trim().toLowerCase()
@@ -167,6 +63,8 @@ function resolveLegacyText(input: LegacyAdvancedParagraphProps): string {
 }
 
 function mapLegacyFlat(input: LegacyAdvancedParagraphProps): DeepPartial<AdvancedParagraph> {
+  const resolvedFlatAlignment = asAlignment(input.alignment ?? input.textAlign ?? (input as any)?.style?.alignment, defaultAdvancedParagraphProps.layout.alignment)
+
   return {
     type: 'advancedparagraph',
     schemaVersion: 1,
@@ -174,7 +72,7 @@ function mapLegacyFlat(input: LegacyAdvancedParagraphProps): DeepPartial<Advance
       text: resolveLegacyText(input),
     },
     layout: {
-      alignment: asAlignment(input.textAlign ?? input.align, defaultAdvancedParagraphProps.layout.alignment),
+      alignment: resolvedFlatAlignment,
     },
     style: {
       color: asString(input.textColor ?? input.fontColor ?? input.color, defaultAdvancedParagraphProps.style.color),
@@ -182,7 +80,7 @@ function mapLegacyFlat(input: LegacyAdvancedParagraphProps): DeepPartial<Advance
       fontWeight: asString(input.fontWeight, defaultAdvancedParagraphProps.style.fontWeight),
       fontFamily: asString(input.fontFamily, defaultAdvancedParagraphProps.style.fontFamily),
       lineHeight: asString(input.lineHeight, defaultAdvancedParagraphProps.style.lineHeight),
-      lineHeightMobile: asString(input.lineHeightMobile, defaultAdvancedParagraphProps.style.lineHeightMobile),
+      lineHeightMobile: asString(input.lineHeightMobile ?? input.lineHeight, defaultAdvancedParagraphProps.style.lineHeightMobile),
       letterSpacing: asString(input.letterSpacing, defaultAdvancedParagraphProps.style.letterSpacing),
       maxWidth: asString(input.maxWidth, defaultAdvancedParagraphProps.style.maxWidth),
       backgroundColor: asString(input.backgroundColor, defaultAdvancedParagraphProps.style.backgroundColor),
@@ -201,10 +99,10 @@ function mapLegacyFlat(input: LegacyAdvancedParagraphProps): DeepPartial<Advance
       textShadow: asString(input.textShadow, defaultAdvancedParagraphProps.style.textShadow),
       boxShadow: asString(input.boxShadow, defaultAdvancedParagraphProps.style.boxShadow),
       opacity: asNumber(input.opacity, defaultAdvancedParagraphProps.style.opacity),
-      fontSizeMobile: asString(input.fontSizeMobile, defaultAdvancedParagraphProps.style.fontSizeMobile),
-      fontSizeTablet: asString(input.fontSizeTablet, defaultAdvancedParagraphProps.style.fontSizeTablet),
-      textAlignMobile: asAlignment(input.textAlignMobile, defaultAdvancedParagraphProps.style.textAlignMobile),
-      textAlignTablet: asAlignment(input.textAlignTablet, defaultAdvancedParagraphProps.style.textAlignTablet),
+      fontSizeMobile: asString(input.fontSizeMobile ?? input.fontSize, defaultAdvancedParagraphProps.style.fontSizeMobile),
+      fontSizeTablet: asString(input.fontSizeTablet ?? input.fontSize, defaultAdvancedParagraphProps.style.fontSizeTablet),
+      textAlignMobile: asAlignment(input.textAlignMobile ?? resolvedFlatAlignment, resolvedFlatAlignment),
+      textAlignTablet: asAlignment(input.textAlignTablet ?? resolvedFlatAlignment, resolvedFlatAlignment),
       textTransform: asTextTransform(input.textTransform, defaultAdvancedParagraphProps.style.textTransform),
       textDecoration: asTextDecoration(input.textDecoration, defaultAdvancedParagraphProps.style.textDecoration),
       fontStyle: asFontStyle(input.fontStyle, defaultAdvancedParagraphProps.style.fontStyle),
@@ -245,6 +143,7 @@ function mapLegacyStructured(input: Record<string, unknown>): DeepPartial<Advanc
   const interaction = isPlainObject(input.interaction) ? input.interaction : {}
   const hover = isPlainObject(interaction.hover) ? interaction.hover : {}
   const system = isPlainObject((input as Record<string, unknown>).system) ? (input as Record<string, unknown>).system : {}
+  const resolvedStructuredAlignment = asAlignment(layout.alignment ?? input.alignment ?? input.textAlign ?? input.align, defaultAdvancedParagraphProps.layout.alignment)
 
   return {
     type: 'advancedparagraph',
@@ -253,7 +152,7 @@ function mapLegacyStructured(input: Record<string, unknown>): DeepPartial<Advanc
       text: asString(content.text ?? input.text ?? input.content ?? input.html, defaultAdvancedParagraphProps.content.text),
     },
     layout: {
-      alignment: asAlignment(layout.alignment ?? input.textAlign ?? input.align, defaultAdvancedParagraphProps.layout.alignment),
+      alignment: resolvedStructuredAlignment,
     },
     style: {
       color: asString(style.color ?? input.textColor ?? input.fontColor ?? input.color, defaultAdvancedParagraphProps.style.color),
@@ -261,7 +160,7 @@ function mapLegacyStructured(input: Record<string, unknown>): DeepPartial<Advanc
       fontWeight: asString(style.fontWeight ?? input.fontWeight, defaultAdvancedParagraphProps.style.fontWeight),
       fontFamily: asString(style.fontFamily ?? input.fontFamily, defaultAdvancedParagraphProps.style.fontFamily),
       lineHeight: asString(style.lineHeight ?? input.lineHeight, defaultAdvancedParagraphProps.style.lineHeight),
-      lineHeightMobile: asString(style.lineHeightMobile ?? input.lineHeightMobile, defaultAdvancedParagraphProps.style.lineHeightMobile),
+      lineHeightMobile: asString(style.lineHeightMobile ?? input.lineHeightMobile ?? style.lineHeight ?? input.lineHeight, defaultAdvancedParagraphProps.style.lineHeightMobile),
       letterSpacing: asString(style.letterSpacing ?? input.letterSpacing, defaultAdvancedParagraphProps.style.letterSpacing),
       maxWidth: asString(style.maxWidth ?? input.maxWidth, defaultAdvancedParagraphProps.style.maxWidth),
       backgroundColor: asString(style.backgroundColor ?? input.backgroundColor, defaultAdvancedParagraphProps.style.backgroundColor),
@@ -276,10 +175,10 @@ function mapLegacyStructured(input: Record<string, unknown>): DeepPartial<Advanc
       textShadow: asString(style.textShadow ?? input.textShadow, defaultAdvancedParagraphProps.style.textShadow),
       boxShadow: asString(style.boxShadow ?? input.boxShadow, defaultAdvancedParagraphProps.style.boxShadow),
       opacity: asNumber(style.opacity ?? input.opacity, defaultAdvancedParagraphProps.style.opacity),
-      fontSizeMobile: asString(style.fontSizeMobile ?? input.fontSizeMobile, defaultAdvancedParagraphProps.style.fontSizeMobile),
-      fontSizeTablet: asString(style.fontSizeTablet ?? input.fontSizeTablet, defaultAdvancedParagraphProps.style.fontSizeTablet),
-      textAlignMobile: asAlignment(style.textAlignMobile ?? input.textAlignMobile, defaultAdvancedParagraphProps.style.textAlignMobile),
-      textAlignTablet: asAlignment(style.textAlignTablet ?? input.textAlignTablet, defaultAdvancedParagraphProps.style.textAlignTablet),
+      fontSizeMobile: asString(style.fontSizeMobile ?? input.fontSizeMobile ?? style.fontSize ?? input.fontSize, defaultAdvancedParagraphProps.style.fontSizeMobile),
+      fontSizeTablet: asString(style.fontSizeTablet ?? input.fontSizeTablet ?? style.fontSize ?? input.fontSize, defaultAdvancedParagraphProps.style.fontSizeTablet),
+      textAlignMobile: asAlignment(style.textAlignMobile ?? input.textAlignMobile ?? resolvedStructuredAlignment, resolvedStructuredAlignment),
+      textAlignTablet: asAlignment(style.textAlignTablet ?? input.textAlignTablet ?? resolvedStructuredAlignment, resolvedStructuredAlignment),
       textTransform: asTextTransform(style.textTransform ?? input.textTransform, defaultAdvancedParagraphProps.style.textTransform),
       textDecoration: asTextDecoration(style.textDecoration ?? input.textDecoration, defaultAdvancedParagraphProps.style.textDecoration),
       fontStyle: asFontStyle(style.fontStyle ?? input.fontStyle, defaultAdvancedParagraphProps.style.fontStyle),
@@ -335,7 +234,8 @@ export function normalizeAdvancedParagraph(input: AdvancedParagraphInput = {}): 
   })
 
   normalized.content.text = asString(normalized.content.text, defaultAdvancedParagraphProps.content.text)
-  normalized.layout.alignment = asAlignment(normalized.layout.alignment, defaultAdvancedParagraphProps.layout.alignment)
+  const rawAlign = (input as any)?.alignment ?? (input as any)?.textAlign ?? (input as any)?.align ?? (input as any)?.layout?.alignment ?? normalized.layout.alignment
+  normalized.layout.alignment = asAlignment(rawAlign, defaultAdvancedParagraphProps.layout.alignment)
   normalized.style.color = asString(normalized.style.color, defaultAdvancedParagraphProps.style.color)
   normalized.style.fontSize = asString(normalized.style.fontSize, defaultAdvancedParagraphProps.style.fontSize)
   normalized.style.fontWeight = asString(normalized.style.fontWeight, defaultAdvancedParagraphProps.style.fontWeight)

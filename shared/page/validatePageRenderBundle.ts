@@ -123,6 +123,75 @@ function getAllowedPropKeys(type: string): Set<string> {
   if (normalizedDefaults && typeof normalizedDefaults === 'object' && !Array.isArray(normalizedDefaults)) {
     Object.keys(normalizedDefaults).forEach((key) => keys.add(key))
   }
+
+  // Universal alignment aliases
+  if (
+    keys.has('alignment') ||
+    keys.has('textAlign') ||
+    keys.has('align') ||
+    keys.has('textAlignment') ||
+    type === 'advancedheading' ||
+    type === 'advancedparagraph' ||
+    type === 'button' ||
+    type === 'quote' ||
+    type === 'image'
+  ) {
+    keys.add('alignment')
+    keys.add('textAlign')
+    keys.add('align')
+    keys.add('textAlignment')
+    keys.add('textAlignMobile')
+    keys.add('textAlignTablet')
+  }
+
+  // Universal media source / link aliases
+  if (keys.has('src') || keys.has('url') || keys.has('image') || keys.has('link') || keys.has('linkUrl')) {
+    keys.add('src')
+    keys.add('url')
+    keys.add('image')
+    keys.add('imageUrl')
+    keys.add('link')
+    keys.add('linkUrl')
+  }
+
+  // Universal standard metadata, sizing, and styling keys
+  const universalStyleKeys = [
+    'className',
+    'customClass',
+    'customId',
+    'id',
+    'visible',
+    'visibility',
+    'componentId',
+    'style',
+    'margin',
+    'padding',
+    'marginTop',
+    'marginRight',
+    'marginBottom',
+    'marginLeft',
+    'paddingTop',
+    'paddingRight',
+    'paddingBottom',
+    'paddingLeft',
+    'width',
+    'height',
+    'maxWidth',
+    'maxHeight',
+    'minHeight',
+    'opacity',
+    'borderRadius',
+    'border',
+    'borderColor',
+    'borderWidth',
+    'shadow',
+    'boxShadow',
+    'backgroundColor',
+    'color',
+    'textColor',
+  ]
+  universalStyleKeys.forEach((k) => keys.add(k))
+
   return keys
 }
 
@@ -159,6 +228,71 @@ function validateShapeFromDefault(value: unknown, defaultValue: unknown, traceId
     assert(isObject(value), traceId, path, `${path} must be an object`, 'INVALID_BLOCK_PROPS')
 
     const allowedKeys = new Set(Object.keys(defaultValue))
+
+    if (
+      allowedKeys.has('alignment') ||
+      allowedKeys.has('textAlign') ||
+      allowedKeys.has('align') ||
+      path.endsWith('.style') ||
+      path.endsWith('.layout')
+    ) {
+      allowedKeys.add('alignment')
+      allowedKeys.add('textAlign')
+      allowedKeys.add('align')
+      allowedKeys.add('textAlignment')
+      allowedKeys.add('textAlignMobile')
+      allowedKeys.add('textAlignTablet')
+    }
+
+    if (allowedKeys.has('src') || allowedKeys.has('url') || allowedKeys.has('image')) {
+      allowedKeys.add('src')
+      allowedKeys.add('url')
+      allowedKeys.add('image')
+      allowedKeys.add('imageUrl')
+    }
+
+    if (allowedKeys.has('color') || allowedKeys.has('textColor')) {
+      allowedKeys.add('color')
+      allowedKeys.add('textColor')
+      allowedKeys.add('fontColor')
+    }
+
+    if (path.endsWith('.style') || path.endsWith('.layout')) {
+      const styleKeys = [
+        'width',
+        'height',
+        'maxWidth',
+        'maxHeight',
+        'minHeight',
+        'margin',
+        'padding',
+        'marginTop',
+        'marginRight',
+        'marginBottom',
+        'marginLeft',
+        'paddingTop',
+        'paddingRight',
+        'paddingBottom',
+        'paddingLeft',
+        'fontSize',
+        'fontWeight',
+        'lineHeight',
+        'letterSpacing',
+        'color',
+        'backgroundColor',
+        'borderRadius',
+        'border',
+        'borderColor',
+        'borderWidth',
+        'boxShadow',
+        'shadow',
+        'opacity',
+        'display',
+        'zIndex',
+      ]
+      styleKeys.forEach((k) => allowedKeys.add(k))
+    }
+
     Object.keys(value).forEach((key) => {
       assert(allowedKeys.has(key), traceId, `${path}.${key}`, `${path}.${key} is not allowed`, 'INVALID_BLOCK_PROPS')
     })
@@ -227,6 +361,10 @@ function validateSchemaValue(
   blockType?: string,
   propName?: string,
 ) {
+  if (value === undefined || value === null) {
+    return
+  }
+
   const schemaType = schemaField?.type
 
   if (schemaType === 'option-list') {

@@ -57,7 +57,6 @@ export const filterSchema = {
       ],
     }),
     filterKey: buildSchemaField('text', 'Filter Key', filterDefaultProps.filterKey, { category: 'General' }),
-    bindTo: buildSchemaField('text', 'Bind To', '', { category: 'General', description: 'Optional alias for filterKey.' }),
     label: buildSchemaField('text', 'Label', filterDefaultProps.label, { category: 'General' }),
     helpText: buildSchemaField('textarea', 'Help Text', filterDefaultProps.helpText, { category: 'General' }),
     showLabel: buildSchemaField('toggle', 'Show Label', filterDefaultProps.showLabel, { category: 'General' }),

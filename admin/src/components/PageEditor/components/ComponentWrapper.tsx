@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Edit, Trash2 } from 'lucide-react'
+import { Edit, Trash2, Copy } from 'lucide-react'
 import { LayoutComponent } from '@/types/page-editor'
 
 interface ComponentWrapperProps {
   children: React.ReactNode
   onEdit: () => void
   onDelete?: () => void
+  onDuplicate?: (component: LayoutComponent) => void
   className?: string
   isGridLevel?: boolean
   sectionId?: string
@@ -30,6 +31,7 @@ export const ComponentWrapper: React.FC<ComponentWrapperProps> = ({
   children,
   onEdit,
   onDelete,
+  onDuplicate,
   className = '',
   isGridLevel = false,
   sectionId,
@@ -107,6 +109,13 @@ export const ComponentWrapper: React.FC<ComponentWrapperProps> = ({
     }
   }
 
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (component && onDuplicate) {
+      onDuplicate(component)
+    }
+  }
+
   const getContextBadge = () => {
     const parts = []
 
@@ -159,6 +168,14 @@ export const ComponentWrapper: React.FC<ComponentWrapperProps> = ({
       )}
 
       <div className={`absolute right-2 top-2 flex gap-1.5 transition-all duration-200 z-20 ${actionClassName}`}>
+        {onDuplicate && component && (
+          <button
+            onClick={handleDuplicate}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+            title="Duplicate Component">
+            <Copy size={14} />
+          </button>
+        )}
         <button
           onClick={handleEdit}
           className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"

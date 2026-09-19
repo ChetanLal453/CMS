@@ -63,6 +63,10 @@ export const DroppableSection: React.FC<DroppableSectionProps> = ({
   // ==================== ✅ CRITICAL FIX: APPLY SECTION SETTINGS ====================
   const sectionSettings = section?.settings || {}
   
+  const sectionBg = sectionSettings?.backgroundColor && sectionSettings.backgroundColor !== 'transparent'
+    ? sectionSettings.backgroundColor
+    : undefined
+
   // Apply section settings to the MAIN wrapper (not header)
   const mainWrapperStyle: React.CSSProperties = {
     ...style,
@@ -75,6 +79,7 @@ export const DroppableSection: React.FC<DroppableSectionProps> = ({
       sectionSettings?.marginBottom ??
       (typeof sectionSettings?.margin === 'string' && sectionSettings.margin.includes(' ') ? undefined : '60px'),
     display: sectionSettings?.visible === false ? 'none' : 'block',
+    ...(sectionBg ? ({ ['--section-bg']: sectionBg } as any) : {}),
   }
 
   const containerType = String(sectionSettings?.containerType || 'boxed')

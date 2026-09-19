@@ -38,6 +38,8 @@ export interface ButtonLayoutProps {
   alignment?: ButtonAlignment
   fullWidth?: boolean
   width?: string
+  margin?: string
+  padding?: string
   marginTop?: string
   marginRight?: string
   marginBottom?: string

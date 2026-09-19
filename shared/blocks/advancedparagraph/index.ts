@@ -92,7 +92,7 @@ export const advancedParagraphContract = {
       textShadow: { type: 'text', label: 'Text Shadow', default: defaultAdvancedParagraphProps.style.textShadow, category: 'Style' },
       boxShadow: { type: 'text', label: 'Box Shadow', default: defaultAdvancedParagraphProps.style.boxShadow, category: 'Style' },
       opacity: { type: 'number', label: 'Opacity', default: defaultAdvancedParagraphProps.style.opacity, min: 0, max: 1, step: 0.1, category: 'Style' },
-      textAlign: {
+      alignment: {
         type: 'select',
         label: 'Alignment',
         default: defaultAdvancedParagraphProps.layout.alignment,
@@ -121,33 +121,6 @@ export const advancedParagraphContract = {
         ],
         category: 'Layout',
       },
-      fontSizeMobile: { type: 'text', label: 'Font Size (Mobile)', default: defaultAdvancedParagraphProps.style.fontSizeMobile, category: 'Layout' },
-      fontSizeTablet: { type: 'text', label: 'Font Size (Tablet)', default: defaultAdvancedParagraphProps.style.fontSizeTablet, category: 'Layout' },
-      textAlignMobile: {
-        type: 'select',
-        label: 'Alignment (Mobile)',
-        default: defaultAdvancedParagraphProps.style.textAlignMobile,
-        options: [
-          { value: 'left', label: 'Left' },
-          { value: 'center', label: 'Center' },
-          { value: 'right', label: 'Right' },
-          { value: 'justify', label: 'Justify' },
-        ],
-        category: 'Layout',
-      },
-      textAlignTablet: {
-        type: 'select',
-        label: 'Alignment (Tablet)',
-        default: defaultAdvancedParagraphProps.style.textAlignTablet,
-        options: [
-          { value: 'left', label: 'Left' },
-          { value: 'center', label: 'Center' },
-          { value: 'right', label: 'Right' },
-          { value: 'justify', label: 'Justify' },
-        ],
-        category: 'Layout',
-      },
-      lineHeightMobile: { type: 'text', label: 'Line Height (Mobile)', default: defaultAdvancedParagraphProps.style.lineHeightMobile, category: 'Layout' },
       hoverEffect: {
         type: 'select',
         label: 'Hover Effect',

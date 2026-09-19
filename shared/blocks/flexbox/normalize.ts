@@ -7,6 +7,10 @@ function asString(value: unknown, fallback: string) {
 }
 
 export function normalizeFlexbox(props: Record<string, any> = {}): FlexboxProps {
+  const gap = asString(props.gap, defaultFlexboxProps.gap || '16px')
+  const rowGap = props.rowGap !== undefined && props.rowGap !== null && props.rowGap !== '' ? asString(props.rowGap, gap) : gap
+  const columnGap = props.columnGap !== undefined && props.columnGap !== null && props.columnGap !== '' ? asString(props.columnGap, gap) : gap
+
   return {
     ...defaultFlexboxProps,
     ...props,
@@ -14,9 +18,9 @@ export function normalizeFlexbox(props: Record<string, any> = {}): FlexboxProps 
     justifyContent: asString(props.justifyContent, defaultFlexboxProps.justifyContent || 'flex-start'),
     alignItems: asString(props.alignItems, defaultFlexboxProps.alignItems || 'stretch'),
     alignContent: asString(props.alignContent, defaultFlexboxProps.alignContent || 'stretch'),
-    gap: asString(props.gap, defaultFlexboxProps.gap || '16px'),
-    rowGap: asString(props.rowGap, defaultFlexboxProps.rowGap || '16px'),
-    columnGap: asString(props.columnGap, defaultFlexboxProps.columnGap || '16px'),
+    gap,
+    rowGap,
+    columnGap,
     wrap: asString(props.wrap, defaultFlexboxProps.wrap || 'nowrap'),
     padding: asString(props.padding, defaultFlexboxProps.padding || '16px'),
     minHeight: asString(props.minHeight, defaultFlexboxProps.minHeight || 'auto'),

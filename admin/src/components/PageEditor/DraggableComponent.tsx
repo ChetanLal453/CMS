@@ -7,7 +7,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { LayoutComponent } from '@/types/page-editor'
 import { useDragDrop } from './DragDropProvider'
-import { TrashIcon, EditIcon } from 'lucide-react'
+import { TrashIcon, EditIcon, Copy, ChevronUp, ChevronDown } from 'lucide-react'
 
 interface DraggableComponentProps {
   component: LayoutComponent;
@@ -25,6 +25,7 @@ interface DraggableComponentProps {
   }) => void;
   onEdit?: (componentId: string) => void;
   onDuplicate?: (component: LayoutComponent) => void;
+  onMove?: (componentId: string, direction: 'up' | 'down') => void;
   onDelete?: (componentId: string, context?: any) => void;
   onResize?: (componentId: string, size: { width: number; height: number }) => void;
   renderComponent: (component: LayoutComponent, context: { sectionId: string; containerId: string; rowId: string; colId: string }) => React.ReactNode;
@@ -42,6 +43,7 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
   onSelect,
   onEdit,
   onDuplicate,
+  onMove,
   onDelete,
   onResize,
   renderComponent
@@ -147,6 +149,27 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
     }
   }
 
+  const handleDuplicateClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isDeleted && onDuplicate) {
+      onDuplicate(component);
+    }
+  }
+
+  const handleMoveUpClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isDeleted && onMove) {
+      onMove(component.id, 'up');
+    }
+  }
+
+  const handleMoveDownClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isDeleted && onMove) {
+      onMove(component.id, 'down');
+    }
+  }
+
   // 🎯 **CRITICAL: If component is deleted, DON'T RENDER**
   if (isDeleted) {
     console.log('🚫 Component deleted, not rendering:', component.id);
@@ -177,6 +200,39 @@ export const DraggableComponent: React.FC<DraggableComponentProps> = ({
 
       {/* Action Buttons Top-Right */}
       <div className="dc-actions">
+        {onMove && (
+          <>
+            <button
+              onClick={handleMoveUpClick}
+              disabled={isDeleted}
+              className={`dc-action-btn is-move-up ${isDeleted ? 'is-disabled' : ''}`}
+              title="Move Up"
+              aria-label="Move up"
+            >
+              <ChevronUp size={13} />
+            </button>
+            <button
+              onClick={handleMoveDownClick}
+              disabled={isDeleted}
+              className={`dc-action-btn is-move-down ${isDeleted ? 'is-disabled' : ''}`}
+              title="Move Down"
+              aria-label="Move down"
+            >
+              <ChevronDown size={13} />
+            </button>
+          </>
+        )}
+        {onDuplicate && (
+          <button
+            onClick={handleDuplicateClick}
+            disabled={isDeleted}
+            className={`dc-action-btn is-duplicate ${isDeleted ? 'is-disabled' : ''}`}
+            title="Duplicate Component"
+            aria-label="Duplicate component"
+          >
+            <Copy size={13} />
+          </button>
+        )}
         <button
           onClick={handleEditClick}
           disabled={isDeleted}

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import toast from 'react-hot-toast'
 import { Page, PageLayout } from '@/types/page-editor'
 import { normalizeLayoutToEditor } from '../../../../../shared/page/layout'
+import { getApiErrorMessage } from '@/lib/apiHelpers'
 
 type EditorPage = Page & {
   slug?: string
@@ -22,18 +24,6 @@ const coerceEditorLayout = (layout: unknown, page?: Partial<EditorPage>): PageLa
     name: page?.name,
     title: page?.title,
   }) as PageLayout
-
-const getApiErrorMessage = (payload: any, fallback: string) => {
-  const message = typeof payload?.error === 'string'
-    ? payload.error
-    : typeof payload?.error?.message === 'string'
-      ? payload.error.message
-      : typeof payload?.message === 'string'
-        ? payload.message
-        : ''
-
-  return message || fallback
-}
 
 export const usePageData = (initialPageId?: string) => {
   const [pages, setPages] = useState<EditorPage[]>([])
@@ -298,12 +288,17 @@ export const usePageData = (initialPageId?: string) => {
           title: data.page?.title ?? validatedLayout.name,
         })
 
-        if (requestId === activeSaveRequestRef.current && currentPageIdRef.current === savePageId) {
-          setLayout(savedLayout)
+        // Always sync the revision ID returned from a successful save
+        const returnedRevId = data.revision?.id ?? data.page?.current_revision_id
+        if (returnedRevId != null && currentPageIdRef.current === savePageId) {
           syncRevisionState(
-            data.revision?.id ?? data.page?.current_revision_id ?? currentRevisionIdRef.current,
+            Number(returnedRevId),
             data.page?.published_revision_id ?? publishedRevisionId,
           )
+        }
+
+        if (requestId === activeSaveRequestRef.current && currentPageIdRef.current === savePageId) {
+          setLayout(savedLayout)
         }
         return true
       } catch (saveError) {
@@ -359,11 +354,31 @@ export const usePageData = (initialPageId?: string) => {
 
         if (!response.ok || !data.success) {
           if (response.status === 409 && currentPageIdRef.current === savePageId) {
+            // Attempt silent re-sync with server's latest revision
+            try {
+              const checkRes = await fetch(`/api/pages/${savePageId}`)
+              const checkData = await checkRes.json()
+              const latestRevId = checkData.page?.current_revision_id ?? checkData.revision?.id
+              if (latestRevId && latestRevId !== currentRevisionIdRef.current) {
+                syncRevisionState(Number(latestRevId), checkData.page?.published_revision_id ?? publishedRevisionId)
+              }
+            } catch (err) {
+              console.error('Failed to re-sync revision after autosave 409:', err)
+            }
             clearSaveConflict()
             setSaveConflict(true)
             setError(getApiErrorMessage(data, 'This page changed in another session'))
           }
           return false
+        }
+
+        // Always sync the revision ID returned from a successful autosave
+        const returnedRevId = data.revision?.id ?? data.page?.current_revision_id
+        if (returnedRevId != null && currentPageIdRef.current === savePageId) {
+          syncRevisionState(
+            Number(returnedRevId),
+            data.page?.published_revision_id ?? publishedRevisionId,
+          )
         }
 
         if (currentPageIdRef.current === savePageId) {
@@ -373,10 +388,6 @@ export const usePageData = (initialPageId?: string) => {
             title: data.page?.title ?? validatedLayout.name,
           })
           setLayout(savedLayout)
-          syncRevisionState(
-            data.revision?.id ?? data.page?.current_revision_id ?? currentRevisionIdRef.current,
-            data.page?.published_revision_id ?? publishedRevisionId,
-          )
         }
 
         return true
@@ -386,6 +397,60 @@ export const usePageData = (initialPageId?: string) => {
       }
     })
   }, [buildValidatedLayout, clearSaveConflict, enqueuePersistence, publishedRevisionId, syncRevisionState])
+
+  const resolveSaveConflict = useCallback(async (action: 'overwrite' | 'reload', customLayout?: PageLayout) => {
+    const savePageId = currentPageIdRef.current
+    if (!savePageId) return
+
+    if (action === 'reload') {
+      clearSaveConflict()
+      setError(null)
+      await loadPage(savePageId)
+      toast.success('Reloaded latest version from server')
+      return
+    }
+
+    if (action === 'overwrite') {
+      try {
+        setLoading(true)
+        setError(null)
+        // Fetch latest revision to use as fresh base
+        const checkRes = await fetch(`/api/pages/${savePageId}`)
+        const checkData = await checkRes.json()
+        const latestRevId = checkData.page?.current_revision_id ?? checkData.revision?.id ?? null
+        syncRevisionState(latestRevId, checkData.page?.published_revision_id ?? publishedRevisionId)
+        clearSaveConflict()
+
+        // Force save with latest base revision
+        const layoutToSave = customLayout || layout
+        const validatedLayout = buildValidatedLayout(layoutToSave, savePageId)
+        const saveRes = await fetch(`/api/pages/${savePageId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            layout: validatedLayout,
+            base_revision_id: latestRevId,
+          }),
+        })
+        const saveData = await saveRes.json()
+        if (saveRes.ok && saveData.success) {
+          const newRevId = saveData.revision?.id ?? saveData.page?.current_revision_id
+          if (newRevId) {
+            syncRevisionState(Number(newRevId), saveData.page?.published_revision_id ?? publishedRevisionId)
+            setLayout(validatedLayout)
+          }
+          toast.success('Changes saved successfully!')
+        } else {
+          toast.error(getApiErrorMessage(saveData, 'Failed to save changes'))
+        }
+      } catch (err) {
+        console.error('Error resolving conflict:', err)
+        toast.error('Failed to overwrite changes')
+      } finally {
+        setLoading(false)
+      }
+    }
+  }, [buildValidatedLayout, clearSaveConflict, layout, loadPage, publishedRevisionId, syncRevisionState])
 
   const createPage = useCallback(async (name: string): Promise<Page | null> => {
     setLoading(true)
@@ -665,6 +730,7 @@ export const usePageData = (initialPageId?: string) => {
     loading,
     error,
     saveConflict,
+    resolveSaveConflict,
     currentRevisionId,
     publishedRevisionId,
     fetchPages,

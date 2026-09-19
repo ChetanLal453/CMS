@@ -3,6 +3,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { TemplateCard } from './TemplateCard'
 import { TemplateEditor } from './TemplateEditor'
+import { getApiErrorMessage } from '@/lib/apiHelpers'
+
 
 interface Template {
   id: string
@@ -31,18 +33,6 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
   onTemplateApplied,
   className = ''
 }) => {
-  const getApiErrorMessage = (payload: any, fallback: string) => {
-    const message = typeof payload?.error === 'string'
-      ? payload.error
-      : typeof payload?.error?.message === 'string'
-        ? payload.error.message
-        : typeof payload?.message === 'string'
-          ? payload.message
-          : ''
-
-    return message || fallback
-  }
-
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')

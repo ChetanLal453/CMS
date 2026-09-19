@@ -11,26 +11,7 @@ import type {
   AdvancedListKind,
   LegacyAdvancedListProps,
 } from './types'
-
-function asString(value: unknown, fallback: string): string {
-  const normalized = String(value ?? '').trim()
-  return normalized || fallback
-}
-
-function asBoolean(value: unknown, fallback: boolean): boolean {
-  if (value === undefined || value === null) return fallback
-  if (typeof value === 'boolean') return value
-  const normalized = String(value).trim().toLowerCase()
-  if (['true', '1', 'yes', 'on'].includes(normalized)) return true
-  if (['false', '0', 'no', 'off'].includes(normalized)) return false
-  return fallback
-}
-
-function asNumber(value: unknown, fallback: number): number {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  const parsed = Number.parseFloat(String(value ?? '').trim())
-  return Number.isFinite(parsed) ? parsed : fallback
-}
+import { asString, asBoolean, asNumber } from '../utils/merge'
 
 function asColumns(value: unknown, fallback: AdvancedListColumns): AdvancedListColumns {
   const normalized = asNumber(value, fallback)

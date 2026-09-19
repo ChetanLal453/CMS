@@ -1,39 +1,19 @@
 'use client'
 
 import React from 'react'
+import { useDeviceMode } from '../context/DeviceModeContext'
 import { createAdvancedHeadingViewModel } from '../../../../../shared/blocks/advancedheading'
 import { sanitizeHtml } from '../../../lib/sanitize-markup'
 
 const AdvancedHeadingPreviewRenderer: React.FC<Record<string, any>> = (props) => {
   const view = React.useMemo(() => createAdvancedHeadingViewModel(props), [props])
   const [isHovered, setIsHovered] = React.useState(false)
-  const [deviceMode, setDeviceMode] = React.useState<'desktop' | 'tablet' | 'mobile'>('desktop')
+  const { deviceMode } = useDeviceMode()
 
   React.useEffect(() => {
     const onSeoWarning = props.onSeoWarning as ((warnings: string[]) => void) | undefined
     onSeoWarning?.(view.seoWarnings)
   }, [props.onSeoWarning, view.seoWarnings])
-
-  React.useEffect(() => {
-    if (typeof document === 'undefined') return
-    const updateDeviceMode = () => {
-      const frame = document.querySelector('.canvas-frame')
-      if (frame?.classList.contains('mobile-view')) {
-        setDeviceMode('mobile')
-      } else if (frame?.classList.contains('tablet-view')) {
-        setDeviceMode('tablet')
-      } else {
-        setDeviceMode('desktop')
-      }
-    }
-    updateDeviceMode()
-    const observer = new MutationObserver(updateDeviceMode)
-    const frame = document.querySelector('.canvas-frame')
-    if (frame) {
-      observer.observe(frame, { attributes: true, attributeFilter: ['class'] })
-    }
-    return () => observer.disconnect()
-  }, [])
 
   if (!view.visible) {
     return null
@@ -44,7 +24,8 @@ const AdvancedHeadingPreviewRenderer: React.FC<Record<string, any>> = (props) =>
     !view.style.color ||
     view.style.color === 'var(--canvas-text, #111111)' ||
     view.style.color === '#111111' ||
-    view.style.color === '#000000'
+    view.style.color === '#000000' ||
+    view.style.color === '#f1f5f9'
 
   const activeAlign =
     deviceMode === 'mobile'
@@ -64,7 +45,8 @@ const AdvancedHeadingPreviewRenderer: React.FC<Record<string, any>> = (props) =>
     ...view.style,
     textAlign: activeAlign as any,
     fontSize: activeFontSize,
-    color: isHovered ? view.style.hoverColor : isDefaultDarkColor ? '#f1f5f9' : view.style.color,
+    color: isHovered ? view.style.hoverColor : isDefaultDarkColor ? 'var(--theme-text, #f1f5f9)' : view.style.color,
+    fontFamily: view.style.fontFamily || 'var(--theme-heading-font-family, var(--theme-font-family, inherit))',
   }
 
   const ariaProps: Record<string, unknown> = {}

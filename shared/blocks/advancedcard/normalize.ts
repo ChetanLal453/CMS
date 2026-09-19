@@ -10,80 +10,8 @@ import type {
   DeepPartial,
   LegacyAdvancedCardProps,
 } from './types'
+import { deepMerge, pruneUndefined, isPlainObject } from '../utils/merge'
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return Object.prototype.toString.call(value) === '[object Object]'
-}
-
-function cloneValue<T>(value: T): T {
-  if (Array.isArray(value)) {
-    return value.map((item) => cloneValue(item)) as T
-  }
-
-  if (isPlainObject(value)) {
-    const output: Record<string, unknown> = {}
-    for (const [key, nestedValue] of Object.entries(value)) {
-      output[key] = cloneValue(nestedValue)
-    }
-    return output as T
-  }
-
-  return value
-}
-
-function deepMerge<T>(...sources: Array<DeepPartial<T> | T | undefined>): T {
-  const result: Record<string, unknown> = {}
-
-  for (const source of sources) {
-    if (!source || !isPlainObject(source)) {
-      continue
-    }
-
-    for (const [key, value] of Object.entries(source)) {
-      const current = result[key]
-
-      if (Array.isArray(value)) {
-        result[key] = value.map((item) => cloneValue(item))
-        continue
-      }
-
-      if (isPlainObject(value)) {
-        result[key] = isPlainObject(current)
-          ? deepMerge(current as Record<string, unknown>, value as Record<string, unknown>)
-          : deepMerge({}, value as Record<string, unknown>)
-        continue
-      }
-
-      if (value !== undefined) {
-        result[key] = value
-      }
-    }
-  }
-
-  return result as T
-}
-
-function pruneUndefined<T>(value: T): T {
-  if (Array.isArray(value)) {
-    return value.map((item) => pruneUndefined(item)) as T
-  }
-
-  if (!isPlainObject(value)) {
-    return value
-  }
-
-  const output: Record<string, unknown> = {}
-
-  for (const [key, nestedValue] of Object.entries(value)) {
-    if (nestedValue === undefined) {
-      continue
-    }
-
-    output[key] = pruneUndefined(nestedValue)
-  }
-
-  return output as T
-}
 
 function hasStructuredSections(value: unknown): value is DeepPartial<AdvancedCard> {
   if (!isPlainObject(value)) {
@@ -168,13 +96,17 @@ function mapLegacyAdvancedCard(input: LegacyAdvancedCardProps): DeepPartial<Adva
     layout: {
       imagePosition: legacy.imagePosition,
       iconPosition: legacy.iconPosition,
-      alignment: legacy.textAlignment || legacy.titleAlignment,
-      textAlignment: legacy.textAlignment,
-      titleAlignment: legacy.titleAlignment,
-      subtitleAlignment: legacy.subtitleAlign,
-      descriptionAlignment: legacy.descriptionAlign,
-      buttonAlignment: legacy.buttonAlignment,
-      buttonFullWidth: legacy.buttonFullWidth,
+      alignment: input.textAlignment || input.titleAlignment || legacy.textAlignment || legacy.titleAlignment || 'left',
+      textAlignment: input.textAlignment || legacy.textAlignment || 'left',
+      titleAlignment: input.titleAlignment || input.textAlignment || legacy.titleAlignment || legacy.textAlignment || 'left',
+      subtitleAlignment: input.subtitleAlign || input.textAlignment || legacy.subtitleAlign || legacy.textAlignment || 'left',
+      descriptionAlignment: input.descriptionAlign || input.textAlignment || legacy.descriptionAlign || legacy.textAlignment || 'left',
+      buttonAlignment: input.buttonAlignment || legacy.buttonAlignment || 'left',
+      buttonFullWidth: Boolean(
+        input.buttonFullWidth ??
+        legacy.buttonFullWidth ??
+        (input.buttonAlignment === 'full-width' || input.buttonAlignment === 'full' || legacy.buttonAlignment === 'full-width' || legacy.buttonAlignment === 'full')
+      ),
       padding: legacy.padding,
       margin: legacy.margin,
       width: legacy.width,
@@ -321,9 +253,86 @@ function mapLegacyAdvancedCard(input: LegacyAdvancedCardProps): DeepPartial<Adva
 }
 
 export function normalizeAdvancedCard(input: AdvancedCardInput = {}): AdvancedCard {
-  const structuredInput = hasStructuredSections(input)
-    ? (pruneUndefined(input) as DeepPartial<AdvancedCard>)
-    : mapLegacyAdvancedCard(input as LegacyAdvancedCardProps)
+  let structuredInput: DeepPartial<AdvancedCard>
+
+  if (hasStructuredSections(input)) {
+    structuredInput = pruneUndefined(input) as DeepPartial<AdvancedCard>
+    const raw = input as Record<string, any>
+    const layout = (structuredInput.layout || {}) as Record<string, any>
+
+    if (raw.textAlignment !== undefined) {
+      layout.textAlignment = raw.textAlignment
+      layout.alignment = raw.textAlignment
+      layout.titleAlignment = raw.titleAlignment || raw.textAlignment
+      layout.subtitleAlignment = raw.subtitleAlign || raw.textAlignment
+      layout.descriptionAlignment = raw.descriptionAlign || raw.textAlignment
+    }
+    if (raw.titleAlignment !== undefined) {
+      layout.titleAlignment = raw.titleAlignment
+    }
+    if (raw.subtitleAlign !== undefined) {
+      layout.subtitleAlignment = raw.subtitleAlign
+    }
+    if (raw.descriptionAlign !== undefined) {
+      layout.descriptionAlignment = raw.descriptionAlign
+    }
+    if (raw.buttonAlignment !== undefined) {
+      layout.buttonAlignment = raw.buttonAlignment
+    }
+    if (raw.buttonFullWidth !== undefined) {
+      layout.buttonFullWidth = Boolean(raw.buttonFullWidth)
+    }
+    if (
+      layout.buttonAlignment === 'full-width' ||
+      layout.buttonAlignment === 'full' ||
+      raw.buttonAlignment === 'full-width' ||
+      raw.buttonAlignment === 'full' ||
+      raw.buttonFullWidth === true ||
+      layout.buttonFullWidth === true
+    ) {
+      layout.buttonFullWidth = true
+      layout.buttonAlignment = 'full-width'
+    }
+    if (layout.textAlignment && !layout.titleAlignment) {
+      layout.titleAlignment = layout.textAlignment
+    }
+    if (layout.textAlignment && !layout.subtitleAlignment) {
+      layout.subtitleAlignment = layout.textAlignment
+    }
+    if (layout.textAlignment && !layout.descriptionAlignment) {
+      layout.descriptionAlignment = layout.textAlignment
+    }
+
+    structuredInput.layout = layout as any
+
+    if (!structuredInput.content) {
+      structuredInput.content = {}
+    }
+    const content = structuredInput.content as Record<string, any>
+    if (raw.title !== undefined) {
+      content.title = { ...(content.title || {}), text: String(raw.title) }
+    }
+    if (raw.subtitle !== undefined) {
+      content.subtitle = { ...(content.subtitle || {}), text: String(raw.subtitle) }
+    }
+    if (raw.description !== undefined) {
+      content.description = { ...(content.description || {}), text: String(raw.description) }
+    }
+    if (raw.buttonText !== undefined) {
+      content.button = { ...(content.button || {}), label: String(raw.buttonText) }
+    }
+    if (raw.buttonLink !== undefined) {
+      content.button = { ...(content.button || {}), href: String(raw.buttonLink) }
+    }
+    if (raw.image !== undefined) {
+      content.image = { ...(content.image || {}), src: String(raw.image) }
+    }
+    if (raw.icon !== undefined) {
+      content.icon = { ...(content.icon || {}), name: String(raw.icon) }
+    }
+  } else {
+    structuredInput = mapLegacyAdvancedCard(input as LegacyAdvancedCardProps)
+  }
 
   const variant = resolveVariant({
     variant: structuredInput.variant,

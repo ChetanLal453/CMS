@@ -12,6 +12,9 @@ import { normalizeAdvancedCard } from '../../../../../shared/blocks/advancedcard
 import { normalizeAdvancedHeading } from '../../../../../shared/blocks/advancedheading/normalize'
 import { normalizeAdvancedList } from '../../../../../shared/blocks/advancedlist/normalize'
 import { normalizeAdvancedParagraph } from '../../../../../shared/blocks/advancedparagraph/normalize'
+import { normalizeNewGrid } from '../../../../../shared/blocks/newgrid/normalize'
+import { normalizeTabs } from '../../../../../shared/blocks/tabs/normalize'
+import { getBlockDefaults, normalizeBlockProps, resolveBlockType } from '../../../../../shared/blocks/registry'
 
 interface PropertyPanelProps {
   selectedComponent?: {
@@ -72,6 +75,7 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
       boxShadow: paragraph.style.boxShadow,
       opacity: paragraph.style.opacity,
       textAlign: paragraph.layout.alignment,
+      alignment: paragraph.layout.alignment,
       margin: paragraph.style.margin,
       padding: paragraph.style.padding,
       width: paragraph.style.width,
@@ -120,6 +124,7 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
       color: heading.style.color,
       hoverColor: heading.style.hoverColor,
       alignment: heading.style.alignment,
+      textAlign: heading.style.alignment,
       textAlignMobile: heading.style.textAlignMobile,
       textAlignTablet: heading.style.textAlignTablet,
       maxWidth: heading.style.maxWidth,
@@ -143,10 +148,11 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
     }
   }
 
-  if (normalizedType === 'advancedcard' || normalizedType === 'advancedcardcomponent') {
+  if (normalizedType === 'advancedcard' || normalizedType === 'advancedcardcomponent' || normalizedType === 'card') {
     const card = normalizeAdvancedCard(props)
     const view = createAdvancedCardView(card, {}, String(card.content.image.src || ''))
     return {
+      ...props,
       ...view,
       id: view.id || card.id || '',
       customClass: view.customClass || card.system?.customClass || '',
@@ -224,6 +230,57 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
     }
   }
 
+  if (normalizedType === 'newgrid' || normalizedType === 'grid') {
+    const grid = normalizeNewGrid(props)
+    return {
+      columns: grid.columns,
+      rows: grid.rows,
+      gap: grid.gap,
+      padding: grid.padding,
+      margin: grid.margin,
+      backgroundColor: grid.backgroundColor,
+      border: grid.border,
+      borderRadius: grid.borderRadius,
+      gridLineColor: grid.gridLineColor,
+      justifyContent: grid.justifyContent,
+      alignItems: grid.alignItems,
+      mobileColumns: grid.mobileColumns,
+      tabletColumns: grid.tabletColumns,
+      desktopColumns: grid.desktopColumns,
+      hideOnMobile: grid.hideOnMobile,
+      hideOnTablet: grid.hideOnTablet,
+      draggable: grid.draggable,
+      resizable: grid.resizable,
+      showGridLines: grid.showGridLines,
+      snapToGrid: grid.snapToGrid,
+      visible: grid.visible,
+      customCSS: grid.customCSS,
+      className: grid.className,
+      id: grid.id,
+      dataAttributes: grid.dataAttributes,
+      cells: grid.cells,
+      components: grid.components,
+    }
+  }
+
+  if (normalizedType === 'tabs') {
+    const tabs = normalizeTabs(props)
+    return {
+      tabs: tabs.tabs,
+      activeTab: tabs.activeTab,
+      ariaLabel: tabs.aria.ariaLabel,
+      className: tabs.aria.className,
+      customId: tabs.aria.customId,
+    }
+  }
+
+  const resolvedBlockKey = resolveBlockType(type)
+  if (resolvedBlockKey) {
+    const defaults = getBlockDefaults(resolvedBlockKey)
+    const normalized = normalizeBlockProps(resolvedBlockKey, { ...defaults, ...props })
+    return { ...defaults, ...props, ...normalized }
+  }
+
   return props || {}
 }
 
@@ -288,8 +345,35 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
     return stripEditorMeta(normalized as Record<string, any>)
   }
 
-  if (normalizedType === 'advancedcard' || normalizedType === 'advancedcardcomponent') {
-    return stripEditorMeta(normalizeAdvancedCard(props) as Record<string, any>)
+  if (normalizedType === 'advancedcard' || normalizedType === 'advancedcardcomponent' || normalizedType === 'card') {
+    const normalized = normalizeAdvancedCard(props)
+    return {
+      ...props,
+      ...stripEditorMeta(normalized as Record<string, any>),
+      textAlignment: props.textAlignment ?? normalized.layout?.textAlignment,
+      titleAlignment: props.titleAlignment ?? props.textAlignment ?? normalized.layout?.titleAlignment,
+      subtitleAlign: props.subtitleAlign ?? props.textAlignment ?? normalized.layout?.subtitleAlignment,
+      descriptionAlign: props.descriptionAlign ?? props.textAlignment ?? normalized.layout?.descriptionAlignment,
+      buttonAlignment: props.buttonAlignment ?? normalized.layout?.buttonAlignment,
+      buttonFullWidth: Boolean(
+        props.buttonFullWidth ??
+        normalized.layout?.buttonFullWidth ??
+        (props.buttonAlignment === 'full-width' || props.buttonAlignment === 'full')
+      ),
+      layout: {
+        ...(normalized.layout || {}),
+        textAlignment: props.textAlignment ?? normalized.layout?.textAlignment ?? 'left',
+        titleAlignment: props.titleAlignment ?? props.textAlignment ?? normalized.layout?.titleAlignment ?? 'left',
+        subtitleAlignment: props.subtitleAlign ?? props.textAlignment ?? normalized.layout?.subtitleAlignment ?? 'left',
+        descriptionAlignment: props.descriptionAlign ?? props.textAlignment ?? normalized.layout?.descriptionAlignment ?? 'left',
+        buttonAlignment: props.buttonAlignment ?? normalized.layout?.buttonAlignment ?? 'left',
+        buttonFullWidth: Boolean(
+          props.buttonFullWidth ??
+          normalized.layout?.buttonFullWidth ??
+          (props.buttonAlignment === 'full-width' || props.buttonAlignment === 'full')
+        ),
+      },
+    }
   }
 
   if (normalizedType === 'advancedlist' || normalizedType === 'list') {
@@ -362,7 +446,20 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
         animation: props.animation,
         animationDuration: props.animationDuration,
       }) as Record<string, any>,
-    )
+     )
+   }
+
+  if (normalizedType === 'newgrid' || normalizedType === 'grid') {
+    return stripEditorMeta(normalizeNewGrid(props) as Record<string, any>)
+  }
+
+  if (normalizedType === 'tabs') {
+    return stripEditorMeta(normalizeTabs(props) as Record<string, any>)
+  }
+
+  const resolvedBlockKey = resolveBlockType(type)
+  if (resolvedBlockKey) {
+    return stripEditorMeta(normalizeBlockProps(resolvedBlockKey, props) as Record<string, any>)
   }
 
   return props
@@ -441,6 +538,22 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
   const [aiPrompt, setAiPrompt] = useState('')
   const [expandedCategoryState, setExpandedCategoryState] = useState<Record<string, boolean>>({})
   const sectionDebounceRef = useRef<NodeJS.Timeout>()
+  const activeThemeColors = useMemo(() => {
+    const colors = layout?.theme?.colors
+    if (colors) {
+      return [
+        colors.primary,
+        colors.secondary,
+        colors.accent,
+        colors.background,
+        colors.surface,
+        colors.text,
+        colors.textMuted,
+        colors.border,
+      ].filter(Boolean)
+    }
+    return COLOR_SWATCHES
+  }, [layout?.theme?.colors])
 
   const resolvedComponent = useMemo(() => {
     if (!selectedComponent) return null
@@ -553,12 +666,67 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
       if (!selectedComponent || !resolvedComponent) return
       const nextEditorProps = { ...localProps, [propName]: value }
       if (propName === 'level') nextEditorProps.semanticLevel = value
+      if (propName === 'fullWidth') {
+        nextEditorProps.width = value ? '100%' : 'auto'
+      }
+      if (propName === 'width') {
+        if (value === '100%') {
+          nextEditorProps.fullWidth = true
+        } else if (value && value !== '100%') {
+          nextEditorProps.fullWidth = false
+        }
+      }
       if (propName === 'alignment' && String(resolvedComponent?.type || '').toLowerCase() === 'advancedheading') {
         if (!localProps.textAlignTablet || localProps.textAlignTablet === localProps.alignment || localProps.textAlignTablet === 'left') {
           nextEditorProps.textAlignTablet = value
         }
         if (!localProps.textAlignMobile || localProps.textAlignMobile === localProps.alignment || localProps.textAlignMobile === 'center') {
           nextEditorProps.textAlignMobile = value
+        }
+      }
+      const compType = String(resolvedComponent?.type || '').toLowerCase()
+      const isCard = compType === 'advancedcard' || compType === 'advancedcardcomponent' || compType === 'card'
+      if (isCard) {
+        if (propName === 'textAlignment') {
+          nextEditorProps.titleAlignment = value
+          nextEditorProps.subtitleAlign = value
+          nextEditorProps.descriptionAlign = value
+          nextEditorProps.alignment = value
+          if (nextEditorProps.layout) {
+            nextEditorProps.layout = {
+              ...nextEditorProps.layout,
+              textAlignment: value,
+              titleAlignment: value,
+              subtitleAlignment: value,
+              descriptionAlignment: value,
+              alignment: value,
+            }
+          }
+        }
+        if (propName === 'buttonAlignment') {
+          const isFull = value === 'full-width' || value === 'full'
+          nextEditorProps.buttonFullWidth = isFull
+          if (nextEditorProps.layout) {
+            nextEditorProps.layout = {
+              ...nextEditorProps.layout,
+              buttonAlignment: value,
+              buttonFullWidth: isFull,
+            }
+          }
+        }
+        if (propName === 'buttonFullWidth') {
+          if (value) {
+            nextEditorProps.buttonAlignment = 'full-width'
+          } else if (nextEditorProps.buttonAlignment === 'full-width' || nextEditorProps.buttonAlignment === 'full') {
+            nextEditorProps.buttonAlignment = 'left'
+          }
+          if (nextEditorProps.layout) {
+            nextEditorProps.layout = {
+              ...nextEditorProps.layout,
+              buttonFullWidth: Boolean(value),
+              buttonAlignment: value ? 'full-width' : (nextEditorProps.buttonAlignment || 'left'),
+            }
+          }
         }
       }
       setLocalProps(nextEditorProps)
@@ -581,18 +749,38 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
 
   const levelValue = localProps.level || localProps.semanticLevel || 'h1'
   const normalizedComponentType = String(resolvedComponent?.type || '').toLowerCase()
-  const isAdvancedCard = normalizedComponentType === 'advancedcard'
+  const isAdvancedCard = normalizedComponentType === 'advancedcard' || normalizedComponentType === 'card' || normalizedComponentType === 'advancedcardcomponent'
   const isAdvancedHeading = normalizedComponentType === 'advancedheading'
   const isAdvancedParagraph = normalizedComponentType === 'advancedparagraph' || normalizedComponentType === 'paragraph'
 
   const schemaCategories = useMemo(() => {
     const rawCategories = Array.isArray(componentDef?.schema?.categories) ? componentDef.schema.categories : []
 
-    return rawCategories.map((category: any) => ({
-      id: String(category?.id || category?.label || 'group'),
-      label: String(category?.label || category?.id || 'Group'),
-      expanded: category?.expanded !== false,
-    }))
+    if (rawCategories.length > 0) {
+      return rawCategories.map((category: any) => ({
+        id: String(category?.id || category?.label || 'group').trim().toLowerCase(),
+        label: String(category?.label || category?.id || 'Group'),
+        expanded: category?.expanded !== false,
+      }))
+    }
+
+    if (componentDef?.schema?.properties) {
+      const discovered = new Map<string, { id: string; label: string; expanded: boolean }>()
+      Object.values(componentDef.schema.properties).forEach((prop: any) => {
+        const cat = prop?.category
+        if (cat && typeof cat === 'string' && cat.trim()) {
+          const id = cat.trim().toLowerCase().replace(/\s+/g, '-')
+          if (!discovered.has(id)) {
+            discovered.set(id, { id, label: cat.trim(), expanded: discovered.size === 0 })
+          }
+        }
+      })
+      if (discovered.size > 0) {
+        return Array.from(discovered.values())
+      }
+    }
+
+    return []
   }, [componentDef])
 
   const usesSchemaAccordion = isAdvancedCard || isAdvancedHeading || isAdvancedParagraph || schemaCategories.length > 0
@@ -604,13 +792,14 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
       return groups
     }
 
-    const knownCategoryIds = new Set(schemaCategories.map((category) => category.id))
+    const knownCategoryIds = new Set(schemaCategories.map((category) => category.id.toLowerCase()))
 
     Object.entries(componentDef.schema.properties).forEach(([name, config]) => {
       if (!isPropertyVisible(config)) return
 
-      const categoryId = String(config?.category || 'advanced').trim().toLowerCase()
-      const resolvedCategory = knownCategoryIds.has(categoryId) ? categoryId : 'advanced'
+      const rawCat = String(config?.category || '').trim().toLowerCase().replace(/\s+/g, '-')
+      const fallbackCat = schemaCategories[0]?.id || 'general'
+      const resolvedCategory = knownCategoryIds.has(rawCat) ? rawCat : fallbackCat
       const existing = groups.get(resolvedCategory) || []
       existing.push({ name, config })
       groups.set(resolvedCategory, existing)
@@ -626,9 +815,13 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
     }
 
     const nextState = schemaCategories.reduce<Record<string, boolean>>((accumulator, category) => {
-      accumulator[category.id] = category.expanded
+      accumulator[category.id] = category.expanded ?? false
       return accumulator
     }, {})
+
+    if (schemaCategories.length > 0 && !Object.values(nextState).some(Boolean)) {
+      nextState[schemaCategories[0].id] = true
+    }
 
     setExpandedCategoryState(nextState)
   }, [resolvedComponent?.id, schemaCategories])
@@ -1014,6 +1207,42 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
           {activeTab === 'style' ? (
             <div className="rp-form">
               <div className="frow">
+                <label className="flbl">Background Color</label>
+                <div className="color-row">
+                  <input
+                    type="color"
+                    className="colorinp"
+                    value={sectionSettings.backgroundColor || '#13161e'}
+                    onChange={(event) => handleSectionUpdate(selectedSection.id, { settings: { backgroundColor: event.target.value } })}
+                  />
+                  <input
+                    type="text"
+                    className="rp-input fi"
+                    value={sectionSettings.backgroundColor || '#13161e'}
+                    onChange={(event) => handleSectionUpdate(selectedSection.id, { settings: { backgroundColor: event.target.value } })}
+                  />
+                </div>
+                <div className="chips" style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                  {activeThemeColors.map((swatch) => (
+                    <button
+                      key={swatch}
+                      type="button"
+                      onClick={() => handleSectionUpdate(selectedSection.id, { settings: { backgroundColor: swatch } })}
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 4,
+                        backgroundColor: swatch,
+                        border: sectionSettings.backgroundColor === swatch ? '2px solid #7c6dfa' : '1px solid rgba(255,255,255,0.12)',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
+                      title={swatch}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="frow">
                 <label className="flbl">Padding</label>
                 <div className="pad-box">
                   <input className="pad-in top" value={sectionPaddingValue} onChange={(event) => handleSectionUpdate(selectedSection.id, { settings: { padding: event.target.value } })} />
@@ -1233,6 +1462,48 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
                 {['none', 'solid', 'dashed'].map((value) => (
                   <button key={value} type="button" className={`chip ${borderStyle === value ? 'on' : ''}`} onClick={() => handlePropChange('borderStyle', value)}>
                     {value[0].toUpperCase() + value.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="rp-section-title rp-section-tight">
+              <div className="rp-section-title-main">Theme Colors</div>
+              <div className="rp-section-title-sub">Quick colors from theme ({layout?.theme?.name || 'Default Theme'})</div>
+            </div>
+
+            <div className="frow">
+              <label className="flbl">Apply Color Token</label>
+              <div className="chips" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {activeThemeColors.map((swatch) => (
+                  <button
+                    key={swatch}
+                    type="button"
+                    className="chip"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '4px 8px',
+                      background: 'rgba(255,255,255,0.05)',
+                    }}
+                    onClick={() => {
+                      if (localProps.color !== undefined || !localProps.backgroundColor) {
+                        handlePropChange('color', swatch)
+                      } else {
+                        handlePropChange('backgroundColor', swatch)
+                      }
+                    }}>
+                    <span
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: 3,
+                        backgroundColor: swatch,
+                        display: 'inline-block',
+                      }}
+                    />
+                    <span style={{ fontSize: 11 }}>{swatch}</span>
                   </button>
                 ))}
               </div>

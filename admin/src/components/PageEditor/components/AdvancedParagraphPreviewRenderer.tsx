@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useDeviceMode } from '../context/DeviceModeContext'
 import { sanitizeHtml } from '../../../lib/sanitize-markup'
 import { normalizeAdvancedParagraph, createAdvancedParagraphViewModel } from '../../../../../shared/blocks/advancedparagraph'
 import type { AdvancedParagraphInput } from '../../../../../shared/blocks/advancedparagraph'
@@ -49,11 +50,32 @@ const AdvancedParagraphPreviewRenderer: React.FC<AdvancedParagraphInput> = (prop
     }
   }
 
+  const { isMobile, isTablet } = useDeviceMode()
+
+  const activeFontSize = isMobile
+    ? (view.responsive.fontSizeMobile || view.style.fontSize)
+    : isTablet
+    ? (view.responsive.fontSizeTablet || view.style.fontSize)
+    : view.style.fontSize
+
+  const activeTextAlign = isMobile
+    ? (view.responsive.textAlignMobile || view.style.textAlign)
+    : isTablet
+    ? (view.responsive.textAlignTablet || view.style.textAlign)
+    : view.style.textAlign
+
+  const activeLineHeight = isMobile
+    ? (view.responsive.lineHeightMobile || view.style.lineHeight)
+    : isTablet
+    ? (view.responsive.lineHeightTablet || view.style.lineHeight)
+    : view.style.lineHeight
+
   const isDefaultDarkColor =
     !view.style.color ||
     view.style.color === 'var(--canvas-text, #111111)' ||
     view.style.color === '#111111' ||
-    view.style.color === '#000000'
+    view.style.color === '#000000' ||
+    view.style.color === '#cbd5e1'
 
   const paragraphNode = (
     <div className="advanced-paragraph-wrap">
@@ -62,7 +84,11 @@ const AdvancedParagraphPreviewRenderer: React.FC<AdvancedParagraphInput> = (prop
         className={`advanced-paragraph ${view.className || ''}`.trim()}
         style={{
           ...view.style,
-          color: isDefaultDarkColor ? '#cbd5e1' : view.style.color,
+          fontSize: activeFontSize,
+          textAlign: activeTextAlign as any,
+          lineHeight: activeLineHeight,
+          color: isDefaultDarkColor ? 'var(--theme-text-muted, var(--theme-text, #cbd5e1))' : view.style.color,
+          fontFamily: view.style.fontFamily || 'var(--theme-font-family, inherit)',
           cursor: view.editable ? 'text' : 'inherit',
           userSelect: view.selectable ? 'text' : 'none',
           ...hoverStyle,

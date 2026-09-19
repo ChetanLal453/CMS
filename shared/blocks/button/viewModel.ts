@@ -16,9 +16,13 @@ const SIZE_MAP: Record<ButtonSize, { fontSize: string; paddingY: string; padding
 }
 
 function getVariantColors(viewModel: ButtonProps) {
-  const primary = viewModel.primaryColor || viewModel.backgroundColor || '#7C6DFA'
+  const isDefaultPrimary = !viewModel.primaryColor || viewModel.primaryColor.toLowerCase() === '#7c6dfa'
+  const isDefaultBg = !viewModel.backgroundColor || viewModel.backgroundColor.toLowerCase() === '#7c6dfa'
+  const primary = (isDefaultPrimary && isDefaultBg)
+    ? 'var(--theme-primary, #7C6DFA)'
+    : (viewModel.primaryColor || viewModel.backgroundColor || '#7C6DFA')
   const textColor = viewModel.textColor || '#FFFFFF'
-  const borderColor = viewModel.borderColor || primary
+  const borderColor = viewModel.borderColor && viewModel.borderColor.toLowerCase() !== '#7c6dfa' ? viewModel.borderColor : primary
 
   switch (viewModel.variant) {
     case 'secondary':
@@ -96,27 +100,28 @@ export function createButtonViewModel(props: Record<string, any> = {}): ButtonVi
       display: 'flex',
       justifyContent,
       width: '100%',
-      margin: `${normalized.marginTop} ${normalized.marginRight} ${normalized.marginBottom} ${normalized.marginLeft}`,
+      margin: normalized.margin || `${normalized.marginTop} ${normalized.marginRight} ${normalized.marginBottom} ${normalized.marginLeft}`,
     },
     buttonStyle: {
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      width: normalized.fullWidth ? '100%' : normalized.width || 'auto',
+      width: normalized.fullWidth ? '100%' : (normalized.width && normalized.width !== '100%' ? normalized.width : 'auto'),
       minWidth: normalized.fullWidth ? '100%' : undefined,
+      maxWidth: normalized.fullWidth ? '100%' : undefined,
       gap: '0',
       paddingTop,
       paddingRight,
       paddingBottom,
       paddingLeft,
-      borderRadius: normalized.borderRadius,
+      borderRadius: normalized.borderRadius && normalized.borderRadius !== '8px' ? normalized.borderRadius : 'var(--theme-radius, 8px)',
       borderWidth: normalized.borderWidth,
       borderStyle: 'solid',
       borderColor: variant.borderColor,
       background: gradientBackground || variant.backgroundColor,
       backgroundColor: gradientBackground ? undefined : variant.backgroundColor,
       color: variant.color,
-      fontFamily: normalized.fontFamily,
+      fontFamily: normalized.fontFamily && normalized.fontFamily !== "'DM Sans', system-ui, sans-serif" ? normalized.fontFamily : 'var(--theme-font-family, inherit)',
       fontSize: normalized.fontSize || sizePreset.fontSize,
       fontWeight: normalized.fontWeight,
       letterSpacing: normalized.letterSpacing,

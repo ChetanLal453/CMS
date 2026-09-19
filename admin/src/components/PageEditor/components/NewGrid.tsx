@@ -9,6 +9,7 @@ import { DynamicComponent } from '../DynamicComponent'
 import { ComponentWrapper } from './ComponentWrapper'
 import { Edit, Trash2 } from 'lucide-react'
 import { useStableComponentsArray } from '../hooks/useStableComponentsArray'
+import { useDeviceMode } from '../context/DeviceModeContext'
 import { newGridContract } from '../../../../../shared/blocks/newgrid'
 import { createNewGridViewModel } from '../../../../../shared/blocks/newgrid/viewModel'
 
@@ -39,6 +40,7 @@ interface GridCellProps {
   component: LayoutComponent | null
   onComponentSelect?: (component: LayoutComponent, context: GridComponentContext) => void
   onComponentUpdate?: (componentId: string, props: Record<string, any>) => void
+  onComponentDuplicate?: (component: LayoutComponent) => void
   sectionId?: string
   containerId?: string
   rowId?: string
@@ -88,6 +90,7 @@ interface NewGridComponentProps {
   onSelect?: () => void
   onComponentSelect?: (component: LayoutComponent, context: GridComponentContext) => void
   onComponentUpdate?: (componentId: string, props: Record<string, any>) => void
+  onComponentDuplicate?: (component: LayoutComponent) => void
   layout?: any
   setLayout?: (layout: any) => void
   setSelectedComponent?: (component: SelectedComponentInfo) => void
@@ -110,6 +113,7 @@ const SortableGridCell: React.FC<{
   context: GridComponentContext
   onComponentSelect?: (component: LayoutComponent, context: GridComponentContext) => void
   onComponentUpdate?: (componentId: string, props: Record<string, any>) => void
+  onComponentDuplicate?: (component: LayoutComponent) => void
   setSelectedComponent?: (component: { sectionId: string; compId: string; component: LayoutComponent }) => void
   deleteComponent?: (componentId: string, context?: any) => void
   onDeleteChildComponent?: (componentId: string, context?: any) => void
@@ -120,6 +124,7 @@ const SortableGridCell: React.FC<{
   context,
   onComponentSelect,
   onComponentUpdate,
+  onComponentDuplicate,
   setSelectedComponent,
   deleteComponent,
   onDeleteChildComponent,
@@ -170,32 +175,8 @@ const SortableGridCell: React.FC<{
     [onComponentUpdate],
   )
 
-  // ✅ FIXED: Edit handler that works with ComponentWrapper's onEdit prop
   const handleEditClick = useCallback(() => {
-    debugLog('🔘 SortableGridCell: Edit button clicked for component:', {
-      componentId: component?.id,
-      componentType: component?.type,
-      context,
-      hasOnComponentSelect: !!onComponentSelect,
-      timestamp: new Date().toISOString(),
-      stackTrace: new Error().stack,
-    })
-
-     if (!onComponentSelect) {
-    console.error('❌❌❌ SortableGridCell DEBUG: onComponentSelect is undefined!', {
-      component,
-      context,
-      parentProps: {
-        draggableId,
-        hasComponent: !!component,
-      },
-      // Check where this function is coming from
-      functionSource: 'SortableGridCell.handleEditClick',
-    })
-  }
-
     if (component && onComponentSelect) {
-      // ✅ CRITICAL: Pass ALL context properties
       onComponentSelect(component, {
         sectionId: context.sectionId,
         containerId: context.containerId,
@@ -211,16 +192,15 @@ const SortableGridCell: React.FC<{
         parentComponentId: context.parentComponentId,
         parentGridId: context.parentGridId,
       })
-    } else {
-      console.error('❌ SortableGridCell: Missing component or onComponentSelect')
     }
-  }, [component, onComponentSelect, context, draggableId])
+  }, [component, onComponentSelect, context])
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       {component ? (
         <ComponentWrapper
           onEdit={handleEditClick}
+          onDuplicate={onComponentDuplicate}
           isGridLevel={false}
           sectionId={context.sectionId}
           containerId={context.containerId}
@@ -295,6 +275,7 @@ const GridCell = memo(
     component,
     onComponentSelect,
     onComponentUpdate,
+    onComponentDuplicate,
     sectionId,
     containerId,
     rowId,
@@ -416,6 +397,7 @@ const GridCell = memo(
           context={gridCellContext}
           onComponentSelect={onComponentSelect}
           onComponentUpdate={onComponentUpdate}
+          onComponentDuplicate={onComponentDuplicate}
           setSelectedComponent={setSelectedComponent}
           deleteComponent={deleteComponent}
           onDeleteChildComponent={handleDelete}>
@@ -478,6 +460,7 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
   onSelect,
   onComponentSelect,
   onComponentUpdate,
+  onComponentDuplicate,
   layout,
   setLayout,
   setSelectedComponent,
@@ -495,14 +478,22 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
   ...props
 }) => {
   const gridRef = useRef<HTMLDivElement>(null)
+  const effectiveColumns = Number(columns ?? propComponent?.props?.columns ?? propComponent?.props?.layout?.columns ?? props?.layout?.columns) || 3
+  const effectiveRows = Number(rows ?? propComponent?.props?.rows ?? propComponent?.props?.layout?.rows ?? props?.layout?.rows) || 2
+  const effectiveGap = gap ?? propComponent?.props?.gap ?? propComponent?.props?.layout?.gap ?? props?.layout?.gap ?? 10
+  const effectivePadding = padding ?? propComponent?.props?.padding ?? propComponent?.props?.layout?.padding ?? props?.layout?.padding ?? 24
+  const effectiveMargin = margin ?? propComponent?.props?.margin ?? propComponent?.props?.layout?.margin ?? props?.layout?.margin ?? 0
+  const effectiveCells = (Array.isArray(cells) && cells.length) ? cells : ((Array.isArray(propComponent?.props?.cells) && propComponent.props.cells.length) ? propComponent.props.cells : props?.cells)
+
   const componentProps = createNewGridViewModel({
     ...props,
-    columns,
-    rows,
-    gap,
-    padding,
-    margin,
-    cells,
+    ...propComponent?.props,
+    columns: effectiveColumns,
+    rows: effectiveRows,
+    gap: effectiveGap,
+    padding: effectivePadding,
+    margin: effectiveMargin,
+    cells: effectiveCells,
     components,
   }) as Record<string, any>
 
@@ -529,6 +520,16 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
   const parsedGap = componentProps.gap
   const parsedPadding = componentProps.padding
   const parsedMargin = componentProps.margin
+  const { isMobile, isTablet } = useDeviceMode()
+  const effectiveColumnsForDisplay = useMemo(() => {
+    if (isMobile) {
+      return componentProps.mobileColumns || componentProps.responsive?.mobileColumns || 1
+    }
+    if (isTablet) {
+      return componentProps.tabletColumns || componentProps.responsive?.tabletColumns || Math.min(2, parsedColumns)
+    }
+    return parsedColumns
+  }, [isMobile, isTablet, componentProps, parsedColumns])
 
   const currentComponentsCount = components.filter((c) => c !== null && c !== undefined && typeof c === 'object' && c.id && c.type).length
 
@@ -679,60 +680,27 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
 
   const getComponentFromCell = useCallback(
     (rowIndex: number, colIndex: number): LayoutComponent | null => {
-      debugLog('🔍 NewGrid: getComponentFromCell called:', {
-        rowIndex,
-        colIndex,
-        gridId,
-        carouselId,
-        slideIndex,
-        hasLocalComponent: !!localComponent,
-        hasPropComponent: !!propComponent,
-        hasPropsCells: !!props.cells,
-      })
+      // Prioritize local component's cells first (holds immediate user edits and synced prop updates)
+      if (localComponent?.props?.cells && Array.isArray(localComponent.props.cells)) {
+        const row = localComponent.props.cells[rowIndex]
+        if (row && row[colIndex] && row[colIndex].component) {
+          return row[colIndex].component
+        }
+      }
 
-      // First check direct props.cells (this is the most reliable source)
+      // Then check prop component's cells (from parent editor updates)
+      if (propComponent?.props?.cells && Array.isArray(propComponent.props.cells)) {
+        const row = propComponent.props.cells[rowIndex]
+        if (row && row[colIndex] && row[colIndex].component) {
+          return row[colIndex].component
+        }
+      }
+
+      // Then check direct props.cells
       if (props.cells && Array.isArray(props.cells)) {
         const row = props.cells[rowIndex]
         if (row && row[colIndex] && row[colIndex].component) {
-          const comp = row[colIndex].component
-          debugLog('✅ Found component in direct props.cells:', {
-            componentId: comp.id,
-            type: comp.type,
-            rowIndex,
-            colIndex,
-            source: 'direct-props',
-          })
-          return comp
-        }
-      }
-
-      // Then check local component's cells
-      if (localComponent?.props?.cells) {
-        const row = localComponent.props.cells[rowIndex]
-        if (row && row[colIndex] && row[colIndex].component) {
-          const comp = row[colIndex].component
-          debugLog('✅ Found component in cells structure (localComponent):', {
-            componentId: comp.id,
-            type: comp.type,
-            rowIndex,
-            colIndex,
-          })
-          return comp
-        }
-      }
-
-      // Then check prop component's cells
-      if (propComponent?.props?.cells) {
-        const row = propComponent.props.cells[rowIndex]
-        if (row && row[colIndex] && row[colIndex].component) {
-          const comp = row[colIndex].component
-          debugLog('✅ Found component in cells structure (propComponent):', {
-            componentId: comp.id,
-            type: comp.type,
-            rowIndex,
-            colIndex,
-          })
-          return comp
+          return row[colIndex].component
         }
       }
 
@@ -740,18 +708,16 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
       const cellIndex = rowIndex * parsedColumns + colIndex
       const comp = gridComponents[cellIndex]
       if (comp) {
-        debugLog('✅ Found component in gridComponents:', comp)
         return comp
       }
 
-      debugLog('❌ No component found at:', { rowIndex, colIndex })
       return null
     },
     [localComponent?.props, propComponent?.props, gridComponents, parsedColumns, gridId, carouselId, slideIndex, props.cells],
   )
 
   const handleDeleteChildComponent = useCallback(
-    (componentId: string, context?: any) => {
+    (componentId: string) => {
       let componentRemoved = false
       let updatedProps = localComponent?.props ? { ...localComponent.props } : {}
 
@@ -895,7 +861,7 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
   const gridStyle = useMemo(
     (): React.CSSProperties => ({
       display: 'grid',
-      gridTemplateColumns: `repeat(${parsedColumns}, 1fr)`,
+      gridTemplateColumns: `repeat(${effectiveColumnsForDisplay}, 1fr)`,
       gridAutoRows: 'minmax(100px, auto)',
       gap: `${parsedGap}px`,
       width: '100%',
@@ -904,7 +870,7 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
       position: 'relative',
       minHeight: '150px',
     }),
-    [parsedColumns, parsedGap],
+    [effectiveColumnsForDisplay, parsedGap],
   )
 
   const gridConfig = useMemo(
@@ -962,6 +928,7 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
             // ✅✅✅ CRITICAL: Pass onComponentSelect FIXED HERE
             onComponentSelect={onComponentSelect}
             onComponentUpdate={onComponentUpdate}
+            onComponentDuplicate={onComponentDuplicate}
             sectionId={sectionId}
             containerId={gridId}
             rowId={rowId || `slide-${slideIndex}`}
@@ -987,6 +954,7 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
     // ✅✅✅ CRITICAL: onComponentSelect dependency add karo
     onComponentSelect,
     onComponentUpdate,
+    onComponentDuplicate,
     sectionId,
     rowId,
     slideIndex,
@@ -1118,8 +1086,45 @@ const gridPropsAreEqual = (prevProps: NewGridComponentProps, nextProps: NewGridC
   if (prevProps.slideIndex !== nextProps.slideIndex) return false
   if (prevProps.rows !== nextProps.rows) return false
   if (prevProps.columns !== nextProps.columns) return false
+  if (prevProps.gap !== nextProps.gap) return false
+  if (prevProps.padding !== nextProps.padding) return false
+  if (prevProps.margin !== nextProps.margin) return false
+  if (prevProps.backgroundColor !== nextProps.backgroundColor) return false
+  if (prevProps.border !== nextProps.border) return false
+  if (prevProps.borderRadius !== nextProps.borderRadius) return false
+  if (prevProps.gridLineColor !== nextProps.gridLineColor) return false
+  if (prevProps.justifyContent !== nextProps.justifyContent) return false
+  if (prevProps.alignItems !== nextProps.alignItems) return false
   if (prevProps.parentComponentId !== nextProps.parentComponentId) return false
   if (prevProps.parentGridId !== nextProps.parentGridId) return false
+
+  const prevP = prevProps.component?.props
+  const nextP = nextProps.component?.props
+  if (prevP !== nextP) {
+    if (!prevP || !nextP) return false
+    if (prevP.columns !== nextP.columns) return false
+    if (prevP.rows !== nextP.rows) return false
+    if (prevP.gap !== nextP.gap) return false
+    if (prevP.padding !== nextP.padding) return false
+    if (prevP.margin !== nextP.margin) return false
+    if (prevP.backgroundColor !== nextP.backgroundColor) return false
+    if (prevP.border !== nextP.border) return false
+    if (prevP.borderRadius !== nextP.borderRadius) return false
+    if (prevP.gridLineColor !== nextP.gridLineColor) return false
+    if (prevP.justifyContent !== nextP.justifyContent) return false
+    if (prevP.alignItems !== nextP.alignItems) return false
+    if (prevP.layout?.columns !== nextP.layout?.columns) return false
+    if (prevP.layout?.rows !== nextP.layout?.rows) return false
+    if (prevP.layout?.gap !== nextP.layout?.gap) return false
+    if (prevP.layout?.padding !== nextP.layout?.padding) return false
+    if (prevP.layout?.margin !== nextP.layout?.margin) return false
+    if (prevP.style?.backgroundColor !== nextP.style?.backgroundColor) return false
+    if (prevP.style?.border !== nextP.style?.border) return false
+    if (prevP.style?.borderRadius !== nextP.style?.borderRadius) return false
+    if (prevP.responsive?.mobileColumns !== nextP.responsive?.mobileColumns) return false
+    if (prevP.responsive?.tabletColumns !== nextP.responsive?.tabletColumns) return false
+    if (prevP.responsive?.desktopColumns !== nextP.responsive?.desktopColumns) return false
+  }
 
   // Check props.cells
   if (prevProps.cells !== nextProps.cells) {

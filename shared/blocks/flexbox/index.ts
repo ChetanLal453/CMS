@@ -6,6 +6,13 @@ export const flexboxContract = {
   defaultProps: defaultFlexboxProps,
   supportsChildren: true,
   schema: {
+    categories: [
+      { id: 'layout', label: 'Layout', expanded: true },
+      { id: 'alignment', label: 'Alignment', expanded: false },
+      { id: 'spacing', label: 'Spacing', expanded: false },
+      { id: 'sizing', label: 'Sizing', expanded: false },
+      { id: 'appearance', label: 'Appearance', expanded: false },
+    ],
     properties: {
       direction: {
         type: 'select',
@@ -61,40 +68,11 @@ export const flexboxContract = {
         category: 'Alignment',
         description: 'Alignment along the cross axis',
       },
-      alignContent: {
-        type: 'select',
-        label: 'Align Content',
-        default: 'stretch',
-        options: [
-          { value: 'stretch', label: 'Stretch' },
-          { value: 'flex-start', label: 'Start' },
-          { value: 'flex-end', label: 'End' },
-          { value: 'center', label: 'Center' },
-          { value: 'space-between', label: 'Space Between' },
-          { value: 'space-around', label: 'Space Around' },
-        ],
-        category: 'Alignment',
-        description: 'Alignment of lines in multi-line flex containers',
-      },
       gap: {
         type: 'text',
         label: 'Gap',
         default: '16px',
         description: 'Space between all items',
-        category: 'Spacing',
-      },
-      rowGap: {
-        type: 'text',
-        label: 'Row Gap',
-        default: '16px',
-        description: 'Vertical gap between wrapped rows',
-        category: 'Spacing',
-      },
-      columnGap: {
-        type: 'text',
-        label: 'Column Gap',
-        default: '16px',
-        description: 'Horizontal gap between columns',
         category: 'Spacing',
       },
       padding: {

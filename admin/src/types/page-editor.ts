@@ -1,4 +1,6 @@
 // Types for the Comprehensive Page Editor
+import type { GlobalTheme } from '../../../shared/theme'
+export type { GlobalTheme }
 
 export interface DragItem {
   type: 'section' | 'container' | 'row' | 'column' | 'component' | 'template' | 'grid-cell' | 'grid' | 'carousel';
@@ -125,6 +127,8 @@ export interface PageLayout {
   name: string;
   sections: Section[];
   components?: LayoutComponent[]; // For grid components registered at layout level
+  theme?: GlobalTheme;
+  presets?: Record<string, any>;
   settings?: {
     title?: string;
     description?: string;

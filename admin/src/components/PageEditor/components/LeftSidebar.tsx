@@ -3,32 +3,38 @@
 import React, { useEffect, useState } from 'react'
 import { ComponentLibrary } from '../ComponentLibrary'
 import { StructureTree } from './StructureTree'
+import { GlobalStylePanel } from './GlobalStylePanel'
 import { Section, LayoutComponent, ComponentDefinition } from '@/types/page-editor'
+import { GlobalTheme } from '../../../../../shared/theme'
 
 interface LeftSidebarProps {
-  layout?: { sections?: Section[] }
+  layout?: { sections?: Section[]; theme?: GlobalTheme; presets?: Record<string, any> }
   selectedSectionId?: string
   selectedComponentId?: string
+  selectedComponent?: LayoutComponent | null
   onSectionSelect: (sectionId: string) => void
   onComponentSelect: (component: LayoutComponent, context: { sectionId: string; containerId: string; rowId: string; colId: string }) => void
   onComponentAdd: (componentDef: ComponentDefinition) => void
+  onThemeChange?: (updatedTheme: GlobalTheme) => void
+  onSavePreset?: (presetName: string, component: LayoutComponent) => void
+  onApplyPreset?: (presetKey: string) => void
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   layout,
   selectedSectionId,
   selectedComponentId,
+  selectedComponent,
   onSectionSelect,
   onComponentSelect,
-  onComponentAdd
+  onComponentAdd,
+  onThemeChange,
+  onSavePreset,
+  onApplyPreset,
 }) => {
-  const [activeTab, setActiveTab] = useState<'library' | 'structure'>('library')
+  const [activeTab, setActiveTab] = useState<'library' | 'structure' | 'theme'>('library')
 
-  useEffect(() => {
-    if (selectedSectionId || selectedComponentId) {
-      setActiveTab('structure')
-    }
-  }, [selectedComponentId, selectedSectionId])
+  // Allow user to freely switch between Components, Structure, and Theme tabs without forced switching
 
   return (
     <div className="left-panel h-full flex flex-col">
@@ -47,6 +53,13 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         >
           Structure
         </button>
+        <button
+          onClick={() => setActiveTab('theme')}
+          className={`panel-tab lptab ${activeTab === 'theme' ? 'active' : ''}`}
+          type="button"
+        >
+          Theme
+        </button>
       </div>
 
       <div id="tab-components" className={`left-tab-panel ${activeTab === 'library' ? 'active' : 'hidden'}`}>
@@ -63,6 +76,19 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             selectedComponentId={selectedComponentId}
             onSectionSelect={onSectionSelect}
             onComponentSelect={onComponentSelect}
+          />
+        )}
+      </div>
+
+      <div id="tab-theme" className={`left-tab-panel ${activeTab === 'theme' ? 'active' : 'hidden'} flex-1 overflow-hidden`}>
+        {activeTab === 'theme' && onThemeChange && (
+          <GlobalStylePanel
+            theme={layout?.theme}
+            onThemeChange={onThemeChange}
+            selectedComponent={selectedComponent}
+            savedPresets={layout?.presets}
+            onSavePreset={onSavePreset}
+            onApplyPreset={onApplyPreset}
           />
         )}
       </div>

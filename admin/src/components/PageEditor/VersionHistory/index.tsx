@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { VersionTimeline } from './VersionTimeline'
 import { VersionCompare } from './VersionCompare'
+import { getApiErrorMessage } from '@/lib/apiHelpers'
 
 interface Version {
   id: string
@@ -30,18 +31,6 @@ export const VersionHistory: React.FC<VersionHistoryProps> = ({
   onRestore,
   className = ''
 }) => {
-  const getApiErrorMessage = (payload: any, fallback: string) => {
-    const message = typeof payload?.error === 'string'
-      ? payload.error
-      : typeof payload?.error?.message === 'string'
-        ? payload.error.message
-        : typeof payload?.message === 'string'
-          ? payload.message
-          : ''
-
-    return message || fallback
-  }
-
   const [versions, setVersions] = useState<Version[]>([])
   const [loading, setLoading] = useState(true)
   const [compareVersions, setCompareVersions] = useState<Version[]>([])

@@ -315,4 +315,127 @@ describe('validateCanonicalLayout', () => {
 
     expect(() => migrateLayoutInput(input)).toThrow(PageLayoutValidationError)
   })
+
+  it('accepts universal aliases (alignment/textAlign, src/url, link/linkUrl, container styles) without validation error', () => {
+    const input = {
+      id: 'layout-aliases-1',
+      name: 'Aliases Test Layout',
+      sections: [
+        {
+          id: 'section-aliases',
+          name: 'Aliases Section',
+          type: 'custom',
+          props: {},
+          settings: { containerType: 'boxed', maxWidth: '1200px' },
+          rows: [
+            {
+              id: 'row-aliases',
+              columns: [
+                {
+                  id: 'col-aliases',
+                  width: 100,
+                  components: [
+                    {
+                      id: 'heading-alias',
+                      type: 'advancedheading',
+                      props: {
+                        text: 'Heading with alignment alias',
+                        alignment: 'center',
+                        textAlign: 'center',
+                        style: {
+                          textAlign: 'center',
+                          alignment: 'center',
+                          margin: '0 0 16px 0',
+                          color: '#111827',
+                        },
+                      },
+                    },
+                    {
+                      id: 'paragraph-alias',
+                      type: 'advancedparagraph',
+                      props: {
+                        text: 'Paragraph with alignment and textColor alias',
+                        alignment: 'center',
+                        textAlign: 'center',
+                        textColor: '#4b5563',
+                        style: {
+                          textAlign: 'center',
+                          color: '#4b5563',
+                        },
+                      },
+                    },
+                    {
+                      id: 'button-alias',
+                      type: 'button',
+                      props: {
+                        text: 'Click Here',
+                        linkUrl: 'https://example.com/learn-more',
+                        alignment: 'center',
+                        textAlign: 'center',
+                        useGradient: true,
+                        gradientColors: '#7c6dfa, #a594ff',
+                      },
+                    },
+                    {
+                      id: 'quote-alias',
+                      type: 'quote',
+                      props: {
+                        text: 'Best service experience ever!',
+                        author: 'Jane Doe',
+                        alignment: 'center',
+                        textAlign: 'center',
+                        align: 'center',
+                      },
+                    },
+                    {
+                      id: 'image-alias',
+                      type: 'image',
+                      props: {
+                        url: 'https://example.com/photo.png',
+                        imageUrl: 'https://example.com/photo.png',
+                        alt: 'Photo',
+                        alignment: 'center',
+                        textAlign: 'center',
+                      },
+                    },
+                    {
+                      id: 'container-alias',
+                      type: 'container',
+                      props: {
+                        maxWidth: '1200px',
+                        width: '100%',
+                        minHeight: '80px',
+                        padding: '24px',
+                        margin: '0 auto',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        borderColor: '#e2e8f0',
+                        shadow: 'md',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+                        alignment: 'center',
+                        textAlign: 'center',
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+
+    const canonical = normalizeLayoutToCanonical(input, { id: 'page-alias', slug: 'alias-test', name: 'Alias Test' })
+    const validated = validateCanonicalLayout(canonical, { pageId: 'page-alias', slug: 'alias-test' })
+
+    expect(validated.sections[0].rows[0].columns[0].components.length).toBe(6)
+    expect(validated.sections[0].rows[0].columns[0].components[0].type).toBe('advancedheading')
+    expect(validated.sections[0].rows[0].columns[0].components[1].type).toBe('advancedparagraph')
+    expect(validated.sections[0].rows[0].columns[0].components[2].type).toBe('button')
+    expect(validated.sections[0].rows[0].columns[0].components[3].type).toBe('quote')
+    expect(validated.sections[0].rows[0].columns[0].components[4].type).toBe('image')
+    expect(validated.sections[0].rows[0].columns[0].components[5].type).toBe('container')
+  })
 })
+

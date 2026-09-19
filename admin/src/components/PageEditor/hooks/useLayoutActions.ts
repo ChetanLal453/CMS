@@ -51,7 +51,7 @@ const createComponentProps = (componentDef: ComponentDefinition): Record<string,
   return normalizedDefaults
 }
 
-const createLayoutComponentFromDefinition = (componentDef: ComponentDefinition): LayoutComponent => ({
+export const createLayoutComponentFromDefinition = (componentDef: ComponentDefinition): LayoutComponent => ({
   id: `${componentDef.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
   type: componentDef.type,
   label: componentDef.name,
@@ -84,7 +84,7 @@ const getSectionRows = (section: Section | undefined | null) => {
   return []
 }
 
-const ensureSectionRows = (section: Section | any) => {
+export const ensureSectionRows = (section: Section | any) => {
   if (Array.isArray(section?.container?.rows)) {
     return section.container.rows
   }
@@ -345,7 +345,8 @@ export const useLayoutActions = (
               }
 
               // ✅ SEARCH IN GRID CELLS
-              if (comp.type === 'NewGrid' && comp.props?.cells) {
+              const compTypeLow = String(comp.type || '').trim().toLowerCase()
+              if ((compTypeLow === 'newgrid' || compTypeLow === 'grid') && comp.props?.cells) {
                 for (let rowIndex = 0; rowIndex < comp.props.cells.length; rowIndex++) {
                   const row = comp.props.cells[rowIndex]
                   for (let colIndex = 0; colIndex < row.length; colIndex++) {

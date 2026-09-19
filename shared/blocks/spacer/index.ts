@@ -5,6 +5,13 @@ import { createSpacerViewModel } from './viewModel'
 export const spacerContract = {
   defaultProps: defaultSpacerProps,
   schema: {
+    categories: [
+      { id: 'spacing', label: 'Spacing', expanded: true },
+      { id: 'responsive', label: 'Responsive', expanded: false },
+      { id: 'appearance', label: 'Appearance', expanded: false },
+      { id: 'behavior', label: 'Behavior', expanded: false },
+      { id: 'advanced', label: 'Advanced', expanded: false },
+    ],
     properties: {
       height: {
         type: 'text',
@@ -29,14 +36,6 @@ export const spacerContract = {
         description: 'Height on tablet devices (768px - 1024px)',
         category: 'Responsive',
         placeholder: '28px',
-      },
-      desktopHeight: {
-        type: 'text',
-        label: 'Desktop Height',
-        default: '32px',
-        description: 'Height on desktop screens (> 1024px)',
-        category: 'Responsive',
-        placeholder: '32px',
       },
       backgroundColor: {
         type: 'color',

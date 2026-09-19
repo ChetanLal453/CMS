@@ -190,9 +190,10 @@ export default function FlipCard({
                 lineHeight: view.lineHeight,
                 letterSpacing: view.textSpacing,
                 margin: 0,
+                width: "100%",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                ...getAlignmentStyle(view.titleAlignment || "left"),
+                ...getAlignmentStyle((view.titleAlignment || view.textAlignment || "left") as any),
               }}
               onMouseEnter={() => setTitleHovered(true)}
               onMouseLeave={() => setTitleHovered(false)}
@@ -210,9 +211,10 @@ export default function FlipCard({
                 lineHeight: view.lineHeight,
                 letterSpacing: view.textSpacing,
                 margin: 0,
+                width: "100%",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                ...getAlignmentStyle(view.subtitleAlign || "left"),
+                ...getAlignmentStyle((view.subtitleAlign || view.textAlignment || "left") as any),
               }}
               onMouseEnter={() => setSubtitleHovered(true)}
               onMouseLeave={() => setSubtitleHovered(false)}
@@ -230,11 +232,12 @@ export default function FlipCard({
                 lineHeight: view.lineHeight,
                 letterSpacing: view.textSpacing,
                 margin: 0,
+                width: "100%",
                 overflow: "hidden",
                 display: "-webkit-box",
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: "vertical" as const,
-                ...getAlignmentStyle(view.descriptionAlign || "left"),
+                ...getAlignmentStyle((view.descriptionAlign || view.textAlignment || "left") as any),
               }}
               onMouseEnter={() => setDescriptionHovered(true)}
               onMouseLeave={() => setDescriptionHovered(false)}
@@ -247,8 +250,17 @@ export default function FlipCard({
             <div
               style={{
                 marginTop: "16px",
+                width: "100%",
                 display: "flex",
-                justifyContent: view.buttonAlignment as any,
+                justifyContent:
+                  view.buttonFullWidth || view.buttonAlignment === "full-width" || view.buttonAlignment === "full"
+                    ? "stretch"
+                    : view.buttonAlignment === "right" || view.buttonAlignment === "flex-end"
+                    ? "flex-end"
+                    : view.buttonAlignment === "center"
+                    ? "center"
+                    : "flex-start",
+                flexWrap: "wrap" as const,
               }}
             >
               <CardButton

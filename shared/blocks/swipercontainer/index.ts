@@ -20,6 +20,13 @@ export { createSwiperContainerViewModel, shouldEnableSwiperContainerLoop } from 
 export const swiperContainerContract = {
   defaultProps: defaultSwiperContainerProps,
   schema: {
+    categories: [
+      { id: 'layout', label: 'Layout', expanded: true },
+      { id: 'behavior', label: 'Behavior', expanded: false },
+      { id: 'navigation', label: 'Navigation', expanded: false },
+      { id: 'effects', label: 'Effects', expanded: false },
+      { id: 'style', label: 'Style', expanded: false },
+    ],
     properties: {
       direction: {
         type: 'select',

@@ -27,7 +27,7 @@ export const imageContract = {
       { id: 'advanced', label: 'Advanced', expanded: false },
     ],
     properties: {
-      src: { type: 'image', label: 'Image Source', default: defaultImageProps.src, category: 'Content' },
+      src: { type: 'image', label: 'Image URL', default: defaultImageProps.src, category: 'Content' },
       alt: { type: 'text', label: 'Alt Text', default: defaultImageProps.alt, category: 'Content' },
       linkUrl: { type: 'text', label: 'Link URL', default: defaultImageProps.linkUrl, category: 'Content' },
       openInNewTab: { type: 'toggle', label: 'Open in New Tab', default: defaultImageProps.openInNewTab, category: 'Content' },

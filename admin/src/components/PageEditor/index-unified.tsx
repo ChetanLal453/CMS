@@ -3,11 +3,12 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { DndContext } from '@dnd-kit/core'
+import { getApiErrorMessage } from '@/lib/apiHelpers'
 import { componentRegistry, initializeComponentRegistry } from '@/lib/componentRegistry'
-import { LayoutComponent, PageLayout, Page, Section } from '@/types/page-editor'
+import { LayoutComponent, PageLayout, Page, Section, GlobalTheme } from '@/types/page-editor'
 import { usePageData } from './hooks/usePageData'
 import { useUIState } from './hooks/useUIState'
-import { useLayoutActions } from './hooks/useLayoutActions'
+import { useLayoutActions, createLayoutComponentFromDefinition, ensureSectionRows } from './hooks/useLayoutActions'
 import { useUndoRedo } from '@/hooks/useUndoRedo'
 import { useAutoSave } from '@/hooks/useAutoSave'
 import { PageEditorCanvas, CanvasToolbar } from './components/PageEditorCanvas'
@@ -29,18 +30,6 @@ interface PageEditorProps {
 }
 
 const debugLog = (..._args: unknown[]) => {}
-
-const getApiErrorMessage = (payload: any, fallback: string) => {
-  const message = typeof payload?.error === 'string'
-    ? payload.error
-    : typeof payload?.error?.message === 'string'
-      ? payload.error.message
-      : typeof payload?.message === 'string'
-        ? payload.message
-        : ''
-
-  return message || fallback
-}
 
 const formatSaveStatus = (lastSaved: Date | null, isSaving: boolean, hasPendingChanges: boolean, hasSaveConflict: boolean) => {
   if (isSaving) return 'Saving...'
@@ -90,36 +79,202 @@ type ComponentLocation = {
   columnId: string
 }
 
-const findComponentLocation = (layout: PageLayout | undefined, componentId: string): ComponentLocation | null => {
-  const sections = Array.isArray(layout?.sections) ? layout.sections : []
+type UniversalLocation =
+  | {
+      type: 'column'
+      sectionIndex: number
+      rowIndex: number
+      colIndex: number
+      componentIndex: number
+      columnId: string
+      component: LayoutComponent
+    }
+  | {
+      type: 'grid-cell'
+      sectionIndex: number
+      rowIndex: number
+      colIndex: number
+      gridIndex: number
+      gridId: string
+      cellRow: number
+      cellCol: number
+      component: LayoutComponent
+    }
+  | {
+      type: 'swiper-slide'
+      sectionIndex: number
+      rowIndex: number
+      colIndex: number
+      swiperIndex: number
+      swiperId: string
+      slideIndex: number
+      componentIndex: number
+      component: LayoutComponent
+    }
+  | {
+      type: 'nested'
+      sectionIndex: number
+      rowIndex: number
+      colIndex: number
+      parentIndex: number
+      parentId: string
+      componentIndex: number
+      component: LayoutComponent
+    }
 
-  for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex += 1) {
-    const section = sections[sectionIndex]
+const findUniversalLocation = (layout: PageLayout | undefined, componentId: string): UniversalLocation | null => {
+  if (!layout || !componentId) return null
+  const sections = Array.isArray(layout.sections) ? layout.sections : []
+
+  for (let sIdx = 0; sIdx < sections.length; sIdx++) {
+    const section = sections[sIdx]
     const rows = getSectionRows(section)
 
-    for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
-      const row = rows[rowIndex]
-      const columns = Array.isArray(row?.columns) ? row.columns : []
+    for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+      const row = rows[rIdx]
+      const cols = Array.isArray(row?.columns) ? row.columns : []
 
-      for (let colIndex = 0; colIndex < columns.length; colIndex += 1) {
-        const column = columns[colIndex]
-        const componentIndex = Array.isArray(column?.components)
-          ? column.components.findIndex((component: LayoutComponent | null) => component?.id === componentId)
-          : -1
+      for (let cIdx = 0; cIdx < cols.length; cIdx++) {
+        const col = cols[cIdx]
+        const comps = Array.isArray(col?.components) ? col.components : []
 
-        if (componentIndex !== -1) {
-          return {
-            sectionIndex,
-            rowIndex,
-            colIndex,
-            componentIndex,
-            columnId: String(column?.id || ''),
+        for (let compIdx = 0; compIdx < comps.length; compIdx++) {
+          const comp = comps[compIdx]
+          if (!comp) continue
+
+          if (comp.id === componentId) {
+            return {
+              type: 'column',
+              sectionIndex: sIdx,
+              rowIndex: rIdx,
+              colIndex: cIdx,
+              componentIndex: compIdx,
+              columnId: String(col?.id || ''),
+              component: comp,
+            }
+          }
+
+          const compType = String(comp.type || '').toLowerCase()
+          if ((compType === 'newgrid' || compType === 'grid') && Array.isArray(comp.props?.cells)) {
+            for (let cellR = 0; cellR < comp.props.cells.length; cellR++) {
+              const rowCells = comp.props.cells[cellR]
+              if (!Array.isArray(rowCells)) continue
+
+              for (let cellC = 0; cellC < rowCells.length; cellC++) {
+                const cell = rowCells[cellC]
+                if (cell?.component?.id === componentId) {
+                  return {
+                    type: 'grid-cell',
+                    sectionIndex: sIdx,
+                    rowIndex: rIdx,
+                    colIndex: cIdx,
+                    gridIndex: compIdx,
+                    gridId: comp.id,
+                    cellRow: cellR,
+                    cellCol: cellC,
+                    component: cell.component,
+                  }
+                }
+              }
+            }
+          }
+
+          if (compType === 'swipercontainer' && Array.isArray(comp.props?.slides)) {
+            for (let slideIdx = 0; slideIdx < comp.props.slides.length; slideIdx++) {
+              const slide = comp.props.slides[slideIdx]
+              const slideComps = Array.isArray(slide?.components) ? slide.components : []
+              for (let scIdx = 0; scIdx < slideComps.length; scIdx++) {
+                if (slideComps[scIdx]?.id === componentId) {
+                  return {
+                    type: 'swiper-slide',
+                    sectionIndex: sIdx,
+                    rowIndex: rIdx,
+                    colIndex: cIdx,
+                    swiperIndex: compIdx,
+                    swiperId: comp.id,
+                    slideIndex: slideIdx,
+                    componentIndex: scIdx,
+                    component: slideComps[scIdx],
+                  }
+                }
+              }
+            }
+          }
+
+          if (Array.isArray(comp.props?.components)) {
+            for (let nIdx = 0; nIdx < comp.props.components.length; nIdx++) {
+              if (comp.props.components[nIdx]?.id === componentId) {
+                return {
+                  type: 'nested',
+                  sectionIndex: sIdx,
+                  rowIndex: rIdx,
+                  colIndex: cIdx,
+                  parentIndex: compIdx,
+                  parentId: comp.id,
+                  componentIndex: nIdx,
+                  component: comp.props.components[nIdx],
+                }
+              }
+            }
           }
         }
       }
     }
   }
 
+  return null
+}
+
+const removeUniversalComponent = (layout: any, loc: UniversalLocation): LayoutComponent | null => {
+  const section = layout?.sections?.[loc.sectionIndex]
+  if (!section) return null
+  const rows = getSectionRows(section)
+  const col = rows?.[loc.rowIndex]?.columns?.[loc.colIndex]
+  if (!col) return null
+
+  if (loc.type === 'column') {
+    if (!Array.isArray(col.components)) return null
+    const [removed] = col.components.splice(loc.componentIndex, 1)
+    return removed || null
+  }
+
+  if (loc.type === 'grid-cell') {
+    const grid = col.components?.[loc.gridIndex]
+    if (!grid?.props?.cells?.[loc.cellRow]?.[loc.cellCol]) return null
+    const removed = grid.props.cells[loc.cellRow][loc.cellCol].component
+    grid.props.cells[loc.cellRow][loc.cellCol].component = null
+    return removed || null
+  }
+
+  if (loc.type === 'swiper-slide') {
+    const swiper = col.components?.[loc.swiperIndex]
+    const slide = swiper?.props?.slides?.[loc.slideIndex]
+    if (!Array.isArray(slide?.components)) return null
+    const [removed] = slide.components.splice(loc.componentIndex, 1)
+    return removed || null
+  }
+
+  if (loc.type === 'nested') {
+    const parent = col.components?.[loc.parentIndex]
+    if (!Array.isArray(parent?.props?.components)) return null
+    const [removed] = parent.props.components.splice(loc.componentIndex, 1)
+    return removed || null
+  }
+
+  return null
+}
+
+const findComponentLocation = (layout: PageLayout | undefined, componentId: string): ComponentLocation | null => {
+  const loc = findUniversalLocation(layout, componentId)
+  if (loc && loc.type === 'column') {
+    return {
+      sectionIndex: loc.sectionIndex,
+      rowIndex: loc.rowIndex,
+      colIndex: loc.colIndex,
+      componentIndex: loc.componentIndex,
+      columnId: loc.columnId,
+    }
+  }
   return null
 }
 
@@ -333,6 +488,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
     saveLayout,
     autosaveLayout,
     saveConflict,
+    resolveSaveConflict,
     applyTemplate,
     createPage,
     deletePage,
@@ -598,8 +754,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
     return defaultNames[columnCount] || `Section with ${columnCount} Columns`
   }, [])
 
-  // ✅✅✅ FIXED: Get FRESH layout before saving
-  // ✅✅✅ FIXED handleComponentDelete function
+  // ✅ Universal Component Delete (Supports Columns, Grid Cells, Swiper Slides, Containers)
   const handleComponentDelete = useCallback(
     (componentId: string, context?: any) => {
       debugLog('🎯 [PageEditor] handleComponentDelete CALLED:', {
@@ -608,169 +763,41 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
         timestamp: new Date().toISOString(),
       })
 
-      // ✅ Step 1: Clear selection if deleting selected component
       if (selectedComponent && selectedComponent.compId === componentId) {
-        debugLog('🗑️ Clearing selected component')
         setSelectedComponent(null)
       }
 
-      // ✅ Step 2: Update layout state (FIXED LOGIC)
       setLayout((currentLayout) => {
-        debugLog('🔄 Updating layout state...')
-
         const updatedLayout = JSON.parse(JSON.stringify(currentLayout))
-        let componentDeleted = false
-        let deleteLocation = ''
+        const loc = findUniversalLocation(updatedLayout, componentId)
 
-        // 🎯 CHECK 1: Is this a NESTED component (inside Grid/Carousel)?
-        if (context && (context.parentGridId || context.parentComponentId || context.gridId)) {
-          debugLog('🔍 Processing NESTED component delete:', {
-            componentId,
-            context,
-          })
-
-          // 🎯 A. Check if it's inside a GRID
-          const searchAndUpdateGrid = () => {
-            for (let s = 0; s < updatedLayout.sections.length; s++) {
-              const section = updatedLayout.sections[s]
-
-              const sectionRows = getSectionRows(section)
-              for (let r = 0; r < sectionRows.length; r++) {
-                const row = sectionRows[r]
-
-                for (let c = 0; c < row.columns.length; c++) {
-                  const column = row.columns[c]
-
-                  for (let compIndex = 0; compIndex < column.components.length; compIndex++) {
-                    const comp = column.components[compIndex]
-
-                    // Check if this is a Grid component
-                    if (comp.type === 'NewGrid' && comp.props && comp.props.cells) {
-                      debugLog('🔍 Found Grid:', comp.id, 'checking cells...')
-
-                      // Search in grid cells
-                      for (let rowIdx = 0; rowIdx < comp.props.cells.length; rowIdx++) {
-                        for (let colIdx = 0; colIdx < comp.props.cells[rowIdx].length; colIdx++) {
-                          const cell = comp.props.cells[rowIdx][colIdx]
-
-                          if (cell.component && cell.component.id === componentId) {
-                            debugLog('✅ Found component in Grid cell:', { rowIdx, colIdx })
-
-                            // Remove component from cell
-                            comp.props.cells[rowIdx][colIdx] = {
-                              ...cell,
-                              component: null,
-                            }
-
-                            componentDeleted = true
-                            deleteLocation = `grid[${comp.id}].cells[${rowIdx}][${colIdx}]`
-                            debugLog('✅ Component removed from Grid')
-
-                            return true // Found and updated
-                          }
-                        }
-                      }
-                    }
-
-                    // 🎯 B. Check if it's inside a CAROUSEL
-                    if (comp.type === 'carousel' && comp.props && comp.props.slides) {
-                      debugLog('🔍 Found Carousel:', comp.id, 'checking slides...')
-
-                      for (let slideIdx = 0; slideIdx < comp.props.slides.length; slideIdx++) {
-                        const slide = comp.props.slides[slideIdx]
-
-                        if (slide.components) {
-                          const originalLength = slide.components.length
-                          slide.components = slide.components.filter((slideComp: any) => slideComp.id !== componentId)
-
-                          if (slide.components.length !== originalLength) {
-                            componentDeleted = true
-                            deleteLocation = `carousel[${comp.id}].slides[${slideIdx}]`
-                            debugLog('✅ Component removed from Carousel slide')
-                            return true
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            return false
-          }
-
-          if (searchAndUpdateGrid()) {
-            debugLog('✅✅✅ NESTED Component deleted successfully')
-            toast.success('Component deleted successfully')
-
-            // ✅ Auto-save after successful delete
-            setTimeout(() => {
-              saveLayout(updatedLayout).then((success) => {
-                debugLog(success ? '💾 Nested component deletion saved' : '❌ Save failed')
-              })
-            }, 0)
-
-            return updatedLayout
-          }
+        if (!loc) {
+          console.error('❌ Component not found in layout:', componentId)
+          toast.error('Component not found')
+          return currentLayout
         }
 
-        // 🎯 CHECK 2: Is this a FIRST-LEVEL component?
-        debugLog('🔍 Searching for FIRST-LEVEL component:', componentId)
-
-        for (let s = 0; s < updatedLayout.sections.length; s++) {
-          const section = updatedLayout.sections[s]
-
-          const sectionRows = getSectionRows(section)
-          for (let r = 0; r < sectionRows.length; r++) {
-            const row = sectionRows[r]
-
-            for (let c = 0; c < row.columns.length; c++) {
-              const column = row.columns[c]
-
-              const originalLength = column.components.length
-              column.components = column.components.filter((comp: any) => comp.id !== componentId)
-
-              if (column.components.length !== originalLength) {
-                componentDeleted = true
-                deleteLocation = `section[${s}].row[${r}].column[${c}]`
-                debugLog('✅ First-level component removed:', deleteLocation)
-                break
-              }
-            }
-            if (componentDeleted) break
-          }
-          if (componentDeleted) break
-        }
-
-        if (componentDeleted) {
-          debugLog('✅✅✅ Component SUCCESSFULLY deleted from layout:', {
-            componentId,
-            deleteLocation,
-          })
-
-          toast.success('Component deleted successfully')
-
-          // ✅ Auto-save
+        const removed = removeUniversalComponent(updatedLayout, loc)
+        if (removed) {
+          toast.success('Component deleted')
           setTimeout(() => {
             saveLayout(updatedLayout).then((success) => {
-              debugLog(success ? '💾 Component deletion saved to database' : '❌ Database save failed')
+              debugLog(success ? '💾 Component deletion saved' : '❌ Save failed')
             })
           }, 0)
-        } else {
-          console.error('❌❌❌ Component NOT FOUND in layout:', componentId)
-          toast.error('Component not found')
+          return updatedLayout
         }
 
-        return updatedLayout
+        return currentLayout
       })
     },
     [selectedComponent, saveLayout, setLayout],
   )
 
-  // ✅✅✅ COMPLETELY FIXED handleDragEnd function - HANDLES ALL DROP TYPES
+  // ✅ Complete Universal Drag & Drop Handler (Sections, Columns, Grid Cells, Swiper Slides)
   const handleDragEnd = useCallback(
     (result: any, draggedItem: any) => {
-      debugLog('🎯 [FIXED] PageEditor: handleDragEnd called', {
+      debugLog('🎯 PageEditor: handleDragEnd called', {
         result,
         draggedItem,
         droppableId: result.destination?.droppableId,
@@ -782,6 +809,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
         return
       }
 
+      // 1. Section Reordering
       if (
         typeof result.draggableId === 'string' &&
         result.draggableId.startsWith('section:') &&
@@ -804,14 +832,6 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
             sections: reorderedSections,
           }
 
-          debugLog('🔀 Sections reordered:', {
-            sectionId,
-            sourceIndex,
-            destinationIndex,
-            layout: nextLayout,
-          })
-          debugLog('Saving layout:', nextLayout)
-
           setTimeout(() => {
             saveLayout(nextLayout).then((success) => {
               debugLog(success ? '💾 Section reorder saved' : '❌ Failed to save section reorder')
@@ -825,551 +845,226 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
       }
 
       const destinationDroppableId = String(result.destination?.droppableId || '')
-      const isSortableComponentMove =
-        Boolean(draggedItem?.data?.sortable) &&
-        typeof result.draggableId === 'string' &&
-        result.draggableId.startsWith('component:') &&
-        (destinationDroppableId.startsWith('component:') || destinationDroppableId.startsWith('column:'))
+      const rawDraggableId = String(result.draggableId || '')
 
-      if (isSortableComponentMove) {
-        const sourceComponentId = String(result.draggableId).split(':')[1] || String(draggedItem?.id || '')
-        const targetComponentId = destinationDroppableId.startsWith('component:') ? destinationDroppableId.split(':')[1] || '' : ''
-        const targetColumnContext = destinationDroppableId.startsWith('column:') ? parseColumnDroppableId(destinationDroppableId) : null
-
-        if (sourceComponentId) {
-          setLayout((prevLayout) => {
-            const newLayout = JSON.parse(JSON.stringify(prevLayout))
-            const sourceLocation = findComponentLocation(newLayout, sourceComponentId)
-            const targetLocation = targetComponentId ? findComponentLocation(newLayout, targetComponentId) : null
-
-            if (!sourceLocation) {
-              return prevLayout
-            }
-
-            const sourceColumn =
-              newLayout.sections[sourceLocation.sectionIndex]?.container?.rows?.[sourceLocation.rowIndex]?.columns?.[sourceLocation.colIndex]
-
-            const targetColumn = targetLocation
-              ? newLayout.sections[targetLocation.sectionIndex]?.container?.rows?.[targetLocation.rowIndex]?.columns?.[targetLocation.colIndex]
-              : targetColumnContext
-                ? newLayout.sections
-                    .find((section: Section) => section.id === targetColumnContext.sectionId)
-                    ?.container?.rows?.find((row: any) => row.id === targetColumnContext.rowId)?.columns?.find((col: any) => col.id === targetColumnContext.columnId)
-                : null
-
-            if (!sourceColumn || !Array.isArray(sourceColumn.components) || !targetColumn || !Array.isArray(targetColumn.components)) {
-              return prevLayout
-            }
-
-            const sameColumn =
-              sourceLocation.sectionIndex === (targetLocation?.sectionIndex ?? sourceLocation.sectionIndex) &&
-              sourceLocation.rowIndex === (targetLocation?.rowIndex ?? sourceLocation.rowIndex) &&
-              sourceLocation.colIndex === (targetLocation?.colIndex ?? sourceLocation.colIndex)
-
-            const [movedComponent] = sourceColumn.components.splice(sourceLocation.componentIndex, 1)
-            if (!movedComponent) {
-              return prevLayout
-            }
-
-            const destinationIndex = targetLocation
-              ? sameColumn && sourceLocation.componentIndex < targetLocation.componentIndex
-                ? Math.max(0, targetLocation.componentIndex - 1)
-                : targetLocation.componentIndex
-              : Math.max(0, Math.min(result.destination?.index ?? targetColumn.components.length, targetColumn.components.length))
-
-            targetColumn.components.splice(destinationIndex, 0, movedComponent)
-
-            debugLog('🔀 Component reordered:', {
-              sourceComponentId,
-              sourceLocation,
-              targetComponentId,
-              targetColumnContext,
-              destinationIndex,
-            })
-
-            setTimeout(() => {
-              saveLayout(newLayout).then((success) => {
-                debugLog(success ? '💾 Component reorder saved' : '❌ Failed to save component reorder')
-              })
-            }, 0)
-
-            return newLayout
-          })
-
-          return
-        }
+      // Identify source component ID
+      let sourceComponentId = ''
+      if (rawDraggableId.startsWith('component:')) {
+        sourceComponentId = rawDraggableId.split(':')[1] || ''
+      } else if (rawDraggableId.startsWith('grid-comp-') || rawDraggableId.startsWith('comp-')) {
+        sourceComponentId = rawDraggableId
+      }
+      if (!sourceComponentId && draggedItem?.id) {
+        const idStr = String(draggedItem.id)
+        sourceComponentId = idStr.startsWith('component:') ? idStr.split(':')[1] : idStr
       }
 
-      // Extract the actual component type from draggedItem
-      let componentType = draggedItem.type
-
-      // If draggedItem.type is "component", try to get the actual type from id or data
-      if (componentType === 'component' && draggedItem.id) {
-        // Extract type from id like "component:advancedCard" or just use the id
-        const idParts = draggedItem.id.split(':')
-        if (idParts.length > 1) {
-          componentType = idParts[1] // Get "advancedCard" from "component:advancedCard"
-        } else {
-          componentType = draggedItem.id // Use the id directly
-        }
+      // Identify component type (from draggedItem or source ID)
+      let componentType = String(draggedItem?.type || '')
+      if ((componentType === 'component' || !componentType) && draggedItem?.id) {
+        const idParts = String(draggedItem.id).split(':')
+        componentType = idParts.length > 1 ? idParts[1] : draggedItem.id
+      }
+      if (!componentType && sourceComponentId) {
+        const typeParts = sourceComponentId.split('-')
+        componentType = typeParts[0]
       }
 
-      debugLog('🔧 Using component type:', componentType)
+      setLayout((prevLayout) => {
+        const newLayout = JSON.parse(JSON.stringify(prevLayout))
 
-      // 🎯 1. Handle GRID CELL drops (HIGHEST PRIORITY)
-      if (result.destination.droppableId?.startsWith('component:empty:grid:')) {
-        debugLog('🏗️ Grid cell drop detected:', result.destination.droppableId)
+        // Check if this is an existing component in the layout
+        const sourceLoc = sourceComponentId ? findUniversalLocation(newLayout, sourceComponentId) : null
+        let movedComponent: LayoutComponent | null = null
 
-        // Parse drop zone ID
-        const dropZoneId = result.destination.droppableId
-        const parts = dropZoneId.split(':')
-        const gridIdIndex = parts.indexOf('grid') + 1
-        const rowIndexIndex = gridIdIndex + 1
-        const colIndexIndex = gridIdIndex + 2
-
-        const actualGridId = parts[gridIdIndex]
-        const rowIndex = parseInt(parts[rowIndexIndex], 10)
-        const colIndex = parseInt(parts[colIndexIndex], 10)
-
-        // Validate coordinates
-        if (isNaN(rowIndex) || isNaN(colIndex)) {
-          console.error('❌ Invalid grid cell coordinates:', { rowIndex, colIndex })
-          return
+        if (sourceLoc) {
+          movedComponent = removeUniversalComponent(newLayout, sourceLoc)
         }
 
-        // Update the layout with the new component in the grid cell
-        setLayout((prevLayout) => {
-          const newLayout = JSON.parse(JSON.stringify(prevLayout))
-          let gridUpdated = false
-          const isGridComponentType = (type: unknown) => {
-            const normalizedType = String(type || '').trim().toLowerCase()
-            return normalizedType === 'newgrid'
+        // If not found in layout, instantiate new component from registry
+        if (!movedComponent) {
+          const compDef = getComponentDefinition(componentType)
+          movedComponent = {
+            id: createEditorId(componentType || 'component'),
+            type: componentType || 'button',
+            label: compDef?.name || componentType || 'Component',
+            props: compDef?.defaultProps ? { ...compDef.defaultProps } : {},
           }
-
-          // Helper function to update grid cell
-          const updateGridCell = (gridComp: any, rowIdx: number, colIdx: number, compType: string): boolean => {
-            // Ensure props exists
-            if (!gridComp.props) gridComp.props = {}
-
-            // Initialize cells if not exists
-            if (!gridComp.props.cells) {
-              const rows = gridComp.props?.rows || 1
-              const cols = gridComp.props?.columns || 3
-              debugLog('🏗️ Initializing grid cells:', { rows, cols })
-              gridComp.props.cells = Array(rows)
+          if (String(componentType).toLowerCase() === 'newgrid') {
+            movedComponent.props = {
+              ...movedComponent.props,
+              columns: 3,
+              rows: 2,
+              cells: Array(2)
                 .fill(null)
                 .map(() =>
-                  Array(cols)
+                  Array(3)
+                    .fill(null)
+                    .map(() => ({ component: null })),
+                ),
+            }
+          }
+        }
+
+        // Case A: Dropping onto a Grid Cell (empty or occupied)
+        if (destinationDroppableId.includes(':grid:')) {
+          const parts = destinationDroppableId.split(':')
+          const gridIdx = parts.indexOf('grid')
+          const actualGridId = parts[gridIdx + 1]
+          const rowIndex = parseInt(parts[gridIdx + 2], 10)
+          const colIndex = parseInt(parts[gridIdx + 3], 10)
+
+          if (!isNaN(rowIndex) && !isNaN(colIndex)) {
+            let targetGrid: any = null
+            for (const section of newLayout.sections || []) {
+              for (const row of getSectionRows(section)) {
+                for (const col of row.columns || []) {
+                  for (const comp of col.components || []) {
+                    const cType = String(comp?.type || '').toLowerCase()
+                    if ((cType === 'newgrid' || cType === 'grid') && comp.id === actualGridId) {
+                      targetGrid = comp
+                      break
+                    }
+                  }
+                  if (targetGrid) break
+                }
+                if (targetGrid) break
+              }
+              if (targetGrid) break
+            }
+
+            if (targetGrid) {
+              if (!targetGrid.props) targetGrid.props = {}
+              if (!Array.isArray(targetGrid.props.cells)) {
+                const rCount = Math.max(rowIndex + 1, targetGrid.props.rows || 2)
+                const cCount = Math.max(colIndex + 1, targetGrid.props.columns || 3)
+                targetGrid.props.cells = Array(rCount)
+                  .fill(null)
+                  .map(() =>
+                    Array(cCount)
+                      .fill(null)
+                      .map(() => ({ component: null })),
+                  )
+              }
+              while (targetGrid.props.cells.length <= rowIndex) {
+                targetGrid.props.cells.push(
+                  Array(targetGrid.props.columns || 3)
                     .fill(null)
                     .map(() => ({ component: null })),
                 )
-            }
-
-            // Ensure target cell exists
-            if (!gridComp.props.cells[rowIdx]) {
-              gridComp.props.cells[rowIdx] = []
-            }
-            if (!gridComp.props.cells[rowIdx][colIdx]) {
-              gridComp.props.cells[rowIdx][colIdx] = { component: null }
-            }
-
-            // Get component definition and create new component
-            const componentDef = getComponentDefinition(compType)
-            const newComponent: LayoutComponent = {
-              id: `${compType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              type: compType,
-              label: componentDef?.name || compType,
-              props: componentDef?.defaultProps ? { ...componentDef.defaultProps } : {},
-            }
-
-            // Update the cell
-            gridComp.props.cells[rowIdx][colIdx] = {
-              ...gridComp.props.cells[rowIdx][colIdx],
-              component: newComponent,
-            }
-
-            debugLog('✅ Component added to grid cell:', {
-              rowIndex: rowIdx,
-              colIndex: colIdx,
-              componentType: compType,
-              gridId: gridComp.id,
-            })
-
-            return true
-          }
-
-          const findAndUpdateGrid = (components: any[]): boolean => {
-            for (const comp of components || []) {
-              if (!comp) continue
-
-              if (isGridComponentType(comp.type) && comp.id === actualGridId) {
-                debugLog('🎯 Found target grid:', comp.id)
-                return updateGridCell(comp, rowIndex, colIndex, componentType)
+              }
+              while (targetGrid.props.cells[rowIndex].length <= colIndex) {
+                targetGrid.props.cells[rowIndex].push({ component: null })
               }
 
-              if (Array.isArray(comp?.props?.components) && findAndUpdateGrid(comp.props.components)) {
-                return true
+              const existingInCell = targetGrid.props.cells[rowIndex][colIndex]?.component
+              targetGrid.props.cells[rowIndex][colIndex] = {
+                ...targetGrid.props.cells[rowIndex][colIndex],
+                component: movedComponent,
               }
 
-              if (Array.isArray(comp?.props?.slides)) {
-                for (const slide of comp.props.slides) {
-                  if (Array.isArray(slide?.components) && findAndUpdateGrid(slide.components)) {
-                    return true
-                  }
-                }
-              }
-            }
-
-            return false
-          }
-
-          for (const section of newLayout.sections) {
-            for (const row of getSectionRows(section)) {
-              for (const col of row.columns) {
-                if (findAndUpdateGrid(col.components)) {
-                  gridUpdated = true
-                  break
-                }
-              }
-              if (gridUpdated) break
-            }
-            if (gridUpdated) break
-          }
-
-          if (gridUpdated) {
-            debugLog('✅✅✅ Grid updated successfully')
-            toast.success('Component added to grid')
-
-            // Auto-save
-            setTimeout(() => {
-              saveLayout(newLayout).then((success) => {
-                debugLog(success ? '💾 Grid update saved' : '❌ Failed to save grid update')
-              })
-            }, 300)
-          } else {
-            console.error('❌ Grid not found:', actualGridId)
-            toast.error('Grid not found')
-          }
-
-          return newLayout
-        })
-
-        return
-      }
-
-      // In the handleDragEnd function in PageEditor.tsx, add this case:
-
-      // 🎯 2. Handle SWIPER SLIDE drops (NEW)
-      if (result.destination.droppableId?.startsWith('swiper-')) {
-        debugLog('🔄 Swiper slide drop detected:', result.destination.droppableId)
-
-        // Parse swiper ID and slide index from drop zone ID
-        // Format: swiper-{swiperId}-slide-{slideIndex}
-        const dropZoneId = result.destination.droppableId
-        const match = dropZoneId.match(/swiper-(.+)-slide-(\d+)/)
-
-        if (match) {
-          const [, swiperId, slideIndexStr] = match
-          const slideIndex = parseInt(slideIndexStr, 10)
-
-          debugLog('🎯 Swiper drop parsed:', {
-            swiperId,
-            slideIndex,
-            componentType,
-          })
-
-          // Update layout to add component to swiper slide
-          setLayout((prevLayout) => {
-            const newLayout = JSON.parse(JSON.stringify(prevLayout))
-            let swiperUpdated = false
-
-            // Deep search function for swiper
-            const findAndUpdateSwiper = (components: any[]): boolean => {
-              for (let i = 0; i < components.length; i++) {
-                const comp = components[i]
-                if (!comp) continue
-
-                // Check if this is the target swiper
-                const isMatchingSwiper =
-                  comp.type === 'swipercontainer' && (comp.id === swiperId || comp.id === `swiper-${swiperId}` || comp.id.includes(swiperId))
-
-                if (isMatchingSwiper) {
-                  debugLog('🎯 Found target swiper:', {
-                    compId: comp.id,
-                    swiperId,
-                    hasSlides: !!comp.props?.slides,
-                    currentSlides: comp.props?.slides || [],
-                  })
-
-                  // Initialize swiper props if needed
-                  if (!comp.props) comp.props = {}
-                  if (!comp.props.slides) {
-                    comp.props.slides = [
-                      {
-                        id: `slide-${Date.now()}`,
-                        components: [],
-                        bgType: 'gradient',
-                        bgGradient: 'linear-gradient(135deg, #1a1628, #22263a)',
-                        padding: '12px',
-                      },
-                    ]
-                  }
-
-                  // Ensure slide exists at index
-                  if (slideIndex >= comp.props.slides.length) {
-                    debugLog('🆕 Creating missing slide at index:', slideIndex)
-                    while (comp.props.slides.length <= slideIndex) {
-                      comp.props.slides.push({
-                        id: `slide-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                        components: [],
-                        bgType: 'gradient',
-                        bgGradient: 'linear-gradient(135deg, #1a1628, #22263a)',
-                        padding: '12px',
-                      })
-                    }
-                  }
-
-                  const targetSlide = comp.props.slides[slideIndex]
-                  if (!targetSlide.components) targetSlide.components = []
-
-                  // Get component definition and create new component
-                  const componentDef = getComponentDefinition(componentType)
-                  const newComponent: LayoutComponent = {
-                    id: `${componentType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                    type: componentType,
-                    label: componentDef?.name || componentType,
-                    props: componentDef?.defaultProps ? { ...componentDef.defaultProps } : {},
-                  }
-
-                  // Special handling for NewGrid components
-                  if (componentType === 'NewGrid') {
-                    // Initialize props if it doesn't exist
-                    if (!newComponent.props) {
-                      newComponent.props = {}
-                    }
-
-                    // Initialize cells for the new grid
-                    if (!newComponent.props.cells) {
-                      newComponent.props.cells = Array(1)
-                        .fill(null)
-                        .map(() =>
-                          Array(3)
-                            .fill(null)
-                            .map(() => ({ component: null })),
-                        )
-                    }
-                  }
-
-                  // Add to target slide
-                  targetSlide.components.push(newComponent)
-
-                  debugLog('✅ Component added to swiper slide:', {
-                    slideIndex: slideIndex,
-                    componentType,
-                    componentId: newComponent.id,
-                    slideComponentsCount: targetSlide.components.length,
-                    slideComponents: targetSlide.components.map((c: any) => ({ type: c.type, id: c.id })),
-                  })
-
-                  // 🆕 CRITICAL: Force update the component props
-                  comp.props = { ...comp.props }
-
-                  swiperUpdated = true
-                  return true
-                }
-
-                // Recursively search nested components
-                if (comp.props?.components) {
-                  const validComponents = comp.props.components.filter((c: LayoutComponent | null) => c !== null) as LayoutComponent[]
-                  if (findAndUpdateSwiper(validComponents)) return true
-                }
-
-                // Search in carousel slides
-                if (comp.type === 'carousel' && comp.props?.slides) {
-                  for (const slide of comp.props.slides) {
-                    if (slide?.components) {
-                      const validComponents = slide.components.filter((c: LayoutComponent) => c !== null)
-                      if (findAndUpdateSwiper(validComponents)) return true
+              // Swap if source was also a grid cell
+              if (existingInCell && sourceLoc && sourceLoc.type === 'grid-cell') {
+                for (const s of newLayout.sections || []) {
+                  for (const r of getSectionRows(s)) {
+                    for (const c of r.columns || []) {
+                      const srcGrid = c.components?.[sourceLoc.gridIndex]
+                      if (srcGrid?.props?.cells?.[sourceLoc.cellRow]?.[sourceLoc.cellCol]) {
+                        srcGrid.props.cells[sourceLoc.cellRow][sourceLoc.cellCol].component = existingInCell
+                      }
                     }
                   }
                 }
               }
-              return false
-            }
 
-            // Search everywhere in layout
-            const searchEverywhere = (): boolean => {
-              // Search sections
-              for (const section of newLayout.sections) {
-                for (const row of section.container.rows) {
-                  for (const col of row.columns) {
-                    const validComponents = col.components.filter((c: LayoutComponent | null) => c !== null) as LayoutComponent[]
-                    if (findAndUpdateSwiper(validComponents)) return true
-                  }
-                }
-              }
-
-              // Search top-level components
-              if (newLayout.components?.length > 0) {
-                const validComponents = newLayout.components.filter((c: LayoutComponent | null) => c !== null) as LayoutComponent[]
-                if (findAndUpdateSwiper(validComponents)) return true
-              }
-
-              return false
-            }
-
-            if (searchEverywhere()) {
-              debugLog('✅ Swiper updated successfully - COMPLETE LAYOUT:', JSON.stringify(newLayout, null, 2))
-
-              // Auto-save
-              if (saveLayout) {
-                setTimeout(() => {
-                  saveLayout(newLayout).then((success) => {
-                    debugLog(success ? '💾 Swiper update saved' : '❌ Failed to save swiper update')
-                  })
-                }, 300)
-              }
-
+              targetGrid.props = { ...targetGrid.props }
+              toast.success(sourceLoc ? 'Component moved in grid' : 'Component added to grid')
               return newLayout
             }
-
-            console.error('❌ Swiper not found in layout:', swiperId)
-            return newLayout
-          })
-
-          toast.success(`Component added to swiper slide ${slideIndex + 1}`)
-          return
-        }
-      }
-
-      // 🎯 2. Handle CAROUSEL drops
-      if (result.destination.droppableId?.startsWith('component:carousel-')) {
-        debugLog('🎠 Carousel drop detected')
-        layoutActionsHandleDragEnd(result, draggedItem)
-        return
-      }
-
-      // 🎯 3. ✅✅✅ CRITICAL FIX: Handle COLUMN drops (FIXED FOR ALL COLUMNS)
-      if (result.destination.droppableId?.startsWith('column:')) {
-        debugLog('📦 Column drop detected:', result.destination.droppableId)
-
-        // Parse destination: column:sectionId:containerId:rowId:columnId
-        const destParts = result.destination.droppableId.split(':')
-        debugLog('🔍 Destination parts:', destParts)
-
-        // Handle both formats:
-        // Format 1: column:sectionId:containerId:rowId:columnId (from PageEditorCanvas)
-        // Format 2: column:sectionId:rowId:columnId (simplified)
-        let sectionId, containerId, rowId, columnId
-
-        if (destParts.length === 5) {
-          // Format 1
-          ;[, sectionId, containerId, rowId, columnId] = destParts
-        } else if (destParts.length === 4) {
-          // Format 2
-          ;[, sectionId, rowId, columnId] = destParts
-          containerId = 'container-' + sectionId // Default container ID
-        } else {
-          console.error('❌ Invalid column droppableId format:', result.destination.droppableId)
-          return
+          }
         }
 
-        debugLog('🔍 Column destination parsed:', { sectionId, containerId, rowId, columnId })
+        // Case B: Dropping onto a Swiper Slide
+        if (destinationDroppableId.startsWith('swiper-')) {
+          const match = destinationDroppableId.match(/swiper-(.+)-slide-(\d+)/)
+          if (match) {
+            const [, swiperId, slideIndexStr] = match
+            const slideIndex = parseInt(slideIndexStr, 10)
 
-        // Get component definition
-        const componentDef = getComponentDefinition(componentType)
-        if (!componentDef) {
-          console.error('❌ Component definition not found:', componentType)
-          toast.error(`Component type "${componentType}" not found`)
-          return
-        }
-
-        // Create new component
-        const newComponent: LayoutComponent = {
-          id: `${componentType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          type: componentType,
-          label: componentDef.name || componentType,
-          props: componentDef.defaultProps ? { ...componentDef.defaultProps } : {},
-        }
-
-        debugLog('🎯 Creating new component for column:', newComponent.id)
-
-        // Update layout - Add to specific column
-        setLayout((prevLayout) => {
-          const newLayout = JSON.parse(JSON.stringify(prevLayout))
-          let componentAdded = false
-
-          // Find and update the target column
-          for (const section of newLayout.sections) {
-            if (section.id === sectionId) {
-              // Find the container
-              const container = section.container
-              if (container.id === containerId || !containerId) {
-                // Find the row
-                for (const row of container.rows) {
-                  if (row.id === rowId || row.id === `row-${sectionId}`) {
-                    // Find the column
-                    for (const col of row.columns) {
-                      if (col.id === columnId) {
-                        // Add component to this column at the specified index
-                        const insertIndex = result.destination?.index ?? col.components.length
-                        col.components.splice(insertIndex, 0, newComponent)
-                        if (!section.name || section.name === 'New Section') {
-                          section.name = componentDef.name || componentType
-                        }
-
-                        debugLog('✅ Component added to column:', {
-                          sectionName: section.name,
-                          columnId,
-                          columnIndex: row.columns.indexOf(col),
-                          insertIndex,
-                          newComponentId: newComponent.id,
+            for (const section of newLayout.sections || []) {
+              for (const row of getSectionRows(section)) {
+                for (const col of row.columns || []) {
+                  for (const comp of col.components || []) {
+                    if (comp.type === 'swipercontainer' && (comp.id === swiperId || comp.id.includes(swiperId))) {
+                      if (!comp.props) comp.props = {}
+                      if (!Array.isArray(comp.props.slides)) comp.props.slides = []
+                      while (comp.props.slides.length <= slideIndex) {
+                        comp.props.slides.push({
+                          id: createEditorId('slide'),
+                          components: [],
                         })
+                      }
+                      const targetSlide = comp.props.slides[slideIndex]
+                      if (!Array.isArray(targetSlide.components)) targetSlide.components = []
+                      targetSlide.components.push(movedComponent)
+                      comp.props = { ...comp.props }
+                      toast.success(`Component added to slide ${slideIndex + 1}`)
+                      return newLayout
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
 
-                        componentAdded = true
+        // Case C: Dropping onto a Column or sorting inside a Column
+        let targetCol: any = null
+        let insertIdx = 0
 
-                        // Auto-save
-                        setTimeout(() => {
-                          saveLayout(newLayout).then((success) => {
-                            debugLog(success ? '💾 Column drop saved' : '❌ Save failed')
-                          })
-                        }, 300)
-
+        if (destinationDroppableId.startsWith('column:')) {
+          const colCtx = parseColumnDroppableId(destinationDroppableId)
+          if (colCtx) {
+            for (const s of newLayout.sections || []) {
+              if (s.id === colCtx.sectionId) {
+                for (const r of getSectionRows(s)) {
+                  if (r.id === colCtx.rowId || r.id === `row-${s.id}`) {
+                    for (const c of r.columns || []) {
+                      if (c.id === colCtx.columnId) {
+                        targetCol = c
+                        insertIdx = typeof result.destination?.index === 'number' ? result.destination.index : (c.components?.length || 0)
                         break
                       }
                     }
                   }
-                  if (componentAdded) break
+                  if (targetCol) break
                 }
               }
+              if (targetCol) break
             }
-            if (componentAdded) break
           }
-
-          if (!componentAdded) {
-            console.error('❌ Target column not found:', { sectionId, containerId, rowId, columnId })
-            debugLog(
-              '🔍 Available sections:',
-              newLayout.sections.map((s: any) => ({
-                id: s.id,
-                rows: s.container?.rows?.map((r: any) => ({
-                  id: r.id,
-                  columns: r.columns?.map((c: any) => c.id),
-                })),
-              })),
-            )
+        } else if (destinationDroppableId.startsWith('component:')) {
+          const targetCompId = destinationDroppableId.split(':')[1]
+          const targetLoc = findUniversalLocation(newLayout, targetCompId)
+          if (targetLoc && targetLoc.type === 'column') {
+            const section = newLayout.sections[targetLoc.sectionIndex]
+            const rows = getSectionRows(section)
+            targetCol = rows[targetLoc.rowIndex]?.columns[targetLoc.colIndex]
+            insertIdx = targetLoc.componentIndex
           }
+        }
 
+        if (targetCol && Array.isArray(targetCol.components)) {
+          const safeIdx = Math.max(0, Math.min(insertIdx, targetCol.components.length))
+          targetCol.components.splice(safeIdx, 0, movedComponent)
+          toast.success(sourceLoc ? 'Component moved' : 'Component added')
           return newLayout
-        })
+        }
 
-        toast.success(`${componentDef.name || componentType} added to column`)
-        return
-      }
-
-      // 4. All other drops - use layoutActionsHandleDragEnd
-      debugLog('📦 Processing other types of drops')
-      layoutActionsHandleDragEnd(result, draggedItem)
+        // Fallback for any other custom drop zones
+        layoutActionsHandleDragEnd(result, draggedItem)
+        return newLayout
+      })
     },
     [layoutActionsHandleDragEnd, setLayout, getComponentDefinition, saveLayout],
   )
@@ -1442,7 +1137,8 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
     ) => {
       // ✅ ADD: Prevent multiple rapid selections
       if (selectedComponent?.compId === component.id) {
-        return // Already selected, don't do anything
+        setRightSidebarVisible(true)
+        return // Already selected, ensure property panel is open
       }
 
       debugLog('🎯 [PageEditor] Component selected (WITH NESTED CONTEXT):', {
@@ -1471,46 +1167,165 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
         cellCol: context.cellCol,
       })
       setSelectedSectionId(context.sectionId)
+      setRightSidebarVisible(true)
     },
-    [selectedComponent],
+    [selectedComponent, setSelectedComponent, setSelectedSectionId, setRightSidebarVisible],
+  )
+
+  const handleComponentAddUnified = useCallback(
+    (componentDef: ComponentDefinition) => {
+      const newComponent: LayoutComponent = createLayoutComponentFromDefinition(componentDef)
+      let targetSectionId = selectedSectionId
+      let targetContainerId = ''
+      let targetRowId = ''
+      let targetColId = ''
+
+      setLayout((prevLayout) => {
+        const nextLayout = JSON.parse(JSON.stringify(prevLayout || { sections: [] }))
+        if (!Array.isArray(nextLayout.sections) || nextLayout.sections.length === 0) {
+          const newSectionId = `section-${Date.now()}`
+          const newContainerId = `container-${Date.now()}`
+          const newRowId = `row-${Date.now()}`
+          const newColId = `col-${Date.now()}`
+          targetSectionId = newSectionId
+          targetContainerId = newContainerId
+          targetRowId = newRowId
+          targetColId = newColId
+          nextLayout.sections = [
+            {
+              id: newSectionId,
+              name: 'Section 1',
+              type: 'custom',
+              container: {
+                id: newContainerId,
+                rows: [
+                  {
+                    id: newRowId,
+                    columns: [
+                      {
+                        id: newColId,
+                        width: 100,
+                        components: [newComponent],
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          ]
+          return nextLayout
+        }
+
+        // Find target section (selected or last)
+        let section = nextLayout.sections.find((s: any) => s.id === selectedSectionId)
+        if (!section) {
+          section = nextLayout.sections[nextLayout.sections.length - 1]
+        }
+        targetSectionId = section.id
+        targetContainerId = section.container?.id || `container-${Date.now()}`
+        if (!section.container) {
+          section.container = { id: targetContainerId, rows: [] }
+        }
+        const rows = ensureSectionRows(section)
+        if (rows.length === 0) {
+          targetRowId = `row-${Date.now()}`
+          targetColId = `col-${Date.now()}`
+          const newRow = {
+            id: targetRowId,
+            columns: [
+              {
+                id: targetColId,
+                width: 100,
+                components: [newComponent],
+              },
+            ],
+          }
+          if (Array.isArray(section.container?.rows)) {
+            section.container.rows.push(newRow)
+          } else {
+            section.rows = [newRow]
+          }
+        } else {
+          // If a component was selected, insert right after it
+          let inserted = false
+          if (selectedComponent?.compId) {
+            for (const r of rows) {
+              for (const c of r.columns || []) {
+                const compIndex = (c.components || []).findIndex((comp: any) => comp?.id === selectedComponent.compId)
+                if (compIndex !== -1) {
+                  c.components.splice(compIndex + 1, 0, newComponent)
+                  targetRowId = r.id
+                  targetColId = c.id
+                  inserted = true
+                  break
+                }
+              }
+              if (inserted) break
+            }
+          }
+          if (!inserted) {
+            const lastRow = rows[rows.length - 1]
+            targetRowId = lastRow.id
+            if (!lastRow.columns || lastRow.columns.length === 0) {
+              targetColId = `col-${Date.now()}`
+              lastRow.columns = [{ id: targetColId, width: 100, components: [newComponent] }]
+            } else {
+              const lastCol = lastRow.columns[0]
+              targetColId = lastCol.id
+              if (!Array.isArray(lastCol.components)) {
+                lastCol.components = []
+              }
+              lastCol.components.push(newComponent)
+            }
+          }
+        }
+
+        return nextLayout
+      })
+
+      // Select the newly added component and open property panel!
+      setTimeout(() => {
+        setSelectedComponent({
+          sectionId: targetSectionId || '',
+          containerId: targetContainerId || '',
+          rowId: targetRowId || '',
+          colId: targetColId || '',
+          compId: newComponent.id,
+          component: newComponent,
+        })
+        if (targetSectionId) {
+          setSelectedSectionId(targetSectionId)
+        }
+        setRightSidebarVisible(true)
+        toast.success(`Added ${componentDef.name}`)
+      }, 50)
+    },
+    [selectedSectionId, selectedComponent, setLayout, setSelectedComponent, setSelectedSectionId, setRightSidebarVisible],
   )
 
   const handleComponentEdit = useCallback(
     (componentId: string) => {
       setRightSidebarVisible(true)
-      // Simple find function
-      let foundComponent: LayoutComponent | null = null
-      let foundContext: any = null
-
-      const searchComponent = (sections: Section[]): boolean => {
-        for (const section of sections) {
-          for (const row of getSectionRows(section)) {
-            for (const col of row.columns) {
-              for (const comp of col.components) {
-                if (comp?.id === componentId) {
-                  foundComponent = comp
-                  foundContext = {
-                    sectionId: section.id,
-                    containerId: section.container.id,
-                    rowId: row.id,
-                    colId: col.id,
-                  }
-                  return true
-                }
-              }
-            }
-          }
-        }
-        return false
-      }
-
-      if (searchComponent(layout?.sections || [])) {
+      const loc = findUniversalLocation(layout, componentId)
+      if (loc) {
+        const section = layout?.sections?.[loc.sectionIndex]
+        const col = getSectionRows(section)?.[loc.rowIndex]?.columns?.[loc.colIndex]
         setSelectedComponent({
-          ...foundContext,
+          sectionId: section?.id || '',
+          containerId: section?.container?.id || '',
+          rowId: `row-${loc.rowIndex}`,
+          colId: loc.type === 'column' ? loc.columnId : col?.id || '',
           compId: componentId,
-          component: foundComponent!,
+          component: loc.component,
+          gridId: loc.type === 'grid-cell' ? loc.gridId : undefined,
+          cellRow: loc.type === 'grid-cell' ? loc.cellRow : undefined,
+          cellCol: loc.type === 'grid-cell' ? loc.cellCol : undefined,
+          carouselId: loc.type === 'swiper-slide' ? loc.swiperId : undefined,
+          slideIndex: loc.type === 'swiper-slide' ? loc.slideIndex : undefined,
         })
-        setSelectedSectionId(foundContext.sectionId)
+        if (section?.id) {
+          setSelectedSectionId(section.id)
+        }
       }
     },
     [layout, setRightSidebarVisible],
@@ -1538,100 +1353,289 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
       })
 
       let updatedViaSelectedGridContext = false
-      if (
-        selectedComponent?.gridId &&
-        selectedComponent.cellRow !== undefined &&
-        selectedComponent.cellCol !== undefined &&
-        selectedComponent.compId === componentId
-      ) {
-        setLayout((prevLayout) => {
-          const nextLayout = JSON.parse(JSON.stringify(prevLayout))
-          let updated = false
 
-          const updateInComponents = (components: any[]): boolean => {
-            for (const comp of components || []) {
-              if (!comp) continue
+      setLayout((prevLayout) => {
+        const nextLayout = JSON.parse(JSON.stringify(prevLayout))
+        let updated = false
 
-              const normalizedType = String(comp.type || '').trim().toLowerCase()
-              if ((normalizedType === 'newgrid') && comp.id === selectedComponent.gridId) {
-                const row = comp.props?.cells?.[selectedComponent.cellRow!]
-                const cell = row?.[selectedComponent.cellCol!]
-                if (cell?.component?.id === componentId) {
-                  cell.component = {
-                    ...cell.component,
-                    props: {
-                      ...cell.component.props,
-                      ...props,
-                    },
-                  }
-                  updatedViaSelectedGridContext = true
-                  return true
-                }
+        const updateInComponents = (components: any[]): boolean => {
+          for (const comp of components || []) {
+            if (!comp) continue
+
+            // 1. Direct component match
+            if (comp.id === componentId) {
+              comp.props = {
+                ...comp.props,
+                ...props,
               }
+              updated = true
+              updatedViaSelectedGridContext = true
+              return true
+            }
 
-              if (Array.isArray(comp?.props?.components) && updateInComponents(comp.props.components)) {
-                return true
-              }
-
-              if (Array.isArray(comp?.props?.slides)) {
-                for (const slide of comp.props.slides) {
-                  if (Array.isArray(slide?.components) && updateInComponents(slide.components)) {
+            // 2. Search inside Grid cells (NewGrid, grid, etc.)
+            const normalizedType = String(comp.type || '').trim().toLowerCase()
+            if ((normalizedType === 'newgrid' || normalizedType === 'grid') && Array.isArray(comp.props?.cells)) {
+              for (let r = 0; r < comp.props.cells.length; r++) {
+                for (let c = 0; c < (comp.props.cells[r]?.length || 0); c++) {
+                  const cell = comp.props.cells[r][c]
+                  if (cell?.component?.id === componentId) {
+                    cell.component = {
+                      ...cell.component,
+                      props: {
+                        ...cell.component.props,
+                        ...props,
+                      },
+                    }
+                    comp.props = { ...comp.props, cells: [...comp.props.cells] }
+                    updated = true
+                    updatedViaSelectedGridContext = true
                     return true
                   }
                 }
               }
             }
 
-            return false
-          }
+            // 3. Search in nested components
+            if (Array.isArray(comp?.props?.components) && updateInComponents(comp.props.components)) {
+              return true
+            }
 
-          for (const section of nextLayout.sections || []) {
-            for (const row of getSectionRows(section)) {
-              for (const column of row.columns || []) {
-                if (updateInComponents(column.components || [])) {
-                  updated = true
-                  break
+            // 4. Search in swiper slides
+            if (Array.isArray(comp?.props?.slides)) {
+              for (const slide of comp.props.slides) {
+                if (Array.isArray(slide?.components) && updateInComponents(slide.components)) {
+                  return true
                 }
               }
-              if (updated) break
+            }
+          }
+
+          return false
+        }
+
+        for (const section of nextLayout.sections || []) {
+          for (const row of getSectionRows(section)) {
+            for (const column of row.columns || []) {
+              if (updateInComponents(column.components || [])) {
+                updated = true
+                break
+              }
             }
             if (updated) break
           }
-
-          if (!updated) {
-            return prevLayout
-          }
-
-          return nextLayout
-        })
-
-        if (updatedViaSelectedGridContext) {
-          return
+          if (updated) break
         }
-      }
 
-      // 🎯 CRITICAL: Update the layout via the layout actions
+        if (!updated && Array.isArray(nextLayout.components)) {
+          if (updateInComponents(nextLayout.components)) {
+            updated = true
+          }
+        }
+
+        if (!updated) {
+          return prevLayout
+        }
+
+        return nextLayout
+      })
+
+      // Sync selectedComponent state so property panel stays accurate
+      setSelectedComponent((prev) => {
+        if (!prev || prev.compId !== componentId) return prev
+        return {
+          ...prev,
+          component: {
+            ...prev.component,
+            props: {
+              ...prev.component.props,
+              ...props,
+            },
+          },
+        }
+      })
+
+      // 🎯 CRITICAL: Update the layout via the layout actions as well
       debugLog('🔄 Calling layoutActionsHandleComponentUpdate...')
       layoutActionsHandleComponentUpdate(componentId, props)
-
-      // 🎯 Optional: Add special handling for grid children
-      if (componentId.includes('advancedCard') || componentId.includes('advancedImage')) {
-        debugLog('🔍 Grid child component detected, ensuring update propagates')
-
-        // Trigger a force update for grids containing this component
-        setLayout((prev) => {
-          debugLog('🔄 Force updating layout for grid child')
-          return { ...prev }
-        })
-      }
     },
     [layoutActionsHandleComponentUpdate, selectedComponent, setLayout],
   )
 
-  const handleComponentDuplicate = useCallback((component: LayoutComponent) => {
-    // TODO: Implement duplicate logic
-    debugLog('Duplicate component:', component)
-  }, [])
+  const handleComponentDuplicate = useCallback(
+    (component: LayoutComponent) => {
+      if (!component?.id) return
+
+      setLayout((prevLayout) => {
+        const newLayout = JSON.parse(JSON.stringify(prevLayout))
+        const loc = findUniversalLocation(newLayout, component.id)
+        if (!loc) {
+          toast.error('Component not found to duplicate')
+          return prevLayout
+        }
+
+        const clonedComponent = cloneComponentTreeWithNewIds(component)
+
+        if (loc.type === 'column') {
+          const section = newLayout.sections[loc.sectionIndex]
+          const rows = getSectionRows(section)
+          const col = rows[loc.rowIndex]?.columns[loc.colIndex]
+          if (col && Array.isArray(col.components)) {
+            col.components.splice(loc.componentIndex + 1, 0, clonedComponent)
+          }
+        } else if (loc.type === 'grid-cell') {
+          const section = newLayout.sections[loc.sectionIndex]
+          const rows = getSectionRows(section)
+          const col = rows[loc.rowIndex]?.columns[loc.colIndex]
+          const grid = col?.components[loc.gridIndex]
+          if (grid?.props?.cells) {
+            let placed = false
+            for (let r = 0; r < grid.props.cells.length; r++) {
+              for (let c = 0; c < grid.props.cells[r].length; c++) {
+                if (!grid.props.cells[r][c]?.component) {
+                  grid.props.cells[r][c] = { component: clonedComponent }
+                  placed = true
+                  break
+                }
+              }
+              if (placed) break
+            }
+            if (!placed) {
+              const colCount = grid.props.columns || 3
+              const newRow = Array(colCount)
+                .fill(null)
+                .map(() => ({ component: null }))
+              newRow[0] = { component: clonedComponent }
+              grid.props.cells.push(newRow)
+              grid.props.rows = grid.props.cells.length
+            }
+            grid.props = { ...grid.props }
+          }
+        } else if (loc.type === 'swiper-slide') {
+          const section = newLayout.sections[loc.sectionIndex]
+          const rows = getSectionRows(section)
+          const col = rows[loc.rowIndex]?.columns[loc.colIndex]
+          const swiper = col?.components[loc.swiperIndex]
+          const slide = swiper?.props?.slides[loc.slideIndex]
+          if (slide && Array.isArray(slide.components)) {
+            slide.components.splice(loc.componentIndex + 1, 0, clonedComponent)
+          }
+        } else if (loc.type === 'nested') {
+          const section = newLayout.sections[loc.sectionIndex]
+          const rows = getSectionRows(section)
+          const col = rows[loc.rowIndex]?.columns[loc.colIndex]
+          const parent = col?.components[loc.parentIndex]
+          if (parent?.props?.components) {
+            parent.props.components.splice(loc.componentIndex + 1, 0, clonedComponent)
+          }
+        }
+
+        toast.success(`Duplicated ${component.label || component.type}`)
+        return newLayout
+      })
+    },
+    [saveLayout, setLayout],
+  )
+
+  const handleComponentMove = useCallback(
+    (componentId: string, direction: 'up' | 'down') => {
+      if (!componentId) return
+
+      setLayout((prevLayout) => {
+        const newLayout = JSON.parse(JSON.stringify(prevLayout))
+        const loc = findUniversalLocation(newLayout, componentId)
+        if (!loc) return prevLayout
+
+        if (loc.type === 'column') {
+          const section = newLayout.sections[loc.sectionIndex]
+          const rows = getSectionRows(section)
+          const col = rows[loc.rowIndex]?.columns[loc.colIndex]
+          if (!col || !Array.isArray(col.components)) return prevLayout
+
+          const currIdx = loc.componentIndex
+          const targetIdx = direction === 'up' ? currIdx - 1 : currIdx + 1
+          if (targetIdx < 0 || targetIdx >= col.components.length) return prevLayout
+
+          const [item] = col.components.splice(currIdx, 1)
+          col.components.splice(targetIdx, 0, item)
+        } else if (loc.type === 'swiper-slide') {
+          const section = newLayout.sections[loc.sectionIndex]
+          const rows = getSectionRows(section)
+          const col = rows[loc.rowIndex]?.columns[loc.colIndex]
+          const swiper = col?.components[loc.swiperIndex]
+          const slide = swiper?.props?.slides[loc.slideIndex]
+          if (!slide || !Array.isArray(slide.components)) return prevLayout
+
+          const currIdx = loc.componentIndex
+          const targetIdx = direction === 'up' ? currIdx - 1 : currIdx + 1
+          if (targetIdx < 0 || targetIdx >= slide.components.length) return prevLayout
+
+          const [item] = slide.components.splice(currIdx, 1)
+          slide.components.splice(targetIdx, 0, item)
+        } else {
+          return prevLayout
+        }
+
+        return newLayout
+      })
+    },
+    [saveLayout, setLayout],
+  )
+
+  const handleThemeChange = useCallback(
+    (updatedTheme: GlobalTheme) => {
+      setLayout((prevLayout: any) => ({
+        ...prevLayout,
+        theme: updatedTheme,
+        settings: {
+          ...(prevLayout?.settings || {}),
+          theme: updatedTheme,
+        },
+      }))
+      toast.success('Theme updated')
+    },
+    [setLayout],
+  )
+
+  const handleSaveComponentPreset = useCallback(
+    (presetName: string, component: LayoutComponent) => {
+      if (!presetName || !component) return
+      const presetId = `preset-${Date.now()}`
+      setLayout((prevLayout: any) => ({
+        ...prevLayout,
+        presets: {
+          ...(prevLayout?.presets || {}),
+          [presetId]: {
+            id: presetId,
+            name: presetName,
+            componentType: component.type,
+            label: component.label,
+            props: JSON.parse(JSON.stringify(component.props || {})),
+            createdAt: new Date().toISOString(),
+          },
+        },
+      }))
+      toast.success(`Preset "${presetName}" saved!`)
+    },
+    [setLayout],
+  )
+
+  const handleApplyComponentPreset = useCallback(
+    (presetKey: string) => {
+      const preset = (layout as any)?.presets?.[presetKey]
+      if (!preset) {
+        toast.error('Preset not found')
+        return
+      }
+      if (!selectedComponent?.compId) {
+        toast.error('Select a component on canvas to apply preset')
+        return
+      }
+      handleComponentUpdate(selectedComponent.compId, preset.props)
+      toast.success(`Preset "${preset.name || 'Style'}" applied!`)
+    },
+    [layout, selectedComponent?.compId, handleComponentUpdate],
+  )
 
   const handleSectionSelect = useCallback((sectionId: string) => {
     setSelectedSectionId(sectionId)
@@ -2209,7 +2213,25 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
             Loading page data...
           </div>
         ) : null}
-        {error ? (
+        {saveConflict ? (
+          <div className="cm-inline-notice is-danger flex items-center justify-between px-3 py-2 text-xs">
+            <span>⚠️ This page was changed in another session or tab.</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void resolveSaveConflict('overwrite', layout)}
+                className="px-2.5 py-1 bg-[#7c6dfa] hover:bg-[#6c5ce7] text-white rounded text-xs font-medium transition cursor-pointer">
+                Keep My Changes & Save
+              </button>
+              <button
+                type="button"
+                onClick={() => void resolveSaveConflict('reload')}
+                className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-xs transition cursor-pointer">
+                Reload From Server
+              </button>
+            </div>
+          </div>
+        ) : error ? (
           <div className="cm-inline-notice is-danger">
             {error}
           </div>
@@ -2285,9 +2307,13 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
                   layout={layout}
                   selectedSectionId={selectedSectionId}
                   selectedComponentId={selectedComponent?.compId}
+                  selectedComponent={selectedComponent?.component}
                   onSectionSelect={handleSectionSelect}
                   onComponentSelect={handleComponentSelect}
-                  onComponentAdd={handleComponentAdd}
+                  onComponentAdd={handleComponentAddUnified}
+                  onThemeChange={handleThemeChange}
+                  onSavePreset={handleSaveComponentPreset}
+                  onApplyPreset={handleApplyComponentPreset}
                 />
               </div>
             )}
@@ -2325,6 +2351,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
               onComponentSelect={handleComponentSelect}
               onComponentEdit={handleComponentEdit}
               onComponentDuplicate={handleComponentDuplicate}
+              onComponentMove={handleComponentMove}
               onComponentDelete={handleComponentDelete}
               onComponentUpdate={handleComponentUpdate}
               onColumnDelete={handleColumnDeleteCallback}

@@ -13,6 +13,9 @@ import { componentRegistry } from '@/lib/componentRegistry'
 import { PageLayout, Section, LayoutComponent } from '@/types/page-editor'
 import { renderRegisteredSection } from '@/lib/sectionRegistry'
 import { NewGrid } from './NewGrid'
+import { HierarchyBreadcrumbs } from './HierarchyBreadcrumbs'
+import { DeviceModeProvider } from '../context/DeviceModeContext'
+import { generateThemeCssVariables } from '../../../../../shared/theme'
 
 interface PageEditorCanvasProps {
   layout: PageLayout
@@ -46,6 +49,7 @@ interface PageEditorCanvasProps {
   onComponentSelect: (component: LayoutComponent, context: { sectionId: string; containerId: string; rowId: string; colId: string }) => void
   onComponentEdit: (componentId: string) => void
   onComponentDuplicate: (component: LayoutComponent) => void
+  onComponentMove?: (componentId: string, direction: 'up' | 'down') => void
   onComponentDelete: (componentId: string) => void
   onComponentUpdate: (componentId: string, props: Record<string, any>) => void
   onComponentResize?: (componentId: string, size: { width: number; height: number }) => void
@@ -120,21 +124,41 @@ const ComponentRenderer: React.FC<{
   isSelected: boolean
   onComponentSelect: PageEditorCanvasProps['onComponentSelect']
   onComponentUpdate: PageEditorCanvasProps['onComponentUpdate']
+  onComponentSelect: PageEditorCanvasProps['onComponentSelect']
+  onComponentEdit?: PageEditorCanvasProps['onComponentEdit']
+  onComponentDuplicate?: PageEditorCanvasProps['onComponentDuplicate']
   onComponentDelete: PageEditorCanvasProps['onComponentDelete']
+  onComponentUpdate: PageEditorCanvasProps['onComponentUpdate']
   layout: PageLayout
   setLayout: PageEditorCanvasProps['setLayout']
   onDragEnd: PageEditorCanvasProps['onDragEnd']
-}> = ({ component, context, isSelected, onComponentSelect, onComponentUpdate, onComponentDelete, layout, setLayout, onDragEnd }) => {
+}> = ({
+  component,
+  context,
+  isSelected,
+  onComponentSelect,
+  onComponentEdit,
+  onComponentDuplicate,
+  onComponentUpdate,
+  onComponentDelete,
+  layout,
+  setLayout,
+  onDragEnd,
+}) => {
+  const compType = String(component?.type || '').toLowerCase()
   // Special handling for NewGrid component
-  if (component?.type === 'NewGrid') {
+  if (compType === 'newgrid' || compType === 'grid') {
     return (
       <div className="w-full overflow-hidden" style={{ maxWidth: '100%', minWidth: 0 }}>
         <NewGrid
           key={component?.id}
           {...component?.props}
+          columns={component?.props?.columns ?? component?.props?.layout?.columns}
+          rows={component?.props?.rows ?? component?.props?.layout?.rows}
           sectionId={context.sectionId}
           component={component}
           deleteComponent={onComponentDelete}
+          onComponentDuplicate={onComponentDuplicate}
           setSelectedComponent={(selected: { sectionId: string; compId: string; component: LayoutComponent }) => {
             onComponentSelect(selected.component, {
               sectionId: selected.sectionId,
@@ -183,6 +207,7 @@ const DroppableColumn: React.FC<{
   onComponentSelect: PageEditorCanvasProps['onComponentSelect']
   onComponentEdit: PageEditorCanvasProps['onComponentEdit']
   onComponentDuplicate: PageEditorCanvasProps['onComponentDuplicate']
+  onComponentMove?: PageEditorCanvasProps['onComponentMove']
   onComponentDelete: PageEditorCanvasProps['onComponentDelete']
   onComponentResize: PageEditorCanvasProps['onComponentResize']
   onColumnDelete: PageEditorCanvasProps['onColumnDelete']
@@ -200,6 +225,7 @@ const DroppableColumn: React.FC<{
   onComponentSelect,
   onComponentEdit,
   onComponentDuplicate,
+  onComponentMove,
   onComponentDelete,
   onComponentResize,
   onColumnDelete,
@@ -261,6 +287,8 @@ const DroppableColumn: React.FC<{
         overflow: 'visible',
         maxWidth: '100%',
         minWidth: 0,
+        boxSizing: 'border-box',
+        transition: 'background-color 0.15s ease, border-color 0.15s ease',
         ...stickyStyle,
       }}
       data-section-droppable-id={droppableId}>
@@ -290,6 +318,7 @@ const DroppableColumn: React.FC<{
               onSelect={onComponentSelect}
               onEdit={onComponentEdit}
               onDuplicate={onComponentDuplicate}
+              onMove={onComponentMove}
               onDelete={onComponentDelete}
               onResize={onComponentResize}
               renderComponent={renderComponent}
@@ -574,6 +603,7 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
   onComponentSelect,
   onComponentEdit,
   onComponentDuplicate,
+  onComponentMove,
   onComponentDelete,
   onComponentUpdate,
   onComponentResize,
@@ -610,6 +640,12 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
   const { isDraggingOverNested } = useDragDrop()
   const boundedZoom = Math.max(50, Math.min(150, Number.isFinite(zoom) ? zoom : 100))
   const zoomScale = boundedZoom / 100
+  const themeCssVars = useMemo(
+    () => generateThemeCssVariables(layout?.theme || (layout as any)?.settings?.theme),
+    [layout?.theme, (layout as any)?.settings?.theme],
+  )
+  const customGlobalCss = layout?.theme?.customCSS || (layout as any)?.settings?.theme?.customCSS || ''
+
   const pageFrameStyle: React.CSSProperties = {
     width: '100%',
     maxWidth: deviceMode === 'mobile' ? '430px' : deviceMode === 'tablet' ? '860px' : '1240px',
@@ -618,6 +654,7 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
     transformOrigin: 'top center',
     margin: '0 auto',
     boxSizing: 'border-box',
+    ...(themeCssVars as any),
   }
 
   useEffect(() => {
@@ -631,6 +668,8 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
         context={context}
         isSelected={selectedComponent?.component?.id === component?.id}
         onComponentSelect={onComponentSelect}
+        onComponentEdit={onComponentEdit}
+        onComponentDuplicate={onComponentDuplicate}
         onComponentUpdate={onComponentUpdate}
         onComponentDelete={onComponentDelete}
         layout={layout}
@@ -638,7 +677,7 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
         onDragEnd={onDragEnd} // ✅ Pass through
       />
     ),
-    [selectedComponent, onComponentSelect, onComponentUpdate, onComponentDelete, layout, setLayout, onDragEnd],
+    [selectedComponent, onComponentSelect, onComponentEdit, onComponentDuplicate, onComponentUpdate, onComponentDelete, layout, setLayout, onDragEnd],
   )
 
   const renderSection = useCallback(
@@ -723,6 +762,7 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
                       onComponentSelect={onComponentSelect}
                       onComponentEdit={onComponentEdit}
                       onComponentDuplicate={onComponentDuplicate}
+                      onComponentMove={onComponentMove}
                       onComponentDelete={onComponentDelete}
                       onComponentResize={onComponentResize}
                       onColumnDelete={onColumnDelete}
@@ -749,6 +789,7 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
       onComponentSelect,
       onComponentEdit,
       onComponentDuplicate,
+      onComponentMove,
       onComponentDelete,
       onComponentResize,
       onColumnDelete,
@@ -759,7 +800,14 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
   )
 
   return (
-    <>
+    <DeviceModeProvider deviceMode={deviceMode} onDeviceModeChange={onDeviceModeChange}>
+      <HierarchyBreadcrumbs
+        layout={layout}
+        selectedSectionId={selectedSectionId}
+        selectedComponent={selectedComponent}
+        onSectionSelect={onSectionSelect}
+        onComponentSelect={onComponentSelect}
+      />
       <div
         ref={canvasScrollRef}
         className={`canvas-scroll flex-1 min-h-0 ${showGrid ? '' : 'grid-off'}`}>
@@ -767,13 +815,16 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
           id="page-frame"
           className={`page-frame canvas-frame ${isWide ? 'wide' : ''} ${deviceMode === 'mobile' ? 'mobile-view' : ''} ${deviceMode === 'tablet' ? 'tablet-view' : ''} ${showGrid ? '' : 'grid-off'}`}
           style={pageFrameStyle}>
+          {customGlobalCss && (
+            <style id="page-editor-global-custom-css" dangerouslySetInnerHTML={{ __html: customGlobalCss }} />
+          )}
           <PageSectionsDroppable layout={layout} renderSection={renderSection} />
         </div>
         <CanvasActions onAddSection={onAddSection} />
       </div>
 
       {isPreviewMode && <PreviewMode layout={layout} onClose={onClosePreview || (() => {})} />}
-    </>
+    </DeviceModeProvider>
   )
 }
 

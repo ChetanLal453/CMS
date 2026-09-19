@@ -4,16 +4,26 @@ import mysql from "mysql2/promise";
 
 type ApiResponse = { message?: string } | any[];
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+const globalForContactDb = globalThis as unknown as {
+  __contactMysqlPool?: mysql.Pool;
+};
+
+if (!globalForContactDb.__contactMysqlPool) {
+  globalForContactDb.__contactMysqlPool = mysql.createPool({
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 5,
+    maxIdle: 2,
+    idleTimeout: 30000,
+    queueLimit: 0,
+  });
+}
+
+const pool = globalForContactDb.__contactMysqlPool;
 
 export default async function handler(
   req: NextApiRequest,

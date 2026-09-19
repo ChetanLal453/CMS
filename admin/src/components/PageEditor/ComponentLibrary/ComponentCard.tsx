@@ -144,16 +144,26 @@ export const ComponentCard: React.FC<ComponentCardProps> = ({ component, onClick
       style={style}
       {...listeners}
       {...attributes}
-      draggable="true"
-      className={`comp-item cc ${isDragging ? 'opacity-50' : ''}`}
-      onClick={onClick}
+      className={`comp-item cc cursor-pointer select-none ${isDragging ? 'opacity-50' : ''}`}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick?.()
+      }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick?.()
+        }
+      }}
     >
-      <div className="comp-icon cc-i">
+      <div className="comp-icon cc-i pointer-events-none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
           {getGlyph(component, glyphKey)}
         </svg>
       </div>
-      <div className="comp-name cc-n">{displayName || component.name}</div>
+      <div className="comp-name cc-n pointer-events-none">{displayName || component.name}</div>
     </div>
   )
 }

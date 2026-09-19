@@ -52,12 +52,41 @@ export interface NewGridBehaviorGroup {
 export interface NewGrid {
   type: NewGridType
   schemaVersion: 1
+  columns?: number
+  rows?: number
+  gap?: number
+  padding?: number
+  margin?: number
+  backgroundColor?: string
+  border?: string
+  borderRadius?: number
+  gridLineColor?: string
+  justifyContent?: NewGridJustifyContent
+  alignItems?: NewGridAlignItems
+  gridTemplateColumns?: string
+  gridAutoRows?: string
+  minHeight?: string
+  mobileColumns?: number
+  tabletColumns?: number
+  desktopColumns?: number
+  hideOnMobile?: boolean
+  hideOnTablet?: boolean
+  draggable?: boolean
+  resizable?: boolean
+  showGridLines?: boolean
+  snapToGrid?: boolean
+  visible?: boolean
+  customCSS?: string
+  className?: string
+  id?: string
+  dataAttributes?: string
   layout: NewGridLayoutGroup
   responsive: NewGridResponsiveGroup
   style: NewGridStyleGroup
   behavior: NewGridBehaviorGroup
   cells: NewGridCell[][]
   components: Array<any | null>
+  [key: string]: unknown
 }
 
 export interface LegacyNewGridProps {

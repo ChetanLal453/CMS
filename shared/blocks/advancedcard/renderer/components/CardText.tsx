@@ -28,6 +28,8 @@ export default function CardText({
       return null;
     }
 
+    const titleAlign = view.titleAlignment || view.textAlignment || "left";
+
     return (
       <h3
         className="advanced-card-title"
@@ -38,7 +40,8 @@ export default function CardText({
           fontWeight: "bold",
           lineHeight: view.lineHeight || 1.35,
           letterSpacing: view.textSpacing,
-          textAlign: view.titleAlignment as any,
+          textAlign: titleAlign as any,
+          width: "100%",
           margin: 0,
           marginBottom: "6px",
           overflow: "visible",
@@ -58,6 +61,8 @@ export default function CardText({
       return null;
     }
 
+    const subtitleAlign = view.subtitleAlign || view.textAlignment || "left";
+
     return (
       <h4
         className="advanced-card-subtitle"
@@ -67,7 +72,8 @@ export default function CardText({
           fontFamily: view.fontFamily,
           lineHeight: view.lineHeight || 1.4,
           letterSpacing: view.textSpacing,
-          textAlign: view.subtitleAlign as any,
+          textAlign: subtitleAlign as any,
+          width: "100%",
           margin: 0,
           marginBottom: "6px",
           overflow: "visible",
@@ -86,6 +92,8 @@ export default function CardText({
     return null;
   }
 
+  const descAlign = view.descriptionAlign || view.textAlignment || "left";
+
   return (
     <p
       className="advanced-card-description"
@@ -95,7 +103,8 @@ export default function CardText({
         fontFamily: view.fontFamily,
         lineHeight: view.lineHeight || 1.5,
         letterSpacing: view.textSpacing,
-        textAlign: view.descriptionAlign as any,
+        textAlign: descAlign as any,
+        width: "100%",
         margin: 0,
         overflow: "hidden",
         display: "-webkit-box",

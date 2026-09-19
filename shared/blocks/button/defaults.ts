@@ -22,6 +22,8 @@ export const defaultButtonProps: ButtonProps = {
   alignment: 'left',
   fullWidth: false,
   width: 'auto',
+  margin: '0px',
+  padding: '14px 28px',
   marginTop: '0px',
   marginRight: '0px',
   marginBottom: '0px',

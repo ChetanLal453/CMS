@@ -183,7 +183,7 @@ export function normalizeFilter(props: Record<string, any> = {}): FilterProps {
     ...props,
     filterType,
     filterKey: String(props.filterKey || filterDefaultProps.filterKey || 'filter'),
-    bindTo: props.bindTo ? String(props.bindTo) : props.bindTo,
+    bindTo: String(props.bindTo ?? props.filterKey ?? filterDefaultProps.bindTo ?? ''),
     label: String(props.label ?? filterDefaultProps.label ?? 'Filter'),
     helpText: String(props.helpText ?? filterDefaultProps.helpText ?? ''),
     placeholder: String(props.placeholder ?? filterDefaultProps.placeholder ?? ''),

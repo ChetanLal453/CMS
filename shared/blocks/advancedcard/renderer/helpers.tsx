@@ -535,10 +535,13 @@ export function getButtonStyles(view: AdvancedCardViewModel, state: AdvancedCard
       break;
   }
 
-  if (view.buttonFullWidth || view.buttonAlignment === "full-width") {
+  if (view.buttonFullWidth || view.buttonAlignment === "full-width" || view.buttonAlignment === "full") {
     baseStyle.width = "100%";
-    baseStyle.display = "block";
+    baseStyle.display = "flex";
+    baseStyle.alignItems = "center";
+    baseStyle.justifyContent = "center";
     baseStyle.textAlign = "center";
+    baseStyle.boxSizing = "border-box";
   }
 
   if (view.buttonStyle !== "rounded-full") {
@@ -613,10 +616,12 @@ export function getBackSideStyles(view: AdvancedCardViewModel): React.CSSPropert
 }
 
 export function getBaseCardStyles(view: AdvancedCardViewModel, state: AdvancedCardRenderState): React.CSSProperties {
+  const isDefaultBg = !view.backgroundColor || view.backgroundColor === '#ffffff' || view.backgroundColor === '#11141f' || view.backgroundColor === '#1e293b'
+  const isDefaultBorder = !view.borderColor || view.borderColor === '#e5e7eb' || view.borderColor === 'rgba(255, 255, 255, 0.08)'
   return {
-    backgroundColor: view.enableFlip ? "transparent" : view.backgroundColor,
-    border: view.enableFlip && state.isFlipped ? "none" : `${view.borderWidth}px solid ${view.borderColor}`,
-    borderRadius: `${view.borderRadius}px`,
+    backgroundColor: view.enableFlip ? "transparent" : isDefaultBg ? 'var(--theme-surface, #ffffff)' : view.backgroundColor,
+    border: view.enableFlip && state.isFlipped ? "none" : `${view.borderWidth}px solid ${isDefaultBorder ? 'var(--theme-border, #e5e7eb)' : view.borderColor}`,
+    borderRadius: view.borderRadius && view.borderRadius !== 8 ? `${view.borderRadius}px` : 'var(--theme-radius, 8px)',
     padding: view.enableFlip ? "0px" : `${view.padding}px`,
     margin: view.margin,
     width: "100%",

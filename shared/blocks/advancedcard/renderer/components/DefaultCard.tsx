@@ -160,6 +160,8 @@ export default function DefaultCard({
             color: isBackgroundMode ? "#ffffff" : "inherit",
             minWidth: 0,
             overflow: "hidden",
+            width: "100%",
+            textAlign: (view.textAlignment || "left") as any,
           }}
         >
           <CardText
@@ -191,8 +193,16 @@ export default function DefaultCard({
             <div
               style={{
                 marginTop: "auto",
+                width: "100%",
                 display: "flex",
-                justifyContent: view.buttonAlignment as any,
+                justifyContent:
+                  view.buttonFullWidth || view.buttonAlignment === "full-width" || view.buttonAlignment === "full"
+                    ? "stretch"
+                    : view.buttonAlignment === "right" || view.buttonAlignment === "flex-end"
+                    ? "flex-end"
+                    : view.buttonAlignment === "center"
+                    ? "center"
+                    : "flex-start",
                 flexWrap: "wrap" as const,
               }}
             >
