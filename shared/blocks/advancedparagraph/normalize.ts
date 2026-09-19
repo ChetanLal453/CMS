@@ -6,10 +6,11 @@ import type {
   AdvancedParagraphInput,
   AdvancedParagraphTextDecoration,
   AdvancedParagraphTextTransform,
-  DeepPartial,
   LegacyAdvancedParagraphProps,
 } from './types'
-import { deepMerge, asString, asBoolean, asNumber, asStringArray } from '../utils/merge'
+import { deepMerge, isPlainObject, asString, asBoolean, asNumber, asStringArray } from '../../utils/merge'
+import type { DeepPartial } from '../../utils/merge'
+
 
 
 function asAlignment(value: unknown, fallback: AdvancedParagraphAlignment): AdvancedParagraphAlignment {
@@ -137,12 +138,12 @@ function mapLegacyFlat(input: LegacyAdvancedParagraphProps): DeepPartial<Advance
 }
 
 function mapLegacyStructured(input: Record<string, unknown>): DeepPartial<AdvancedParagraph> {
-  const content = isPlainObject(input.content) ? input.content : {}
-  const layout = isPlainObject(input.layout) ? input.layout : {}
-  const style = isPlainObject(input.style) ? input.style : {}
-  const interaction = isPlainObject(input.interaction) ? input.interaction : {}
-  const hover = isPlainObject(interaction.hover) ? interaction.hover : {}
-  const system = isPlainObject((input as Record<string, unknown>).system) ? (input as Record<string, unknown>).system : {}
+  const content = isPlainObject(input.content) ? (input.content as Record<string, unknown>) : {}
+  const layout = isPlainObject(input.layout) ? (input.layout as Record<string, unknown>) : {}
+  const style = isPlainObject(input.style) ? (input.style as Record<string, unknown>) : {}
+  const interaction = isPlainObject(input.interaction) ? (input.interaction as Record<string, unknown>) : {}
+  const hover = isPlainObject(interaction.hover) ? (interaction.hover as Record<string, unknown>) : {}
+  const system = isPlainObject(input.system) ? (input.system as Record<string, unknown>) : {}
   const resolvedStructuredAlignment = asAlignment(layout.alignment ?? input.alignment ?? input.textAlign ?? input.align, defaultAdvancedParagraphProps.layout.alignment)
 
   return {

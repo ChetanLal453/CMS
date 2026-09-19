@@ -1,4 +1,6 @@
 import type { CSSProperties } from 'react'
+import type { DeepPartial } from '../../utils/merge'
+export type { DeepPartial }
 
 export type AdvancedListType = 'advancedlist'
 export type AdvancedListDisplayStyle = 'plain' | 'boxed' | 'bordered' | 'full-box'
@@ -105,9 +107,9 @@ export interface LegacyAdvancedListProps {
 }
 
 export type AdvancedListInput =
-  | Partial<AdvancedList>
+  | DeepPartial<AdvancedList>
   | LegacyAdvancedListProps
-  | (Partial<AdvancedList> & LegacyAdvancedListProps)
+  | (DeepPartial<AdvancedList> & LegacyAdvancedListProps)
 
 export interface AdvancedListResolvedItem extends AdvancedListItem {
   resolvedIndex: number

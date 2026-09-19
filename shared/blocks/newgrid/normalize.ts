@@ -3,11 +3,16 @@ import type {
   LegacyNewGridProps,
   NewGrid,
   NewGridAlignItems,
+  NewGridBehaviorGroup,
   NewGridCell,
   NewGridInput,
   NewGridJustifyContent,
+  NewGridLayoutGroup,
+  NewGridResponsiveGroup,
+  NewGridStyleGroup,
 } from './types'
-import { asString, asBoolean, asNumber, asInteger } from '../utils/merge'
+import { asString, asBoolean, asNumber, asInteger, isPlainObject } from '../../utils/merge'
+import type { DeepPartial } from '../../utils/merge'
 
 function asJustifyContent(value: unknown, fallback: NewGridJustifyContent): NewGridJustifyContent {
   const allowed: NewGridJustifyContent[] = ['stretch', 'start', 'center', 'end', 'space-between', 'space-around', 'space-evenly']
@@ -61,10 +66,10 @@ function normalizeComponents(source: unknown, cells: NewGridCell[][], rows: numb
 
 export function normalizeNewGrid(input: NewGridInput = {}): NewGrid {
   const legacy = input as LegacyNewGridProps
-  const layout = input.layout || {}
-  const responsive = input.responsive || {}
-  const style = input.style || {}
-  const behavior = input.behavior || {}
+  const layout = (isPlainObject(input.layout) ? input.layout : {}) as Partial<NewGridLayoutGroup>
+  const responsive = (isPlainObject(input.responsive) ? input.responsive : {}) as Partial<NewGridResponsiveGroup>
+  const style = (isPlainObject(input.style) ? input.style : {}) as Partial<NewGridStyleGroup>
+  const behavior = (isPlainObject(input.behavior) ? input.behavior : {}) as Partial<NewGridBehaviorGroup>
 
   const columns = asInteger(input.columns ?? legacy.columns ?? layout.columns, defaultNewGridProps.layout.columns)
   const rows = asInteger(input.rows ?? legacy.rows ?? layout.rows, defaultNewGridProps.layout.rows)

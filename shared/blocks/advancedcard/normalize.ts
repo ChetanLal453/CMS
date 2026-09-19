@@ -7,10 +7,11 @@ import type {
   AdvancedCard,
   AdvancedCardInput,
   AdvancedCardVariant,
-  DeepPartial,
   LegacyAdvancedCardProps,
 } from './types'
-import { deepMerge, pruneUndefined, isPlainObject } from '../utils/merge'
+import { deepMerge, pruneUndefined, isPlainObject, cloneValue } from '../../utils/merge'
+import type { DeepPartial } from '../../utils/merge'
+
 
 
 function hasStructuredSections(value: unknown): value is DeepPartial<AdvancedCard> {
@@ -105,7 +106,7 @@ function mapLegacyAdvancedCard(input: LegacyAdvancedCardProps): DeepPartial<Adva
       buttonFullWidth: Boolean(
         input.buttonFullWidth ??
         legacy.buttonFullWidth ??
-        (input.buttonAlignment === 'full-width' || input.buttonAlignment === 'full' || legacy.buttonAlignment === 'full-width' || legacy.buttonAlignment === 'full')
+        (String(input.buttonAlignment) === 'full-width' || String(input.buttonAlignment) === 'full' || String(legacy.buttonAlignment) === 'full-width' || String(legacy.buttonAlignment) === 'full')
       ),
       padding: legacy.padding,
       margin: legacy.margin,

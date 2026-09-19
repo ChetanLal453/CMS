@@ -5,10 +5,13 @@ import type {
   AdvancedAccordionBehavior,
   AdvancedAccordionIconPosition,
   AdvancedAccordionInput,
+  AdvancedAccordionInteractionGroup,
   AdvancedAccordionItem,
+  AdvancedAccordionStyleGroup,
   LegacyAdvancedAccordionProps,
 } from './types'
-import { asString, asBoolean, asNumber } from '../utils/merge'
+import { asString, asBoolean, asNumber, isPlainObject } from '../../utils/merge'
+import type { DeepPartial } from '../../utils/merge'
 
 function asBehavior(value: unknown, fallback: AdvancedAccordionBehavior): AdvancedAccordionBehavior {
   return value === 'single' || value === 'multiple' ? value : fallback
@@ -34,8 +37,8 @@ function normalizeItem(item: Partial<AdvancedAccordionItem> | undefined, index: 
 
 export function normalizeAdvancedAccordion(input: AdvancedAccordionInput = {}): AdvancedAccordion {
   const legacy = input as LegacyAdvancedAccordionProps
-  const structuredStyle = input.style || {}
-  const structuredInteraction = input.interaction || {}
+  const structuredStyle = (isPlainObject(input.style) ? input.style : {}) as Partial<AdvancedAccordionStyleGroup>
+  const structuredInteraction = (isPlainObject(input.interaction) ? input.interaction : {}) as Partial<AdvancedAccordionInteractionGroup>
   const sourceItems = Array.isArray(input.items) ? input.items : Array.isArray(legacy.items) ? legacy.items : defaultAdvancedAccordionProps.items
   const items = sourceItems.length ? sourceItems.map((item, index) => normalizeItem(item, index)) : defaultAdvancedAccordionProps.items.map(normalizeItem)
 

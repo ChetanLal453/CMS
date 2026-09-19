@@ -1,4 +1,6 @@
 import type { CSSProperties } from 'react'
+import type { DeepPartial } from '../../utils/merge'
+export type { DeepPartial }
 
 export type NewGridType = 'newgrid'
 export type NewGridJustifyContent = 'stretch' | 'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly'
@@ -124,7 +126,7 @@ export interface LegacyNewGridProps {
   [key: string]: unknown
 }
 
-export type NewGridInput = Partial<NewGrid> | LegacyNewGridProps | (Partial<NewGrid> & LegacyNewGridProps)
+export type NewGridInput = DeepPartial<NewGrid> | LegacyNewGridProps | (DeepPartial<NewGrid> & LegacyNewGridProps)
 
 export interface NewGridViewModel {
   type: NewGridType

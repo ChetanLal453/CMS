@@ -10,7 +10,7 @@ import type {
   ButtonTextTransform,
   ButtonVariant,
 } from './types'
-import { asString, asBoolean, asNumber } from '../utils/merge'
+import { asString, asBoolean, asNumber } from '../../utils/merge'
 
 function asVariant(value: unknown, fallback: ButtonVariant): ButtonVariant {
   const normalized = String(value ?? '').trim().toLowerCase()

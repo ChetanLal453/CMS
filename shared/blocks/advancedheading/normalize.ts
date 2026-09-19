@@ -8,10 +8,11 @@ import type {
   AdvancedHeadingLevel,
   AdvancedHeadingTextDecoration,
   AdvancedHeadingTextTransform,
-  DeepPartial,
   LegacyAdvancedHeadingProps,
 } from './types'
-import { deepMerge, asString, asBoolean, asNumber } from '../utils/merge'
+import { deepMerge, isPlainObject, asString, asBoolean, asNumber } from '../../utils/merge'
+import type { DeepPartial } from '../../utils/merge'
+
 
 function asLevel(value: unknown, fallback: AdvancedHeadingLevel): AdvancedHeadingLevel {
   const normalized = String(value ?? '').trim().toLowerCase()

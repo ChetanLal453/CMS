@@ -5,14 +5,8 @@ export type AdvancedHeadingTextTransform = 'none' | 'uppercase' | 'lowercase' | 
 export type AdvancedHeadingTextDecoration = 'none' | 'underline' | 'line-through' | 'overline'
 export type AdvancedHeadingFontStyle = 'normal' | 'italic' | 'oblique'
 export type AdvancedHeadingHtmlTag = 'auto' | AdvancedHeadingLevel | 'div' | 'span' | 'p'
-
-export type DeepPartial<T> = {
-  [K in keyof T]?: T[K] extends Array<infer U>
-    ? Array<DeepPartial<U>>
-    : T[K] extends object
-      ? DeepPartial<T[K]>
-      : T[K]
-}
+import type { DeepPartial } from '../../utils/merge'
+export type { DeepPartial }
 
 export interface AdvancedHeadingStyleGroup {
   usePresetStyles: boolean

@@ -1,4 +1,6 @@
 import type { CSSProperties } from 'react'
+import type { DeepPartial } from '../../utils/merge'
+export type { DeepPartial }
 
 export type AdvancedAccordionType = 'advancedaccordion'
 export type AdvancedAccordionBehavior = 'single' | 'multiple'
@@ -78,9 +80,9 @@ export interface LegacyAdvancedAccordionProps {
 }
 
 export type AdvancedAccordionInput =
-  | Partial<AdvancedAccordion>
+  | DeepPartial<AdvancedAccordion>
   | LegacyAdvancedAccordionProps
-  | (Partial<AdvancedAccordion> & LegacyAdvancedAccordionProps)
+  | (DeepPartial<AdvancedAccordion> & LegacyAdvancedAccordionProps)
 
 export interface AdvancedAccordionViewModel {
   items: AdvancedAccordionItem[]

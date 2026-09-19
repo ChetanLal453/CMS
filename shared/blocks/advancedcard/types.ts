@@ -42,14 +42,8 @@ export type CardContentOrderItem =
   | 'subtitle'
   | 'description'
   | 'button'
-
-export type DeepPartial<T> = {
-  [K in keyof T]?: T[K] extends Array<infer U>
-    ? Array<DeepPartial<U>>
-    : T[K] extends object
-      ? DeepPartial<T[K]>
-      : T[K]
-}
+import type { DeepPartial } from '../../utils/merge'
+export type { DeepPartial }
 
 export interface AdvancedCardTextContent {
   text: string

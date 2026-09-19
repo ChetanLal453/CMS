@@ -8,7 +8,7 @@ import type {
   ImageShape,
   ImageShadow,
 } from './types'
-import { asString, asBoolean, asNumber } from '../utils/merge'
+import { asString, asBoolean, asNumber } from '../../utils/merge'
 
 function asAlignment(value: unknown, fallback: ImageAlignment): ImageAlignment {
   const normalized = String(value ?? '').trim().toLowerCase()

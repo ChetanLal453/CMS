@@ -9,9 +9,11 @@ import type {
   AdvancedListInput,
   AdvancedListItem,
   AdvancedListKind,
+  AdvancedListStyleGroup,
   LegacyAdvancedListProps,
 } from './types'
-import { asString, asBoolean, asNumber } from '../utils/merge'
+import { asString, asBoolean, asNumber, isPlainObject } from '../../utils/merge'
+import type { DeepPartial } from '../../utils/merge'
 
 function asColumns(value: unknown, fallback: AdvancedListColumns): AdvancedListColumns {
   const normalized = asNumber(value, fallback)
@@ -56,7 +58,7 @@ function normalizeItem(item: Partial<AdvancedListItem> | undefined, index: numbe
 
 export function normalizeAdvancedList(input: AdvancedListInput = {}): AdvancedList {
   const legacy = input as LegacyAdvancedListProps
-  const style = input.style || {}
+  const style = (isPlainObject(input.style) ? input.style : {}) as Partial<AdvancedListStyleGroup>
   const sourceItems = Array.isArray(input.items) ? input.items : Array.isArray(legacy.items) ? legacy.items : defaultAdvancedListProps.items
 
   return {
