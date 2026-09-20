@@ -66,8 +66,6 @@ const AdvancedParagraphPreviewRenderer: React.FC<AdvancedParagraphInput> = (prop
 
   const activeLineHeight = isMobile
     ? (view.responsive.lineHeightMobile || view.style.lineHeight)
-    : isTablet
-    ? (view.responsive.lineHeightTablet || view.style.lineHeight)
     : view.style.lineHeight
 
   const isDefaultDarkColor =

@@ -31,10 +31,17 @@ import {
   tagDefaultOptions,
   type FilterOption,
   type FilterProps,
+  type FilterSourceType,
   type FilterState,
   type FilterType,
   type FilterValue,
 } from '../../../../../shared/blocks/filter'
+import {
+  fetchOptionsFromApi,
+  parseValue,
+  serializeValue,
+  isValueEmpty,
+} from './filterHelpers'
 
 interface FilterContextValue {
   state: FilterState

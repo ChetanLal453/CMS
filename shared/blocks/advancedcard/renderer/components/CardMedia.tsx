@@ -3,12 +3,13 @@
 
 import React from "react";
 import type { AdvancedCardViewModel } from "../../viewModel";
-import type { AdvancedCardRenderState } from "../helpers";
+import type { AdvancedCardIconSet, AdvancedCardRenderState } from "../helpers";
 import { getIconComponent, getIconHoverStyle, getIconShapeStyle, getIconShadow, getImageHoverStyle, getImageShadow } from "../helpers";
 
 interface CardMediaProps {
   view: AdvancedCardViewModel;
   state: AdvancedCardRenderState;
+  iconSet?: AdvancedCardIconSet;
   onImageError: () => void;
   onImageMouseEnter: () => void;
   onImageMouseLeave: () => void;

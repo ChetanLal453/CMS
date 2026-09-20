@@ -5,8 +5,8 @@ import type { PublicBlockProps } from '../PublicBlocks/shared'
 import type { FilterOption, FilterViewModel } from '../../../../../shared/blocks/filter'
 import { reportCmsBoundaryViolation } from '../../../lib/cmsBoundary'
 
-function optionalString(value: string) {
-  return value === '' ? undefined : value
+function optionalString(value: string | undefined) {
+  return value === '' || value === undefined ? undefined : value
 }
 
 type FilterRendererProps = PublicBlockProps & {
@@ -39,7 +39,6 @@ export default function PublicFilter(props: FilterRendererProps) {
   const control = (() => {
     switch (filterType) {
       case 'toggle':
-      case 'toggle-switch':
         return (
           <button
             type="button"
@@ -82,14 +81,18 @@ export default function PublicFilter(props: FilterRendererProps) {
             {options.map((option: FilterOption, index: number) => {
               const optionValue = option.value
               const optionLabel = option.label
-              const selected = Array.isArray(value) ? value.includes(optionValue) : value === optionValue
+              const currentValues: string[] = Array.isArray(value) ? (value as (string | number)[]).map(String) : []
+              const selected = Array.isArray(value) ? currentValues.includes(optionValue) : value === optionValue
               return (
                 <button
                   key={`${optionValue}-${index}`}
                   type="button"
                   onClick={() => {
                     if (Array.isArray(value)) {
-                      updateValue(selected ? value.filter((item: string) => item !== optionValue) : [...value, optionValue])
+                      const nextValues: string[] = selected
+                        ? currentValues.filter((item) => item !== optionValue)
+                        : [...currentValues, optionValue]
+                      updateValue(nextValues)
                       return
                     }
 
@@ -110,7 +113,6 @@ export default function PublicFilter(props: FilterRendererProps) {
           </div>
         )
       case 'radioGroup':
-      case 'radio-buttons':
         return (
           <div style={{ display: 'grid', gap: '8px' }}>
             {options.map((option: FilterOption, index: number) => {
@@ -126,7 +128,6 @@ export default function PublicFilter(props: FilterRendererProps) {
           </div>
         )
       case 'clearAll':
-      case 'clear-all':
         return (
           <button
             type="button"
@@ -169,7 +170,6 @@ export default function PublicFilter(props: FilterRendererProps) {
           </select>
         )
       case 'searchInput':
-      case 'search':
       default:
         return (
           <input
@@ -205,7 +205,7 @@ export default function PublicFilter(props: FilterRendererProps) {
       {viewModel.showLabel !== false && viewModel.label ? <div style={{ fontWeight: 600 }}>{viewModel.label}</div> : null}
       {viewModel.helpText ? <div style={{ fontSize: '14px', color: '#6b7280' }}>{viewModel.helpText}</div> : null}
       {control}
-      {viewModel.showClearButton && filterType !== 'clearAll' && filterType !== 'clear-all' ? (
+      {viewModel.showClearButton && filterType !== 'clearAll' ? (
         <button
           type="button"
           onClick={() => updateValue(viewModel.emptyValue)}

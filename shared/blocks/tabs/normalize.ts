@@ -25,7 +25,7 @@ function createTabId(index: number): string {
   return `tab-${index + 1}`
 }
 
-function normalizeTabItem(tab: LegacyTabItem | undefined, index: number): TabItem {
+function normalizeTabItem(tab: TabItem | LegacyTabItem | undefined, index: number): TabItem {
   const fallback = defaultTabsProps.tabs[index] || defaultTabsProps.tabs[0]
   const title = asString(tab?.title, `Tab ${index + 1}`)
   return {
@@ -42,7 +42,7 @@ function normalizeTabItem(tab: LegacyTabItem | undefined, index: number): TabIte
 export function normalizeTabs(input: TabsInput = {}): TabsBlock {
   const legacy = input as LegacyTabsProps
   const sourceTabs = Array.isArray(input.tabs) ? input.tabs : defaultTabsProps.tabs
-  const tabs = sourceTabs.length ? sourceTabs.map((tab, index) => normalizeTabItem(tab, index)) : defaultTabsProps.tabs.map(normalizeTabItem)
+  const tabs = sourceTabs.length ? sourceTabs.map((tab, index) => normalizeTabItem(tab, index)) : defaultTabsProps.tabs.map((tab, index) => normalizeTabItem(tab, index))
 
   const requestedActive = asNumber(input.activeTab ?? legacy.activeTab, defaultTabsProps.activeTab)
   const safeActive = Math.max(0, Math.min(requestedActive, Math.max(tabs.length - 1, 0)))

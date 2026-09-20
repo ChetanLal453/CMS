@@ -15,6 +15,7 @@ import { normalizeAdvancedParagraph } from '../../../../../shared/blocks/advance
 import { normalizeNewGrid } from '../../../../../shared/blocks/newgrid/normalize'
 import { normalizeTabs } from '../../../../../shared/blocks/tabs/normalize'
 import { getBlockDefaults, normalizeBlockProps, resolveBlockType } from '../../../../../shared/blocks/registry'
+import { THEME_PRESETS } from '../../../../../shared/theme'
 
 interface PropertyPanelProps {
   selectedComponent?: {
@@ -1469,7 +1470,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
 
             <div className="rp-section-title rp-section-tight">
               <div className="rp-section-title-main">Theme Colors</div>
-              <div className="rp-section-title-sub">Quick colors from theme ({layout?.theme?.name || 'Default Theme'})</div>
+              <div className="rp-section-title-sub">Quick colors from theme ({layout?.theme?.preset ? (THEME_PRESETS[layout.theme.preset]?.name || layout.theme.preset) : 'Default Theme'})</div>
             </div>
 
             <div className="frow">

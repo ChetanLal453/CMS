@@ -62,7 +62,7 @@ export function normalizeImage(props: Record<string, any> = {}): ImageProps {
     openInNewTab: asBoolean(props.openInNewTab, defaultImageProps.openInNewTab ?? false),
     objectFit: asObjectFit(props.objectFit, defaultImageProps.objectFit || 'contain'),
     objectPosition: asString(props.objectPosition, defaultImageProps.objectPosition || 'center'),
-    borderRadius: asString(props.borderRadius, defaultImageProps.borderRadius || '0px'),
+    borderRadius: asString(props.borderRadius, String(defaultImageProps.borderRadius ?? '0px')),
     shape: asShape(props.shape, defaultImageProps.shape || 'default'),
     customShape: asString(props.customShape, defaultImageProps.customShape || ''),
     showGradientBorder: asBoolean(props.showGradientBorder, defaultImageProps.showGradientBorder ?? false),

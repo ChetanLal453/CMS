@@ -5,6 +5,7 @@ import type {
   SwiperContainerViewModel,
   SwiperEditorSlideView,
   SwiperModuleKey,
+  SwiperRenderConfig,
   SwiperRenderSlideView,
   SwiperSlideItem,
 } from './types'
@@ -15,7 +16,7 @@ function getPreviewLabel(slideIndex: number) {
   return PREVIEW_LABELS[slideIndex % PREVIEW_LABELS.length]
 }
 
-function getSlidesPerViewValue(slidesPerView: SwiperContainerViewModel['slidesPerView']) {
+function getSlidesPerViewValue(slidesPerView: SwiperContainerViewModel['slidesPerView']): number | 'auto' {
   if (slidesPerView === 'auto') {
     return 'auto'
   }
@@ -279,7 +280,7 @@ function createEditorSlideView(
     normalizedBg,
   )
 
-  const previewBackgroundStyle: Record<string, string> = (() => {
+  const previewBackgroundStyle: Record<string, string | undefined> = (() => {
     if (resolvedBgType === 'image' && slide.bgImage) {
       return { backgroundImage: `url(${slide.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     }
@@ -327,7 +328,7 @@ function createRenderSlideView(
   const resolvedBgType = slide.bgType || (slide.bgImage ? 'image' : slide.bgGradient ? 'gradient' : 'color')
   const resolvedPadding = slide.padding || '12px'
   const resolvedMinHeight = slide.minHeight || slideMinHeight || '120px'
-  const surfaceStyle: Record<string, string> = (() => {
+  const surfaceStyle: Record<string, string | undefined> = (() => {
     if (resolvedBgType === 'image' && slide.bgImage) {
       return {
         backgroundImage: `url(${slide.bgImage})`,

@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import type { DeepPartial } from '../../utils/merge'
 export type { DeepPartial }
 
@@ -100,3 +99,5 @@ export interface AdvancedAccordionViewModel {
   contentStyle: CSSProperties
   titleStyle: CSSProperties
 }
+
+export type CSSProperties = Record<string, any>

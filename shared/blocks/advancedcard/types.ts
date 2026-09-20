@@ -21,7 +21,13 @@ export type CardButtonVariant =
   | '3d'
   | 'rounded-full'
 export type CardButtonSize = 'sm' | 'md' | 'lg' | 'xl'
-export type CardButtonAlignment = 'left' | 'center' | 'right' | 'full-width'
+export type CardButtonAlignment =
+  | 'left'
+  | 'center'
+  | 'right'
+  | 'full-width'
+  | 'full' // legacy alias for backward compat
+  | 'flex-end' // legacy alias for backward compat
 export type CardAnimationType = 'none' | 'fade-in' | 'slide-up' | 'zoom-in'
 export type CardHoverAnimation = 'none' | 'glow' | 'pulse' | 'scale'
 export type CardFlipTrigger = 'hover' | 'click'

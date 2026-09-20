@@ -9,7 +9,7 @@ import {
   type AdvancedAccordionItem,
 } from '../../../../../shared/blocks/advancedaccordion'
 
-export interface AdvancedAccordionProps extends AdvancedAccordionInput {
+export type AdvancedAccordionProps = AdvancedAccordionInput & {
   onUpdate?: (props: Partial<AdvancedAccordionProps>) => void
   onComponentUpdate?: (componentId: string, props: Record<string, any>) => void
   componentId?: string

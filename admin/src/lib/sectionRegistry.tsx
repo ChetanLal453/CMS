@@ -168,7 +168,7 @@ export function renderRegisteredSection(
     return <UnknownSection sectionType={section?.type} />
   }
 
-  const safeProps = schema ? sanitizeSectionProps(section.type, section.props) : (section?.props || {})
+  const safeProps = schema ? sanitizeSectionProps(section.type || '', section.props) : (section?.props || {})
 
   return <Component {...safeProps} editable={options.editable} onPropsChange={options.onPropsChange} content={safeProps} />
 }

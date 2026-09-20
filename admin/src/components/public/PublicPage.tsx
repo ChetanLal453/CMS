@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { getComponentRenderer } from '../../../../curvemetricswebsite/src/components/registry'
-import type { AdminNavigationItem, AdminPageBundle } from '@/lib/admin-pages'
+import type { PageNavigationItem, PageRenderBundle } from '../../../../shared/page/PageRenderBundle'
 import { buildPublicPageView, type PublicSectionView } from '../../../../shared/page/viewHelpers'
 import { createBlockViewModel } from '../../../../shared/blocks/registry'
 
@@ -56,7 +56,7 @@ function NavigationList({
   tone = 'light',
   layout = 'horizontal',
 }: {
-  items?: AdminNavigationItem[]
+  items?: PageNavigationItem[]
   tone?: 'light' | 'dark'
   layout?: 'horizontal' | 'vertical'
 }) {
@@ -82,7 +82,7 @@ function NavigationListItem({
   item,
   tone,
 }: {
-  item: AdminNavigationItem
+  item: PageNavigationItem
   tone: 'light' | 'dark'
 }) {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -523,7 +523,7 @@ export function RenderSectionView({ sectionView }: { sectionView: PublicSectionV
   }
 }
 
-export function PublicPage({ bundle }: { bundle: AdminPageBundle }) {
+export function PublicPage({ bundle }: { bundle: PageRenderBundle }) {
   const pageView = buildPublicPageView(bundle)
 
   return (

@@ -1303,12 +1303,22 @@ const advancedCardFieldToSection = Object.entries(ADVANCED_CARD_SECTION_FIELD_MA
 
 advancedCardSchema.categories = ADVANCED_CARD_SECTION_DEFINITIONS.map((section) => ({ ...section }))
 
+export interface AdvancedCardSchemaFieldProperty {
+  type?: string
+  title?: string
+  description?: string
+  default?: any
+  category?: string
+  panel?: string
+  [key: string]: unknown
+}
+
 Object.entries(advancedCardSchema.properties).forEach(([fieldName, config]) => {
   if (!config || typeof config !== 'object') {
     return
   }
 
-  config.category = advancedCardFieldToSection[fieldName] || 'advanced'
-  config.panel = 'settings'
+  const fieldConfig = config as AdvancedCardSchemaFieldProperty
+  fieldConfig.category = advancedCardFieldToSection[fieldName] || 'advanced'
+  fieldConfig.panel = 'settings'
 })
-

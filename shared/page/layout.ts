@@ -1,3 +1,4 @@
+import type { PageBlock } from './PageRenderBundle'
 import { normalizeBlockProps } from '../blocks/registry'
 import { normalizeAdvancedCard, sanitizeAdvancedCardForStorage } from '../blocks/advancedcard/normalize'
 import { createAdvancedCardView } from '../blocks/advancedcard/viewModel'
@@ -183,10 +184,10 @@ function normalizeRows(section: any, sectionIndex: number) {
   ]
 }
 
-function collectSectionBlocks(rows: Array<{ columns?: Array<{ components?: unknown[] }> }> = []) {
+function collectSectionBlocks(rows: Array<{ columns?: Array<{ components?: unknown[] }> }> = []): PageBlock[] {
   return rows.flatMap((row) =>
     (Array.isArray(row?.columns) ? row.columns : []).flatMap((column) =>
-      (Array.isArray(column?.components) ? column.components : []),
+      (Array.isArray(column?.components) ? (column.components as PageBlock[]) : []),
     ),
   )
 }

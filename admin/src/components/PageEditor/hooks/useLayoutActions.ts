@@ -123,7 +123,7 @@ const findDirectComponentLocation = (layout: PageLayout, componentId: string): C
 
       for (let colIndex = 0; colIndex < columns.length; colIndex += 1) {
         const column = columns[colIndex]
-        const componentIndex = (column?.components || []).findIndex((component) => component?.id === componentId)
+        const componentIndex = (column?.components || []).findIndex((component: LayoutComponent) => component?.id === componentId)
 
         if (componentIndex !== -1) {
           return {
@@ -656,7 +656,7 @@ export const useLayoutActions = (
               }
 
               // Search top-level components
-              if (newLayout.components?.length > 0) {
+              if (newLayout.components && newLayout.components.length > 0) {
                 const validComponents = newLayout.components.filter((c: LayoutComponent | null) => c !== null) as LayoutComponent[]
                 if (findAndUpdateCarousel(validComponents)) return true
               }

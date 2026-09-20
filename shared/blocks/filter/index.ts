@@ -29,7 +29,7 @@ export {
   normalizeFilterType,
   normalizeOptions,
 } from './normalize'
-export type { FilterOption, FilterProps, FilterState, FilterType, FilterValue, FilterViewModel } from './types'
+export type { FilterOption, FilterProps, FilterSourceType, FilterState, FilterType, FilterValue, FilterViewModel } from './types'
 
 export { createFilterViewModel } from './viewModel'
 export const filterSchema = {
@@ -141,9 +141,9 @@ export const filterSchema = {
     debounceMs: buildSchemaField('number', 'Debounce (ms)', filterDefaultProps.debounceMs, { category: 'Behavior', showIf: isFilterType('searchInput') }),
     autoFocus: buildSchemaField('toggle', 'Auto Focus', filterDefaultProps.autoFocus, { category: 'Behavior', showIf: isFilterType('searchInput') }),
     persistState: buildSchemaField('toggle', 'Persist State', filterDefaultProps.persistState, { category: 'Behavior' }),
-    storageKey: buildSchemaField('text', 'Storage Key', filterDefaultProps.storageKey, { category: 'Behavior', showIf: (props) => Boolean(props.persistState) }),
+    storageKey: buildSchemaField('text', 'Storage Key', filterDefaultProps.storageKey, { category: 'Behavior', showIf: (props: Record<string, any>) => Boolean(props.persistState) }),
     syncWithUrl: buildSchemaField('toggle', 'Sync With URL', filterDefaultProps.syncWithUrl, { category: 'Behavior' }),
-    queryParam: buildSchemaField('text', 'Query Param', filterDefaultProps.queryParam, { category: 'Behavior', showIf: (props) => Boolean(props.syncWithUrl) }),
+    queryParam: buildSchemaField('text', 'Query Param', filterDefaultProps.queryParam, { category: 'Behavior', showIf: (props: Record<string, any>) => Boolean(props.syncWithUrl) }),
     autoApply: buildSchemaField('toggle', 'Auto Apply', filterDefaultProps.autoApply, { category: 'Behavior' }),
     applyButtonLabel: buildSchemaField('text', 'Apply Button Label', filterDefaultProps.applyButtonLabel, { category: 'Behavior', showIf: isNotFilterType('searchInput') }),
     resetOnChange: buildSchemaField('toggle', 'Reset On Change', filterDefaultProps.resetOnChange, { category: 'Behavior' }),

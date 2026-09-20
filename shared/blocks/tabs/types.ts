@@ -1,5 +1,3 @@
-import type { CSSProperties } from 'react'
-
 export type TabsType = 'tabs'
 
 export interface TabItem {
@@ -91,3 +89,7 @@ export interface TabsViewModel {
   activeTabButtonStyle: CSSProperties
   contentStyle: CSSProperties
 }
+
+// TODO: Restore proper CSSProperties/React type once monorepo 
+// @types/react resolution is fixed (see SwiperContainer.tsx TS2786 errors)
+export type CSSProperties = Record<string, any>

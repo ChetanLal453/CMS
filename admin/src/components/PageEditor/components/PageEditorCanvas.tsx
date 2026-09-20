@@ -80,6 +80,7 @@ interface PageEditorCanvasProps {
   onDeletePage?: (pageId: string) => void
   onDisablePage?: (pageId: string, disabled: boolean) => void
   onRenamePage?: (pageId: string, name: string) => void
+  onPreviewDraft?: () => void
 }
 
 // REMOVED: useSectionEditing hook (text editing ke liye tha)
@@ -123,12 +124,10 @@ const ComponentRenderer: React.FC<{
   context: { sectionId: string; containerId: string; rowId: string; colId: string }
   isSelected: boolean
   onComponentSelect: PageEditorCanvasProps['onComponentSelect']
-  onComponentUpdate: PageEditorCanvasProps['onComponentUpdate']
-  onComponentSelect: PageEditorCanvasProps['onComponentSelect']
   onComponentEdit?: PageEditorCanvasProps['onComponentEdit']
   onComponentDuplicate?: PageEditorCanvasProps['onComponentDuplicate']
-  onComponentDelete: PageEditorCanvasProps['onComponentDelete']
   onComponentUpdate: PageEditorCanvasProps['onComponentUpdate']
+  onComponentDelete: PageEditorCanvasProps['onComponentDelete']
   layout: PageLayout
   setLayout: PageEditorCanvasProps['setLayout']
   onDragEnd: PageEditorCanvasProps['onDragEnd']
@@ -439,6 +438,7 @@ export const CanvasToolbar: React.FC<{
   onDeletePage?: (pageId: string) => void
   onDisablePage?: (pageId: string, disabled: boolean) => void
   onRenamePage?: (pageId: string, name: string) => void
+  onPreviewDraft?: () => void
 }> = ({
   pages,
   currentPageId,

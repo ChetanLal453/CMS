@@ -1,7 +1,7 @@
 import { coerceValueForType, normalizeFilter, normalizeFilterType, normalizeOptions } from './normalize'
 import type { FilterViewModel } from './types'
 
-function getEmptyValue(viewModel: Pick<FilterViewModel, 'resolvedFilterType' | 'rangeMode'> & { min?: number; max?: number }) {
+function getEmptyValue(viewModel: Pick<FilterViewModel, 'resolvedFilterType' | 'rangeMode'> & { min?: number; max?: number }): FilterViewModel['emptyValue'] {
   if (viewModel.resolvedFilterType === 'toggle') {
     return false
   }
@@ -11,9 +11,12 @@ function getEmptyValue(viewModel: Pick<FilterViewModel, 'resolvedFilterType' | '
   }
 
   if (viewModel.resolvedFilterType === 'rangeSlider') {
-    const rangeMin = typeof viewModel.min === 'number' ? viewModel.min : Number(viewModel.min) || 0
-    const rangeMax = typeof viewModel.max === 'number' ? viewModel.max : Number(viewModel.max) || 100
-    return viewModel.rangeMode === 'single' ? [rangeMin, rangeMin] : [rangeMin, rangeMax]
+    const rawMin = typeof viewModel.min === 'number' && Number.isFinite(viewModel.min) ? viewModel.min : Number(viewModel.min)
+    const rawMax = typeof viewModel.max === 'number' && Number.isFinite(viewModel.max) ? viewModel.max : Number(viewModel.max)
+    const rangeMin = Number.isFinite(rawMin) ? rawMin : 0
+    const rangeMax = Number.isFinite(rawMax) ? rawMax : 100
+    const tuple: [number, number] = viewModel.rangeMode === 'single' ? [rangeMin, rangeMin] : [rangeMin, rangeMax]
+    return tuple
   }
 
   return ''

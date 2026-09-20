@@ -5,7 +5,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { DndContext } from '@dnd-kit/core'
 import { getApiErrorMessage } from '@/lib/apiHelpers'
 import { componentRegistry, initializeComponentRegistry } from '@/lib/componentRegistry'
-import { LayoutComponent, PageLayout, Page, Section, GlobalTheme } from '@/types/page-editor'
+import { LayoutComponent, PageLayout, Page, Section, GlobalTheme, ComponentDefinition } from '@/types/page-editor'
 import { usePageData } from './hooks/usePageData'
 import { useUIState } from './hooks/useUIState'
 import { useLayoutActions, createLayoutComponentFromDefinition, ensureSectionRows } from './hooks/useLayoutActions'
@@ -2241,7 +2241,6 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
             <CanvasToolbar
               pages={pages.map((p) => ({ id: p.id, name: p.name, active: p.active, disabled: p.disabled }))}
               currentPageId={currentPageId}
-              currentPageSlug={currentPage?.slug}
               onPageSelect={(pageId) => {
                 void handlePageSelect(pageId)
               }}
@@ -2368,7 +2367,6 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
               onClosePreview={() => setIsPreviewMode(false)}
               pages={pages.map((p) => ({ id: p.id, name: p.name, active: p.active, disabled: p.disabled }))}
               currentPageId={currentPageId}
-              currentPageSlug={currentPage?.slug}
               onPageSelect={setCurrentPageId}
               onAddPage={handleAddPageWithPrompt}
               canUndo={canUndo}

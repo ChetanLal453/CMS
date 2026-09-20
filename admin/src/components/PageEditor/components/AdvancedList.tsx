@@ -8,11 +8,12 @@ import { createAdvancedListViewModel } from '../../../../../shared/blocks/advanc
 import { normalizeAdvancedList } from '../../../../../shared/blocks/advancedlist/normalize'
 import type { AdvancedListInput, AdvancedListItem as ListItem } from '../../../../../shared/blocks/advancedlist/types'
 
-export interface AdvancedListProps extends AdvancedListInput {
-  onUpdate?: (props: Partial<AdvancedListProps>) => void
+export type AdvancedListProps = AdvancedListInput & {
+  onUpdate?: (props: Record<string, any>) => void
   onComponentUpdate?: (componentId: string, props: Record<string, any>) => void
   componentId?: string
   onSelect?: () => void
+  [key: string]: any
 }
 const previewDefaultProps = {
   items: defaultAdvancedListProps.items,

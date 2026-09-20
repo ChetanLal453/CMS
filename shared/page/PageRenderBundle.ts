@@ -186,6 +186,10 @@ export type BasePageRenderBundle = {
   header?: PageHeader | null
   footer?: PageFooter | null
   banner?: PageBanner | null
+  published_revision?: PageRevisionMeta | null
+  has_published_revision?: boolean
+  revision?: PageRevisionMeta | null
+  draft_revision?: PageRevisionMeta | null
   view: {
     traceId: string
     theme: {

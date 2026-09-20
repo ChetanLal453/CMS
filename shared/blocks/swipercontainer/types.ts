@@ -49,7 +49,7 @@ export interface SwiperEditorSlideView extends SwiperSlideItem {
   resolvedPadding: string
   hasComponents: boolean
   previewLabel: string
-  previewBackgroundStyle: Record<string, string>
+  previewBackgroundStyle: Record<string, string | undefined>
   editorCardStyle: Record<string, string>
 }
 

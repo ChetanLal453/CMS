@@ -326,11 +326,12 @@ function getRowAlignItems(value?: string): 'flex-start' | 'center' | 'flex-end' 
 }
 
 function getSectionRows(section: PageSection): DerivedRowView[] {
+  const containerRows = section.container?.rows
   const sourceRows =
     Array.isArray(section.rows) && section.rows.length
       ? section.rows
-      : Array.isArray(section.container?.rows) && section.container.rows.length
-        ? section.container.rows
+      : Array.isArray(containerRows) && containerRows.length
+        ? containerRows
         : []
 
   return sourceRows.map((row, rowIndex) => ({

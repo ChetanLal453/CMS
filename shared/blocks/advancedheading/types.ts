@@ -144,4 +144,4 @@ export interface AdvancedHeadingViewModel {
   }
   seoWarnings: string[]
 }
-import type { CSSProperties } from 'react'
+export type CSSProperties = Record<string, any>

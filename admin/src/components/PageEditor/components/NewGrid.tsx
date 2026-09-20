@@ -769,7 +769,12 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
 
       if (deleteComponent) {
         const enhancedContext = {
-          ...context,
+          sectionId,
+          containerId,
+          rowId,
+          colId,
+          carouselId,
+          slideIndex,
           parentGridId: gridId,
           parentComponentId: parentComponentId || containerId || gridId,
           source: 'grid-cell' as const,
@@ -780,7 +785,7 @@ const NewGridComponent: React.FC<NewGridComponentProps> = ({
         deleteComponent(componentId, enhancedContext)
       }
     },
-    [localComponent, onUpdate, deleteComponent, gridId, parentComponentId, containerId],
+    [localComponent, onUpdate, deleteComponent, gridId, parentComponentId, containerId, sectionId, rowId, colId, carouselId, slideIndex],
   )
 
   const handleEditClick = useCallback(

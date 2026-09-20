@@ -85,10 +85,14 @@ export interface Section {
     sticky_offset?: number;
     rowVerticalAlign?: 'top' | 'center' | 'bottom';
     
-    // Other style properties...
+    marginBottom?: string | number;
+    containerType?: 'boxed' | 'full-width' | 'fluid';
+    maxWidth?: number;
+    sideSpacing?: number;
     opacity?: number;
     width?: string;
     height?: string;
+    [key: string]: any;
   };
   content?: string;
 }
@@ -209,6 +213,7 @@ export interface ComponentDefinition {
   defaultProps: Record<string, any>;
   schema: {
     title?: string;
+    categories?: Array<{ id?: string; label?: string; expanded?: boolean }>;
     fields?: FieldPropertyConfig[];
     properties?: {
       [key: string]: ObjectPropertyConfig;

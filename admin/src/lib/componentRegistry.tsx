@@ -23,9 +23,12 @@ import NewGridAdminComponent from '../components/PageEditor/components/NewGrid'
 import SwiperContainerAdminComponent from '../components/PageEditor/components/SwiperContainer'
 import TabsAdminRenderer from '../components/PageEditor/components/TabsAdminRenderer'
 
+import { simpleBlockRenderers } from './simpleBlockRenderers'
+
 type ComponentSchema = ComponentDefinition['schema']
 
 registerAdminComponents({
+  ...simpleBlockRenderers,
   advancedheading: (props) => React.createElement(AdvancedHeadingPreviewRenderer, props),
   advancedparagraph: (props) => React.createElement(AdvancedParagraphPreviewRenderer, props),
   advancedcard: (props) => React.createElement(AdvancedCardPreviewRenderer, props),

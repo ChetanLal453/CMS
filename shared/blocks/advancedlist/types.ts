@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import type { DeepPartial } from '../../utils/merge'
 export type { DeepPartial }
 
@@ -135,3 +134,5 @@ export interface AdvancedListViewModel {
   emptyStateStyle: CSSProperties
   previewOverrides: Partial<AdvancedListStyleGroup>
 }
+
+export type CSSProperties = Record<string, any>

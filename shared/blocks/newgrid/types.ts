@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import type { DeepPartial } from '../../utils/merge'
 export type { DeepPartial }
 
@@ -168,3 +167,5 @@ export interface NewGridViewModel {
   editorCellStyle: CSSProperties
   emptyCellStyle: CSSProperties
 }
+
+export type CSSProperties = Record<string, any>

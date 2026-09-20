@@ -1,6 +1,5 @@
-import type { CSSProperties } from 'react'
 import { normalizeNewGrid } from './normalize'
-import type { NewGridInput, NewGridViewModel } from './types'
+import type { NewGridInput, NewGridViewModel, CSSProperties } from './types'
 
 function parseDataAttributes(dataAttributes: string): Record<string, string> {
   if (!dataAttributes.trim()) {

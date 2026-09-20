@@ -1,5 +1,3 @@
-import type { CSSProperties } from 'react'
-
 export type AdvancedParagraphType = 'advancedparagraph'
 export type AdvancedParagraphAlignment = 'left' | 'center' | 'right' | 'justify'
 export type AdvancedParagraphTextTransform = 'none' | 'uppercase' | 'lowercase' | 'capitalize'
@@ -180,3 +178,5 @@ export interface AdvancedParagraphViewModel {
     textAlignTablet: AdvancedParagraphAlignment
   }
 }
+
+export type CSSProperties = Record<string, any>
