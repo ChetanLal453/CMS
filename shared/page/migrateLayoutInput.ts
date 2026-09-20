@@ -24,7 +24,7 @@ type MigrationOptions = {
   slug?: string | null
 }
 
-type MigrationResult<T> = {
+export type MigrationResult<T = unknown> = {
   traceId: string
   value: T
   migrations: AutoMigrationLog[]
@@ -420,10 +420,10 @@ function migrateSection(
   return migrated
 }
 
-export function migrateLayoutInput(
+export function migrateLayoutInput<T = unknown>(
   layout: unknown,
   _options: MigrationOptions = {},
-): MigrationResult<unknown> {
+): MigrationResult<T> {
   const traceId = createTraceId()
 
   if (!isObject(layout)) {
@@ -444,7 +444,7 @@ export function migrateLayoutInput(
 
   return {
     traceId,
-    value: migrated,
+    value: migrated as T,
     migrations,
   }
 }

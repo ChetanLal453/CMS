@@ -1,7 +1,85 @@
-import { migrateLayoutInput } from '../../../../shared/page/migrateLayoutInput'
+import { migrateLayoutInput, type MigrationResult } from '../../../../shared/page/migrateLayoutInput'
 import { PageLayoutValidationError } from '../../../../shared/page/validateCanonicalLayout'
 
-function createLegacyLayout(blockType: string, blockProps: Record<string, unknown> = {}) {
+type LegacyTestComponent = {
+  id: string
+  type: string
+  props: Record<string, unknown>
+}
+
+type LegacyTestColumn = {
+  id: string
+  width: number
+  components: LegacyTestComponent[]
+}
+
+type LegacyTestSection = {
+  id: string
+  name: string
+  type: string
+  props?: Record<string, unknown>
+  settings?: Record<string, unknown>
+  content?: Record<string, unknown>
+  stickyEnabled?: boolean
+  stickyColumnIndex?: number
+  stickyPosition?: string
+  stickyOffset?: number
+  columns?: LegacyTestColumn[]
+  rows?: Array<{
+    id?: string
+    columns: Array<{
+      id?: string
+      width?: number
+      components: LegacyTestComponent[]
+    }>
+  }>
+}
+
+type LegacyTestLayout = {
+  id: string
+  name: string
+  sections: LegacyTestSection[]
+}
+
+type MigratedTestComponent = {
+  id?: string
+  type: string
+  props: Record<string, any>
+  [key: string]: any
+}
+
+type MigratedTestColumn = {
+  id?: string
+  width?: number
+  components: MigratedTestComponent[]
+  [key: string]: any
+}
+
+type MigratedTestRow = {
+  id?: string
+  columns: MigratedTestColumn[]
+  [key: string]: any
+}
+
+type MigratedTestSection = {
+  id: string
+  name: string
+  type: string
+  props?: Record<string, any>
+  settings?: Record<string, any>
+  rows: MigratedTestRow[]
+  columns?: MigratedTestColumn[]
+  [key: string]: any
+}
+
+type MigratedTestLayout = {
+  id: string
+  name: string
+  sections: MigratedTestSection[]
+  [key: string]: any
+}
+
+function createLegacyLayout(blockType: string, blockProps: Record<string, unknown> = {}): LegacyTestLayout {
   return {
     id: 'layout-1',
     name: 'Layout',
@@ -43,8 +121,8 @@ describe('migrateLayoutInput', () => {
     ['richtext', 'advancedparagraph'],
     ['advancedImage', 'image'],
     ['advancedCard', 'advancedcard'],
-  ])('migrates block alias %s -> %s and logs it', (before, after) => {
-    const result = migrateLayoutInput(createLegacyLayout(before, { text: 'Hello world' }))
+  ])('migrates block alias %s -> %s and logs it', (before: string, after: string) => {
+    const result = migrateLayoutInput<MigratedTestLayout>(createLegacyLayout(before, { text: 'Hello world' }))
     const component = result.value.sections[0].rows[0].columns[0].components[0]
 
     expect(component.type).toBe(after)
@@ -69,7 +147,7 @@ describe('migrateLayoutInput', () => {
   })
 
   it('recovers block identifiers accidentally stored in type fields', () => {
-    const result = migrateLayoutInput(createLegacyLayout('advancedparagraph-1777898919186-tt7g31vr7', { text: 'Hello world' }))
+    const result = migrateLayoutInput<MigratedTestLayout>(createLegacyLayout('advancedparagraph-1777898919186-tt7g31vr7', { text: 'Hello world' }))
     const component = result.value.sections[0].rows[0].columns[0].components[0]
 
     expect(component.type).toBe('advancedparagraph')
@@ -87,12 +165,12 @@ describe('migrateLayoutInput', () => {
   it.each([
     ['home_banner', 'hero'],
     ['choose', 'features'],
-  ])('migrates section alias %s -> %s and logs it', (before, after) => {
+  ])('migrates section alias %s -> %s and logs it', (before: string, after: string) => {
     const layout = createLegacyLayout('advancedparagraph', { text: 'Hello world' })
     layout.sections[0].type = before
     layout.sections[0].props = { title: 'Title', subtitle: 'Subtitle' }
 
-    const result = migrateLayoutInput(layout)
+    const result = migrateLayoutInput<MigratedTestLayout>(layout)
 
     expect(result.value.sections[0].type).toBe(after)
     expect(result.migrations).toEqual(
@@ -107,7 +185,7 @@ describe('migrateLayoutInput', () => {
   })
 
   it('migrates image -> src deterministically and logs it', () => {
-    const result = migrateLayoutInput(createLegacyLayout('advancedImage', { image: '/hero.png', alt: 'Hero' }))
+    const result = migrateLayoutInput<MigratedTestLayout>(createLegacyLayout('advancedImage', { image: '/hero.png', alt: 'Hero' }))
     const props = result.value.sections[0].rows[0].columns[0].components[0].props
 
     expect(props).toMatchObject({
@@ -148,7 +226,7 @@ describe('migrateLayoutInput', () => {
       ],
     }
 
-    const result = migrateLayoutInput(layout)
+    const result = migrateLayoutInput<MigratedTestLayout>(layout)
 
     expect(result.value.sections[0].props).toEqual({
       title: 'Hero title',
@@ -164,7 +242,7 @@ describe('migrateLayoutInput', () => {
   })
 
   it('migrates section.columns -> rows and logs it', () => {
-    const result = migrateLayoutInput(createLegacyLayout('advancedparagraph', { text: 'Hello world' }))
+    const result = migrateLayoutInput<MigratedTestLayout>(createLegacyLayout('advancedparagraph', { text: 'Hello world' }))
 
     expect(result.value.sections[0].rows).toHaveLength(1)
     expect(result.value.sections[0].rows[0].columns).toHaveLength(1)
@@ -185,7 +263,7 @@ describe('migrateLayoutInput', () => {
     layout.sections[0].stickyPosition = 'top'
     layout.sections[0].stickyOffset = 24
 
-    const result = migrateLayoutInput(layout)
+    const result = migrateLayoutInput<MigratedTestLayout>(layout)
     const settings = result.value.sections[0].settings
 
     expect(settings).toMatchObject({
@@ -297,7 +375,7 @@ describe('migrateLayoutInput', () => {
       ],
     }
 
-    const result = migrateLayoutInput(layout)
+    const result = migrateLayoutInput<MigratedTestLayout>(layout)
 
     expect(result.value).toEqual(layout)
     expect(result.migrations).toHaveLength(0)
