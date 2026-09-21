@@ -40,10 +40,13 @@ function resolveClipPath(shape?: string, customShape?: string) {
 }
 
 function resolveBorderRadius(shape?: string, borderRadius?: string | number) {
+  if (borderRadius !== undefined && borderRadius !== null && String(borderRadius).trim() !== '') {
+    return typeof borderRadius === 'number' ? `${borderRadius}px` : String(borderRadius)
+  }
   if (shape === 'circle') return '999px'
   if (shape === 'rounded') return '24px'
   if (shape === 'square') return '0px'
-  return typeof borderRadius === 'number' ? `${borderRadius}px` : String(borderRadius ?? '0px')
+  return '0px'
 }
 
 function buildGradientBorderBackground(type?: string, direction?: string, colors?: string) {
@@ -55,31 +58,68 @@ function buildGradientBorderBackground(type?: string, direction?: string, colors
 
 export function createImageViewModel(props: Record<string, any> = {}): ImageViewModel {
   const normalized = normalizeImage(props)
-  const hasImage = Boolean(normalized.src && normalized.src.trim())
-  const hasLink = Boolean(normalized.linkUrl && normalized.linkUrl.trim())
-  const clipPath = resolveClipPath(normalized.shape, normalized.customShape)
-  const resolvedBorderRadius = resolveBorderRadius(normalized.shape, normalized.borderRadius)
-  const gradientBorderBackground = normalized.showGradientBorder
-    ? buildGradientBorderBackground(normalized.gradientBorderType, normalized.gradientBorderDirection, normalized.gradientBorderColors)
+  const src = normalized.content?.src ?? normalized.src ?? ''
+  const hasImage = Boolean(src && src.trim())
+  const linkUrl = normalized.content?.linkUrl ?? normalized.linkUrl ?? ''
+  const hasLink = Boolean(linkUrl && linkUrl.trim())
+  const openInNewTab = Boolean(normalized.content?.openInNewTab ?? normalized.openInNewTab)
+  const caption = normalized.content?.caption ?? normalized.caption ?? ''
+  const showCaption = Boolean(caption && caption.trim())
+
+  const shape = normalized.style?.shape ?? normalized.shape
+  const customShape = normalized.style?.customShape ?? normalized.customShape
+  const clipPath = resolveClipPath(shape, customShape)
+
+  const rawBorderRadius = normalized.style?.borderRadius ?? normalized.borderRadius
+  const resolvedBorderRadius = resolveBorderRadius(shape, rawBorderRadius)
+
+  const showGradientBorder = Boolean(normalized.style?.showGradientBorder ?? normalized.showGradientBorder)
+  const gradientBorderType = normalized.style?.gradientBorderType ?? normalized.gradientBorderType
+  const gradientBorderDirection = normalized.style?.gradientBorderDirection ?? normalized.gradientBorderDirection
+  const gradientBorderColors = normalized.style?.gradientBorderColors ?? normalized.gradientBorderColors
+  const gradientBorderWidth = normalized.style?.gradientBorderWidth ?? normalized.gradientBorderWidth ?? '10px'
+  const gradientBorderBackground = showGradientBorder
+    ? buildGradientBorderBackground(gradientBorderType, gradientBorderDirection, gradientBorderColors)
     : undefined
+
+  const showOverlay = Boolean(normalized.style?.showOverlay ?? normalized.showOverlay)
+  const overlayText = String(normalized.style?.overlayText ?? normalized.overlayText ?? '').trim()
+  const showOverlayLayer = Boolean(showOverlay || overlayText)
+
+  const width = normalized.width ?? '100%'
+  const height = normalized.height ?? 'auto'
+  const maxWidth = normalized.maxWidth ?? '100%'
+  const maxHeight = normalized.maxHeight ?? 'none'
+  const objectFit = normalized.objectFit ?? 'contain'
+  const objectPosition = normalized.objectPosition ?? 'center'
+  const shadow = normalized.shadow ?? 'none'
+  const hoverDuration = normalized.hoverDuration ?? 0.3
+  const imageZoom = normalized.imageZoom ?? 1
 
   return {
     ...normalized,
+    src,
+    linkUrl,
+    caption,
+    openInNewTab,
     hasImage,
     isRenderable: hasImage,
     hasLink,
-    resolvedSrc: resolveAdminMediaUrl(normalized.src || ''),
-    showCaption: Boolean(normalized.caption && normalized.caption.trim()),
-    showOverlayLayer: Boolean(normalized.showOverlay || normalized.overlayText),
-    linkTarget: normalized.openInNewTab ? '_blank' : '_self',
-    linkRel: normalized.openInNewTab ? 'noopener noreferrer' : undefined,
+    resolvedSrc: resolveAdminMediaUrl(src),
+    showCaption,
+    showOverlayLayer,
+    linkTarget: openInNewTab ? '_blank' : '_self',
+    linkRel: openInNewTab ? 'noopener noreferrer' : undefined,
     resolvedBorderRadius,
     resolvedClassName: `${normalized.className || ''}`.trim(),
     clipPath,
     containerStyle: {
-      textAlign: normalized.alignment,
-      margin: normalized.margin || '0 auto',
-      transform: `translate(${normalized.componentPositionX}, ${normalized.componentPositionY})`,
+      textAlign: normalized.alignment ?? 'center',
+      margin: normalized.margin ?? '0 auto',
+      transform:
+        normalized.componentPositionX || normalized.componentPositionY
+          ? `translate(${normalized.componentPositionX || '0px'}, ${normalized.componentPositionY || '0px'})`
+          : undefined,
       position: 'relative',
       width: '100%',
       maxWidth: '100%',
@@ -87,39 +127,41 @@ export function createImageViewModel(props: Record<string, any> = {}): ImageView
     frameStyle: {
       position: 'relative',
       display: 'block',
-      width: normalized.width || '100%',
-      maxWidth: normalized.maxWidth || '100%',
-      padding: normalized.showGradientBorder ? normalized.gradientBorderWidth : normalized.padding,
-      border: normalized.border,
+      width,
+      maxWidth,
+      padding: showGradientBorder ? gradientBorderWidth : (normalized.padding ?? undefined),
+      border: normalized.border ?? undefined,
       borderRadius: resolvedBorderRadius,
       background: gradientBorderBackground,
-      boxShadow: SHADOW_MAP[normalized.shadow || 'none'],
+      boxShadow: SHADOW_MAP[shadow] || 'none',
       overflow: 'hidden',
     },
     imageStyle: {
-      width: normalized.width || '100%',
-      height: normalized.height || 'auto',
-      maxWidth: normalized.maxWidth || '100%',
-      maxHeight: normalized.maxHeight || 'none',
-      objectFit: normalized.objectFit || 'contain',
-      objectPosition: normalized.objectPosition,
+      width,
+      height,
+      maxWidth,
+      maxHeight,
+      objectFit,
+      objectPosition,
       borderRadius: resolvedBorderRadius,
       display: 'block',
-      filter: normalized.filter,
-      transform: `scale(${normalized.imageZoom || 1})`,
-      transition: `transform ${normalized.hoverDuration}s ease, filter ${normalized.hoverDuration}s ease, opacity ${normalized.hoverDuration}s ease`,
+      filter: normalized.filter && normalized.filter !== 'none' ? normalized.filter : undefined,
+      transform: imageZoom !== 1 ? `scale(${imageZoom})` : undefined,
+      transition: `transform ${hoverDuration}s ease, filter ${hoverDuration}s ease, opacity ${hoverDuration}s ease`,
       clipPath,
       cursor: normalized.showLightbox ? 'zoom-in' : hasLink ? 'pointer' : 'default',
     },
     hoverImageStyle: {
       transform:
         normalized.hoverEffect === 'zoom'
-          ? `scale(${normalized.hoverZoom || normalized.imageZoom || 1.1})`
+          ? `scale(${normalized.hoverZoom || 1.1})`
           : normalized.hoverEffect === 'rotate'
-            ? `scale(${normalized.imageZoom || 1}) rotate(3deg)`
+            ? `scale(${imageZoom}) rotate(3deg)`
             : normalized.hoverEffect === 'flip'
-              ? `scale(${normalized.imageZoom || 1}) rotateY(180deg)`
-              : `scale(${normalized.imageZoom || 1})`,
+              ? `scale(${imageZoom}) rotateY(180deg)`
+              : imageZoom !== 1
+                ? `scale(${imageZoom})`
+                : undefined,
       filter:
         normalized.hoverEffect === 'grayscale'
           ? 'grayscale(1)'
@@ -127,19 +169,19 @@ export function createImageViewModel(props: Record<string, any> = {}): ImageView
             ? `brightness(${normalized.hoverBrightness || 1.2})`
             : normalized.hoverEffect === 'blur'
               ? 'blur(1.5px)'
-              : normalized.filter,
+              : (normalized.filter && normalized.filter !== 'none' ? normalized.filter : undefined),
       opacity: normalized.hoverEffect === 'fade' ? 0.82 : 1,
     },
     overlayStyle: {
       position: 'absolute',
       inset: 0,
-      backgroundColor: normalized.overlayColor,
-      opacity: normalized.showOverlay ? normalized.overlayOpacity : 0,
-      display: normalized.showOverlayLayer ? 'flex' : 'none',
+      backgroundColor: showOverlayLayer ? (normalized.overlayColor || '#000000') : undefined,
+      opacity: showOverlay ? (normalized.overlayOpacity ?? 0.3) : 0,
+      display: showOverlayLayer ? 'flex' : 'none',
       alignItems: 'center',
       justifyContent: 'center',
       pointerEvents: 'none',
-      transition: `opacity ${normalized.hoverDuration}s ease`,
+      transition: `opacity ${hoverDuration}s ease`,
     },
     overlayTextStyle: {
       color: '#ffffff',
@@ -151,7 +193,7 @@ export function createImageViewModel(props: Record<string, any> = {}): ImageView
     captionStyle: {
       marginTop: normalized.captionPosition === 'bottom' ? '10px' : 0,
       marginBottom: normalized.captionPosition === 'top' ? '10px' : 0,
-      textAlign: normalized.captionAlignment,
+      textAlign: normalized.captionAlignment ?? 'center',
       fontSize: '14px',
       color: 'var(--canvas-text2, #64748b)',
     },

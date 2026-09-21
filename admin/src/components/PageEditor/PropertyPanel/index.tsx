@@ -15,6 +15,7 @@ import { normalizeAdvancedParagraph } from '../../../../../shared/blocks/advance
 import { normalizeNewGrid } from '../../../../../shared/blocks/newgrid/normalize'
 import { normalizeTabs } from '../../../../../shared/blocks/tabs/normalize'
 import { normalizeButton } from '../../../../../shared/blocks/button/normalize'
+import { normalizeImage } from '../../../../../shared/blocks/image/normalize'
 import { getBlockDefaults, normalizeBlockProps, resolveBlockType } from '../../../../../shared/blocks/registry'
 import { THEME_PRESETS } from '../../../../../shared/theme'
 
@@ -356,6 +357,66 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
     }
   }
 
+  if (normalizedType === 'image') {
+    const img = normalizeImage(props)
+    const shape = img.style?.shape ?? img.shape ?? 'default'
+    const rawBorderRadius = img.style?.borderRadius ?? img.borderRadius
+    const isDefaultRadius = (shape === 'circle' || shape === 'rounded') && (rawBorderRadius === '0px' || !rawBorderRadius)
+    const editorBorderRadius = isDefaultRadius ? '' : (rawBorderRadius ?? '')
+
+    const rawPadding = img.style?.padding ?? img.padding
+    const editorPadding = rawPadding === '0px' ? '' : (rawPadding ?? '')
+
+    const showOverlay = Boolean(img.style?.showOverlay ?? img.showOverlay)
+    const overlayText = img.style?.overlayText ?? img.overlayText ?? ''
+
+    return {
+      src: img.content?.src ?? img.src ?? '',
+      alt: img.content?.alt ?? img.alt ?? 'Image',
+      linkUrl: img.content?.linkUrl ?? img.linkUrl ?? '',
+      openInNewTab: Boolean(img.content?.openInNewTab ?? img.openInNewTab),
+      caption: img.content?.caption ?? img.caption ?? '',
+      captionPosition: img.content?.captionPosition ?? img.captionPosition ?? 'bottom',
+      captionAlignment: img.content?.captionAlignment ?? img.captionAlignment ?? 'center',
+
+      width: img.style?.width ?? img.width ?? '',
+      height: img.style?.height ?? img.height ?? '',
+      maxWidth: img.style?.maxWidth ?? img.maxWidth ?? '',
+      maxHeight: img.style?.maxHeight ?? img.maxHeight ?? '',
+      alignment: img.style?.alignment ?? img.alignment ?? 'center',
+      objectFit: img.style?.objectFit ?? img.objectFit ?? 'contain',
+      objectPosition: img.style?.objectPosition ?? img.objectPosition ?? 'center',
+      borderRadius: editorBorderRadius,
+      shape,
+      customShape: img.style?.customShape ?? img.customShape ?? '',
+      showGradientBorder: Boolean(img.style?.showGradientBorder ?? img.showGradientBorder),
+      gradientBorderColors: img.style?.gradientBorderColors ?? img.gradientBorderColors ?? '',
+      gradientBorderDirection: img.style?.gradientBorderDirection ?? img.gradientBorderDirection ?? '135deg',
+      gradientBorderWidth: img.style?.gradientBorderWidth ?? img.gradientBorderWidth ?? '10px',
+      gradientBorderType: img.style?.gradientBorderType ?? img.gradientBorderType ?? 'conic',
+      shadow: img.style?.shadow ?? img.shadow ?? 'none',
+      border: img.style?.border ?? img.border ?? '',
+      margin: img.style?.margin ?? img.margin ?? '',
+      padding: editorPadding,
+      filter: img.style?.filter ?? img.filter ?? '',
+      imageZoom: img.style?.imageZoom ?? img.imageZoom ?? 1,
+      componentPositionX: img.style?.componentPositionX ?? img.componentPositionX ?? '',
+      componentPositionY: img.style?.componentPositionY ?? img.componentPositionY ?? '',
+      showOverlay,
+      overlayColor: img.style?.overlayColor ?? img.overlayColor ?? '#000000',
+      overlayOpacity: img.style?.overlayOpacity ?? img.overlayOpacity ?? 0.3,
+      overlayText,
+      hoverEffect: img.style?.hoverEffect ?? img.hoverEffect ?? 'none',
+      hoverZoom: img.style?.hoverZoom ?? img.hoverZoom ?? 1.1,
+      hoverBrightness: img.style?.hoverBrightness ?? img.hoverBrightness ?? 1.2,
+      hoverDuration: img.style?.hoverDuration ?? img.hoverDuration ?? 0.3,
+      lazyLoad: Boolean(img.style?.lazyLoad ?? img.lazyLoad),
+      showLightbox: Boolean(img.style?.showLightbox ?? img.showLightbox),
+      className: img.style?.className ?? img.className ?? '',
+      customId: img.style?.customId ?? img.customId ?? '',
+    }
+  }
+
   const resolvedBlockKey = resolveBlockType(type)
   if (resolvedBlockKey) {
     const defaults = getBlockDefaults(resolvedBlockKey)
@@ -617,6 +678,82 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
         },
       },
     })
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
+  }
+
+  if (normalizedType === 'image') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalNumber = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      const num = Number(v)
+      return Number.isNaN(num) ? undefined : num
+    }
+
+    const showOverlay = Boolean(props.showOverlay)
+    const overlayText = toOptionalString(props.overlayText)
+    const hasOverlayActive = showOverlay || Boolean(overlayText)
+
+    const normalized = normalizeImage({
+      content: {
+        src: toOptionalString(props.src) || '',
+        alt: toOptionalString(props.alt) || 'Image',
+        linkUrl: toOptionalString(props.linkUrl),
+        openInNewTab: Boolean(props.openInNewTab),
+        caption: toOptionalString(props.caption),
+        captionPosition: props.captionPosition || 'bottom',
+        captionAlignment: props.captionAlignment || 'center',
+      },
+      style: {
+        width: toOptionalString(props.width),
+        height: toOptionalString(props.height),
+        maxWidth: toOptionalString(props.maxWidth),
+        maxHeight: toOptionalString(props.maxHeight),
+        alignment: props.alignment || 'center',
+        objectFit: props.objectFit || 'contain',
+        objectPosition: toOptionalString(props.objectPosition),
+        borderRadius: toOptionalString(props.borderRadius),
+        shape: props.shape || 'default',
+        customShape: toOptionalString(props.customShape),
+        showGradientBorder: Boolean(props.showGradientBorder),
+        gradientBorderColors: toOptionalString(props.gradientBorderColors),
+        gradientBorderDirection: toOptionalString(props.gradientBorderDirection),
+        gradientBorderWidth: toOptionalString(props.gradientBorderWidth),
+        gradientBorderType: props.gradientBorderType || 'conic',
+        shadow: props.shadow || 'none',
+        border: toOptionalString(props.border),
+        margin: toOptionalString(props.margin),
+        padding: toOptionalString(props.padding),
+        filter: toOptionalString(props.filter),
+        imageZoom: toOptionalNumber(props.imageZoom),
+        componentPositionX: toOptionalString(props.componentPositionX),
+        componentPositionY: toOptionalString(props.componentPositionY),
+        showOverlay,
+        overlayColor: hasOverlayActive ? toOptionalString(props.overlayColor) : undefined,
+        overlayOpacity: hasOverlayActive ? toOptionalNumber(props.overlayOpacity) : undefined,
+        overlayText,
+        hoverEffect: props.hoverEffect || 'none',
+        hoverZoom: toOptionalNumber(props.hoverZoom),
+        hoverBrightness: toOptionalNumber(props.hoverBrightness),
+        hoverDuration: toOptionalNumber(props.hoverDuration),
+        lazyLoad: Boolean(props.lazyLoad),
+        showLightbox: Boolean(props.showLightbox),
+        className: toOptionalString(props.className),
+        customId: toOptionalString(props.customId),
+      },
+      responsive: {
+        desktop: props.responsive?.desktop || {},
+        tablet: props.responsive?.tablet || {},
+        mobile: props.responsive?.mobile || {},
+      },
+    })
+
     return stripEditorMeta({
       ...normalized,
       version: 1,

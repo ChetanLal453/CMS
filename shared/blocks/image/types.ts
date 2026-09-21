@@ -20,6 +20,67 @@ export type ImageCaptionPosition = 'bottom' | 'top' | 'overlay'
 export type ImageHoverEffect = 'none' | 'zoom' | 'fade' | 'grayscale' | 'brighten' | 'blur' | 'rotate' | 'flip'
 export type ImageGradientBorderType = 'linear' | 'radial' | 'conic'
 
+export interface CanonicalImageContent {
+  src?: string
+  alt?: string
+  linkUrl?: string
+  openInNewTab?: boolean
+  caption?: string
+  captionPosition?: ImageCaptionPosition
+  captionAlignment?: ImageAlignment
+}
+
+export interface CanonicalImageStyle {
+  width?: string
+  height?: string
+  maxWidth?: string
+  maxHeight?: string
+  alignment?: ImageAlignment
+  objectFit?: ImageObjectFit
+  objectPosition?: string
+  borderRadius?: string | number
+  shape?: ImageShape
+  customShape?: string
+  showGradientBorder?: boolean
+  gradientBorderColors?: string
+  gradientBorderDirection?: string
+  gradientBorderWidth?: string
+  gradientBorderType?: ImageGradientBorderType
+  shadow?: ImageShadow
+  border?: string
+  margin?: string
+  padding?: string
+  filter?: string
+  imageZoom?: number
+  componentPositionX?: string
+  componentPositionY?: string
+  showOverlay?: boolean
+  overlayColor?: string
+  overlayOpacity?: number
+  overlayText?: string
+  hoverEffect?: ImageHoverEffect
+  hoverZoom?: number
+  hoverBrightness?: number
+  hoverDuration?: number
+  lazyLoad?: boolean
+  showLightbox?: boolean
+  className?: string
+  customId?: string
+}
+
+export interface CanonicalImageResponsive {
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: Record<string, any>
+}
+
+export interface CanonicalImageProps {
+  version?: number
+  content?: CanonicalImageContent
+  style?: CanonicalImageStyle
+  responsive?: CanonicalImageResponsive
+}
+
 export type ImageProps = {
   src?: string
   alt?: string
@@ -64,7 +125,7 @@ export type ImageProps = {
   maxWidth?: string
   maxHeight?: string
   [key: string]: any
-}
+} & CanonicalImageProps
 
 export type ImageViewModel = ImageProps & {
   hasImage: boolean

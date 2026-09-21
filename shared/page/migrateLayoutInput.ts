@@ -170,6 +170,100 @@ function migrateBlock(
       migrations.push(entry)
       logAutoMigration(entry)
     }
+
+    if (!isObject(migrated.props.content) || !isObject(migrated.props.style) || !migrated.props.version) {
+      const isLegacyUnversioned = !migrated.props.version
+      const legacyShape = migrated.props.shape || 'default'
+
+      const isDefaultBorderRadius =
+        typeof migrated.props.borderRadius === 'string' &&
+        migrated.props.borderRadius.trim() === '0px'
+      const shouldStripBorderRadius =
+        isLegacyUnversioned && (legacyShape === 'circle' || legacyShape === 'rounded') && isDefaultBorderRadius
+
+      const isDefaultPadding =
+        typeof migrated.props.padding === 'string' &&
+        migrated.props.padding.trim() === '0px'
+      const shouldStripPadding = isLegacyUnversioned && isDefaultPadding
+
+      const isDefaultOverlay =
+        !migrated.props.showOverlay && !migrated.props.overlayText
+
+      const borderRadius = shouldStripBorderRadius ? undefined : migrated.props.borderRadius
+      const padding = shouldStripPadding ? undefined : migrated.props.padding
+      const overlayColor = (isLegacyUnversioned && isDefaultOverlay) ? undefined : migrated.props.overlayColor
+      const overlayOpacity = (isLegacyUnversioned && isDefaultOverlay) ? undefined : migrated.props.overlayOpacity
+
+      const content = {
+        src: migrated.props.src ?? migrated.props.image ?? migrated.props.url ?? migrated.props.imageUrl,
+        alt: migrated.props.alt ?? 'Image',
+        linkUrl: migrated.props.linkUrl ?? migrated.props.link ?? migrated.props.href,
+        openInNewTab: migrated.props.openInNewTab,
+        caption: migrated.props.caption,
+        captionPosition: migrated.props.captionPosition,
+        captionAlignment: migrated.props.captionAlignment,
+      }
+
+      const style = {
+        width: migrated.props.width,
+        height: migrated.props.height,
+        maxWidth: migrated.props.maxWidth,
+        maxHeight: migrated.props.maxHeight,
+        alignment: migrated.props.alignment ?? migrated.props.textAlign ?? migrated.props.align,
+        objectFit: migrated.props.objectFit,
+        objectPosition: migrated.props.objectPosition,
+        borderRadius,
+        shape: migrated.props.shape,
+        customShape: migrated.props.customShape,
+        showGradientBorder: migrated.props.showGradientBorder,
+        gradientBorderColors: migrated.props.gradientBorderColors,
+        gradientBorderDirection: migrated.props.gradientBorderDirection,
+        gradientBorderWidth: migrated.props.gradientBorderWidth,
+        gradientBorderType: migrated.props.gradientBorderType,
+        shadow: migrated.props.shadow,
+        border: migrated.props.border,
+        margin: migrated.props.margin,
+        padding,
+        filter: migrated.props.filter,
+        imageZoom: migrated.props.imageZoom,
+        componentPositionX: migrated.props.componentPositionX,
+        componentPositionY: migrated.props.componentPositionY,
+        showOverlay: migrated.props.showOverlay,
+        overlayColor,
+        overlayOpacity,
+        overlayText: migrated.props.overlayText,
+        hoverEffect: migrated.props.hoverEffect,
+        hoverZoom: migrated.props.hoverZoom,
+        hoverBrightness: migrated.props.hoverBrightness,
+        hoverDuration: migrated.props.hoverDuration,
+        lazyLoad: migrated.props.lazyLoad,
+        showLightbox: migrated.props.showLightbox,
+        className: migrated.props.className,
+        customId: migrated.props.customId,
+      }
+
+      const beforeProps = { ...migrated.props }
+      migrated.props = {
+        ...migrated.props,
+        version: 1,
+        content,
+        style,
+        responsive: migrated.props.responsive ?? {},
+      }
+
+      const entry = {
+        type: 'auto_migration' as const,
+        migration: 'image_legacy_to_canonical',
+        targetType: 'block' as const,
+        blockOrSectionType: resolvedType,
+        path: `${path}.props`,
+        before: summarize(beforeProps),
+        after: summarize(migrated.props),
+        traceId,
+      }
+      migrations.push(entry)
+      logAutoMigration(entry)
+    }
   }
 
   if (resolvedType === 'advancedheading') {

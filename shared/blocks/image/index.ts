@@ -3,6 +3,10 @@ import { normalizeImage } from './normalize'
 import { createImageViewModel } from './viewModel'
 
 export type {
+  CanonicalImageContent,
+  CanonicalImageProps,
+  CanonicalImageResponsive,
+  CanonicalImageStyle,
   ImageAlignment,
   ImageCaptionPosition,
   ImageGradientBorderType,

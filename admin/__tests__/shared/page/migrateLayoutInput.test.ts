@@ -551,4 +551,71 @@ describe('migrateLayoutInput', () => {
     expect(component.props.style.backgroundColor).toBe('#7C6DFA')
     expect(result.migrations.filter((m) => m.migration === 'button_legacy_to_canonical')).toHaveLength(0)
   })
+
+  it('migrates legacy flat image to canonical format non-destructively', () => {
+    const layout = {
+      id: 'layout-img-1',
+      name: 'Layout',
+      sections: [
+        {
+          id: 'section-1',
+          name: 'Section',
+          type: 'custom',
+          props: {},
+          settings: {},
+          rows: [
+            {
+              id: 'row-1',
+              columns: [
+                {
+                  id: 'col-1',
+                  width: 100,
+                  components: [
+                    {
+                      id: 'comp-1',
+                      type: 'image',
+                      props: {
+                        src: '/legacy-banner.jpg',
+                        alt: 'Legacy Banner',
+                        width: '100%',
+                        shape: 'circle',
+                        borderRadius: '0px',
+                        padding: '0px',
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+
+    const result = migrateLayoutInput<MigratedTestLayout>(layout)
+    const component = result.value.sections[0].rows[0].columns[0].components[0]
+
+    expect(component.props.version).toBe(1)
+    expect(component.props.content).toBeDefined()
+    expect(component.props.content.src).toBe('/legacy-banner.jpg')
+    expect(component.props.content.alt).toBe('Legacy Banner')
+    expect(component.props.style).toBeDefined()
+    expect(component.props.style.shape).toBe('circle')
+    // Legacy default '0px' stripped on circle so shape preset takes effect:
+    expect(component.props.style.borderRadius).toBeUndefined()
+    expect(component.props.style.padding).toBeUndefined()
+    // Non-destructive: flat fields still preserved on props
+    expect(component.props.src).toBe('/legacy-banner.jpg')
+    expect(component.props.alt).toBe('Legacy Banner')
+
+    expect(result.migrations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'auto_migration',
+          migration: 'image_legacy_to_canonical',
+        }),
+      ]),
+    )
+  })
 })
+
