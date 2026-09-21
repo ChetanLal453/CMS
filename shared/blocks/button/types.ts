@@ -90,6 +90,85 @@ export interface ButtonResponsiveProps {
   hideOnMobile?: boolean
 }
 
+export interface CanonicalButtonContent {
+  text?: string
+  link?: string
+  openInNewTab?: boolean
+  loadingText?: string
+  ariaLabel?: string
+}
+
+export interface CanonicalButtonStyle {
+  variant?: ButtonVariant
+  size?: ButtonSize
+  primaryColor?: string
+  backgroundColor?: string
+  textColor?: string
+  hoverColor?: string
+  activeColor?: string
+  borderColor?: string
+  useGradient?: boolean
+  gradientColors?: string
+  gradientDirection?: string
+  gradientType?: ButtonGradientType
+  borderRadius?: string
+  borderWidth?: string
+  shadow?: ButtonShadow
+  alignment?: ButtonAlignment
+  textAlign?: ButtonAlignment
+  fullWidth?: boolean
+  width?: string
+  margin?: string
+  padding?: string
+  marginTop?: string
+  marginRight?: string
+  marginBottom?: string
+  marginLeft?: string
+  paddingTop?: string
+  paddingRight?: string
+  paddingBottom?: string
+  paddingLeft?: string
+  fontFamily?: string
+  fontSize?: string
+  fontWeight?: ButtonFontWeight | string
+  letterSpacing?: string
+  textTransform?: ButtonTextTransform
+  lineHeight?: string
+  icon?: string
+  iconPosition?: 'left' | 'right'
+  iconSize?: string
+  iconSpacing?: string
+  disabled?: boolean
+  loading?: boolean
+  hoverEffect?: ButtonHoverEffect
+  hoverScale?: number
+  hoverShadow?: ButtonShadow
+  animationType?: ButtonAnimationType
+  animationDuration?: string
+  className?: string
+  customClass?: string
+  customId?: string
+  onClick?: string
+  dataTracking?: string
+}
+
+export interface CanonicalButtonResponsive {
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: {
+    size?: ButtonSize
+    fullWidth?: boolean
+    hidden?: boolean
+  }
+}
+
+export interface CanonicalButtonProps {
+  version?: number
+  content?: CanonicalButtonContent
+  style?: CanonicalButtonStyle
+  responsive?: CanonicalButtonResponsive
+}
+
 export type ButtonProps = ButtonContentProps &
   ButtonStyleProps &
   ButtonLayoutProps &
@@ -97,7 +176,8 @@ export type ButtonProps = ButtonContentProps &
   ButtonIconProps &
   ButtonStateProps &
   ButtonAdvancedProps &
-  ButtonResponsiveProps & {
+  ButtonResponsiveProps &
+  CanonicalButtonProps & {
     [key: string]: any
   }
 

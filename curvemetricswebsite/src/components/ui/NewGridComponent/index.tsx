@@ -36,13 +36,10 @@ function renderNestedComponent(component: any, renderComponent?: (component: any
   return renderComponent(component)
 }
 
-const NewGridComponent: React.FC<NewGridComponentProps> = (inputProps) => {
-  const viewModel = inputProps.__sharedViewModel ?? null
-
-  if (!viewModel) {
-    return reportCmsBoundaryViolation('newgrid', 'Missing required shared view model.')
-  }
-
+const NewGridInner: React.FC<{
+  viewModel: NonNullable<NewGridComponentProps['__sharedViewModel']>
+  renderComponent?: NewGridComponentProps['renderComponent']
+}> = ({ viewModel, renderComponent }) => {
   const gridCells = useMemo(() => {
     const cells: React.ReactNode[] = []
 
@@ -65,14 +62,14 @@ const NewGridComponent: React.FC<NewGridComponentProps> = (inputProps) => {
               minWidth: 0,
             }}
           >
-            {component ? renderNestedComponent(component, inputProps.renderComponent) : null}
+            {component ? renderNestedComponent(component, renderComponent) : null}
           </div>,
         )
       }
     }
 
     return cells
-  }, [inputProps.renderComponent, viewModel.cells, viewModel.columns, viewModel.rows])
+  }, [renderComponent, viewModel.cells, viewModel.columns, viewModel.rows])
 
   if (!viewModel.visible) {
     return null
@@ -88,6 +85,16 @@ const NewGridComponent: React.FC<NewGridComponentProps> = (inputProps) => {
       {gridCells}
     </div>
   )
+}
+
+const NewGridComponent: React.FC<NewGridComponentProps> = (inputProps) => {
+  const viewModel = inputProps.__sharedViewModel ?? null
+
+  if (!viewModel) {
+    return reportCmsBoundaryViolation('newgrid', 'Missing required shared view model.')
+  }
+
+  return <NewGridInner viewModel={viewModel} renderComponent={inputProps.renderComponent} />
 }
 
 export default NewGridComponent

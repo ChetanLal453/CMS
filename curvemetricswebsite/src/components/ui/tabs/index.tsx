@@ -14,13 +14,7 @@ type TabsRendererProps = PublicBlockProps & {
   __sharedViewModel?: TabsViewModel
 }
 
-export default function PublicTabs(props: TabsRendererProps) {
-  const viewModel = props.__sharedViewModel ?? null
-
-  if (!viewModel) {
-    return reportCmsBoundaryViolation('tabs', 'Missing required shared view model.')
-  }
-
+function TabsInner({ viewModel, renderComponent }: { viewModel: TabsViewModel; renderComponent: TabsRendererProps['renderComponent'] }) {
   const tabs = viewModel.tabs
   const [activeIndex, setActiveIndex] = useState(viewModel.activeIndex)
 
@@ -30,7 +24,7 @@ export default function PublicTabs(props: TabsRendererProps) {
 
   const safeActiveIndex = Math.max(0, Math.min(activeIndex, tabs.length - 1))
   const activeTab: TabItem = tabs[safeActiveIndex]
-  const tabContentNodes = collectNodes(activeTab.components, props.renderComponent, `tabs-${safeActiveIndex}`)
+  const tabContentNodes = collectNodes(activeTab.components, renderComponent, `tabs-${safeActiveIndex}`)
   const content = activeTab.content.trim()
 
   return (
@@ -57,4 +51,14 @@ export default function PublicTabs(props: TabsRendererProps) {
       </div>
     </div>
   )
+}
+
+export default function PublicTabs(props: TabsRendererProps) {
+  const viewModel = props.__sharedViewModel ?? null
+
+  if (!viewModel) {
+    return reportCmsBoundaryViolation('tabs', 'Missing required shared view model.')
+  }
+
+  return <TabsInner viewModel={viewModel} renderComponent={props.renderComponent} />
 }

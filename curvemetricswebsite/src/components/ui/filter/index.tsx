@@ -13,13 +13,7 @@ type FilterRendererProps = PublicBlockProps & {
   __sharedViewModel?: FilterViewModel
 }
 
-export default function PublicFilter(props: FilterRendererProps) {
-  const viewModel = props.__sharedViewModel ?? null
-
-  if (!viewModel) {
-    return reportCmsBoundaryViolation('filter', 'Missing required shared view model.')
-  }
-
+function FilterInner({ viewModel }: { viewModel: FilterViewModel }) {
   const filterType = viewModel.resolvedFilterType
   const options = viewModel.normalizedOptions
   const [value, setValue] = useState(viewModel.effectiveValue)
@@ -222,4 +216,14 @@ export default function PublicFilter(props: FilterRendererProps) {
       ) : null}
     </div>
   )
+}
+
+export default function PublicFilter(props: FilterRendererProps) {
+  const viewModel = props.__sharedViewModel ?? null
+
+  if (!viewModel) {
+    return reportCmsBoundaryViolation('filter', 'Missing required shared view model.')
+  }
+
+  return <FilterInner viewModel={viewModel} />
 }

@@ -117,13 +117,10 @@ const SlideComponent: React.FC<{
   )
 }
 
-const SwiperContainer: React.FC<SwiperContainerProps> = (inputProps) => {
-  const normalizedProps = useMemo(() => inputProps.__sharedViewModel ?? null, [inputProps.__sharedViewModel])
-  const renderComponent = inputProps.renderComponent
-
-  if (!normalizedProps) {
-    return reportCmsBoundaryViolation('swipercontainer', 'Missing required shared view model.')
-  }
+const SwiperContainerInner: React.FC<{
+  normalizedProps: SwiperContainerProps
+  renderComponent?: (component: Record<string, any>) => React.ReactNode
+}> = ({ normalizedProps, renderComponent }) => {
 
   const {
     renderSlides,
@@ -829,6 +826,21 @@ const SwiperContainer: React.FC<SwiperContainerProps> = (inputProps) => {
         }
       `}</style>
     </div>
+  )
+}
+
+const SwiperContainer: React.FC<SwiperContainerProps> = (inputProps) => {
+  const normalizedProps = (inputProps.__sharedViewModel ?? null) as SwiperContainerProps | null
+
+  if (!normalizedProps) {
+    return reportCmsBoundaryViolation('swipercontainer', 'Missing required shared view model.')
+  }
+
+  return (
+    <SwiperContainerInner
+      normalizedProps={normalizedProps}
+      renderComponent={inputProps.renderComponent}
+    />
   )
 }
 

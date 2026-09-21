@@ -13,13 +13,7 @@ type AccordionRendererProps = PublicBlockProps & {
   __sharedViewModel?: Record<string, any>
 }
 
-const Accordion: React.FC<AccordionRendererProps> = (props) => {
-  const viewModel = useMemo(() => props.__sharedViewModel ?? null, [props.__sharedViewModel])
-
-  if (!viewModel) {
-    return reportCmsBoundaryViolation('advancedaccordion', 'Missing required shared view model.')
-  }
-
+const AccordionInner: React.FC<{ viewModel: Record<string, any> }> = ({ viewModel }) => {
   const [openItems, setOpenItems] = useState<Set<string>>(new Set(viewModel.allowAllClosed ? [] : [viewModel.items[0]?.id].filter(Boolean) as string[]))
 
   useEffect(() => {
@@ -74,6 +68,16 @@ const Accordion: React.FC<AccordionRendererProps> = (props) => {
       ))}
     </div>
   )
+}
+
+const Accordion: React.FC<AccordionRendererProps> = (props) => {
+  const viewModel = props.__sharedViewModel ?? null
+
+  if (!viewModel) {
+    return reportCmsBoundaryViolation('advancedaccordion', 'Missing required shared view model.')
+  }
+
+  return <AccordionInner viewModel={viewModel} />
 }
 
 const AccordionRow: React.FC<{

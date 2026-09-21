@@ -18,6 +18,29 @@ type FrontendAdvancedCardProps = AdvancedCard & Pick<
   };
 } & Record<string, unknown>;
 
+const AdvancedCardInner: React.FC<{
+  sharedViewModel: {
+    card: AdvancedCard;
+    view: AdvancedCardViewModel;
+  };
+  onClick?: AdvancedCardComponentProps['onClick'];
+  onMouseEnter?: AdvancedCardComponentProps['onMouseEnter'];
+  onMouseLeave?: AdvancedCardComponentProps['onMouseLeave'];
+}> = ({ sharedViewModel, onClick, onMouseEnter, onMouseLeave }) => {
+  const card = React.useMemo(() => sharedViewModel.card, [sharedViewModel.card]);
+  const view = React.useMemo(
+    () => ({
+      ...sharedViewModel.view,
+      onClick,
+      onMouseEnter,
+      onMouseLeave,
+    }),
+    [onClick, onMouseEnter, onMouseLeave, sharedViewModel.view],
+  );
+
+  return <AdvancedCardRenderer card={card} view={view} iconSet={FaIcons} />;
+};
+
 const AdvancedCardComponent: React.FC<FrontendAdvancedCardProps> = (props) => {
   const sharedViewModel = props.__sharedViewModel ?? null;
 
@@ -25,18 +48,14 @@ const AdvancedCardComponent: React.FC<FrontendAdvancedCardProps> = (props) => {
     return reportCmsBoundaryViolation("advancedcard", "Missing required shared view model.");
   }
 
-  const card = React.useMemo(() => sharedViewModel.card, [sharedViewModel.card]);
-  const view = React.useMemo(
-    () => ({
-      ...sharedViewModel.view,
-      onClick: props.onClick,
-      onMouseEnter: props.onMouseEnter,
-      onMouseLeave: props.onMouseLeave,
-    }),
-    [props.onClick, props.onMouseEnter, props.onMouseLeave, sharedViewModel.view],
+  return (
+    <AdvancedCardInner
+      sharedViewModel={sharedViewModel}
+      onClick={props.onClick}
+      onMouseEnter={props.onMouseEnter}
+      onMouseLeave={props.onMouseLeave}
+    />
   );
-
-  return <AdvancedCardRenderer card={card} view={view} iconSet={FaIcons} />;
 };
 
 export default AdvancedCardComponent;

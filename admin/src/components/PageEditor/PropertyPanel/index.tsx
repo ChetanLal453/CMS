@@ -14,6 +14,7 @@ import { normalizeAdvancedList } from '../../../../../shared/blocks/advancedlist
 import { normalizeAdvancedParagraph } from '../../../../../shared/blocks/advancedparagraph/normalize'
 import { normalizeNewGrid } from '../../../../../shared/blocks/newgrid/normalize'
 import { normalizeTabs } from '../../../../../shared/blocks/tabs/normalize'
+import { normalizeButton } from '../../../../../shared/blocks/button/normalize'
 import { getBlockDefaults, normalizeBlockProps, resolveBlockType } from '../../../../../shared/blocks/registry'
 import { THEME_PRESETS } from '../../../../../shared/theme'
 
@@ -275,6 +276,86 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
     }
   }
 
+  if (normalizedType === 'button') {
+    const button = normalizeButton(props)
+    const variant = button.style?.variant ?? button.variant ?? 'primary'
+    const size = button.style?.size ?? button.size ?? 'medium'
+
+    const rawBg = button.style?.backgroundColor ?? button.backgroundColor
+    const isDefaultBgOnNonPrimary = variant !== 'primary' && typeof rawBg === 'string' && rawBg.toLowerCase() === '#7c6dfa'
+    const editorBg = isDefaultBgOnNonPrimary ? '' : (rawBg ?? '')
+
+    const rawFontSize = button.style?.fontSize ?? button.fontSize
+    const isDefaultFontOnNonMedium = size !== 'medium' && rawFontSize === '16px'
+    const editorFontSize = isDefaultFontOnNonMedium ? '' : (rawFontSize ?? '')
+
+    const rawPaddingTop = button.style?.paddingTop ?? button.paddingTop
+    const isDefaultPadOnNonMedium = size !== 'medium' && rawPaddingTop === '14px'
+    const editorPaddingTop = isDefaultPadOnNonMedium ? '' : (rawPaddingTop ?? '')
+
+    return {
+      text: button.content?.text ?? button.text,
+      link: button.content?.link ?? button.link,
+      openInNewTab: button.content?.openInNewTab ?? button.openInNewTab,
+      loadingText: button.content?.loadingText ?? button.loadingText,
+      ariaLabel: button.content?.ariaLabel ?? button.ariaLabel,
+      variant,
+      size,
+      primaryColor: button.style?.primaryColor ?? button.primaryColor ?? '',
+      backgroundColor: editorBg,
+      textColor: button.style?.textColor ?? button.textColor ?? '',
+      hoverColor: button.style?.hoverColor ?? button.hoverColor ?? '',
+      activeColor: button.style?.activeColor ?? button.activeColor ?? '',
+      borderColor: button.style?.borderColor ?? button.borderColor ?? '',
+      useGradient: button.style?.useGradient ?? button.useGradient ?? false,
+      gradientColors: button.style?.gradientColors ?? button.gradientColors ?? '#7f00ff, #e100ff',
+      gradientDirection: button.style?.gradientDirection ?? button.gradientDirection ?? '135deg',
+      gradientType: button.style?.gradientType ?? button.gradientType ?? 'linear',
+      borderRadius: button.style?.borderRadius ?? button.borderRadius ?? '',
+      borderWidth: button.style?.borderWidth ?? button.borderWidth ?? '',
+      shadow: button.style?.shadow ?? button.shadow ?? 'md',
+      alignment: button.style?.alignment ?? button.alignment ?? 'left',
+      textAlign: button.style?.textAlign ?? button.textAlign ?? 'left',
+      fullWidth: button.style?.fullWidth ?? button.fullWidth ?? false,
+      width: button.style?.width ?? button.width ?? 'auto',
+      margin: button.style?.margin ?? button.margin ?? '0px',
+      padding: button.style?.padding ?? button.padding ?? '',
+      marginTop: button.style?.marginTop ?? button.marginTop ?? '0px',
+      marginRight: button.style?.marginRight ?? button.marginRight ?? '0px',
+      marginBottom: button.style?.marginBottom ?? button.marginBottom ?? '0px',
+      marginLeft: button.style?.marginLeft ?? button.marginLeft ?? '0px',
+      paddingTop: editorPaddingTop,
+      paddingRight: button.style?.paddingRight ?? button.paddingRight ?? '',
+      paddingBottom: button.style?.paddingBottom ?? button.paddingBottom ?? '',
+      paddingLeft: button.style?.paddingLeft ?? button.paddingLeft ?? '',
+      fontFamily: button.style?.fontFamily ?? button.fontFamily ?? '',
+      fontSize: editorFontSize,
+      fontWeight: button.style?.fontWeight ?? button.fontWeight ?? '600',
+      letterSpacing: button.style?.letterSpacing ?? button.letterSpacing ?? '0px',
+      textTransform: button.style?.textTransform ?? button.textTransform ?? 'none',
+      lineHeight: button.style?.lineHeight ?? button.lineHeight ?? '1.5',
+      icon: button.style?.icon ?? button.icon ?? '',
+      iconPosition: button.style?.iconPosition ?? button.iconPosition ?? 'left',
+      iconSize: button.style?.iconSize ?? button.iconSize ?? '16px',
+      iconSpacing: button.style?.iconSpacing ?? button.iconSpacing ?? '8px',
+      disabled: button.style?.disabled ?? button.disabled ?? false,
+      loading: button.style?.loading ?? button.loading ?? false,
+      hoverEffect: button.style?.hoverEffect ?? button.hoverEffect ?? 'scale',
+      hoverScale: button.style?.hoverScale ?? button.hoverScale ?? 1.05,
+      hoverShadow: button.style?.hoverShadow ?? button.hoverShadow ?? 'lg',
+      animationType: button.style?.animationType ?? button.animationType ?? 'none',
+      animationDuration: button.style?.animationDuration ?? button.animationDuration ?? '0.3s',
+      className: button.style?.className ?? button.className ?? '',
+      customClass: button.style?.customClass ?? button.customClass ?? '',
+      customId: button.style?.customId ?? button.customId ?? '',
+      onClick: button.style?.onClick ?? button.onClick ?? '',
+      dataTracking: button.style?.dataTracking ?? button.dataTracking ?? '',
+      mobileSize: button.responsive?.mobile?.size ?? button.mobileSize ?? 'medium',
+      mobileFullWidth: button.responsive?.mobile?.fullWidth ?? button.mobileFullWidth ?? false,
+      hideOnMobile: button.responsive?.mobile?.hidden ?? button.hideOnMobile ?? false,
+    }
+  }
+
   const resolvedBlockKey = resolveBlockType(type)
   if (resolvedBlockKey) {
     const defaults = getBlockDefaults(resolvedBlockKey)
@@ -456,6 +537,90 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
 
   if (normalizedType === 'tabs') {
     return stripEditorMeta(normalizeTabs(props) as Record<string, any>)
+  }
+
+  if (normalizedType === 'button') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+
+    const normalized = normalizeButton({
+      content: {
+        text: props.text,
+        link: props.link,
+        openInNewTab: props.openInNewTab,
+        loadingText: props.loadingText,
+        ariaLabel: props.ariaLabel,
+      },
+      style: {
+        variant: props.variant || 'primary',
+        size: props.size || 'medium',
+        primaryColor: toOptionalString(props.primaryColor),
+        backgroundColor: toOptionalString(props.backgroundColor),
+        textColor: toOptionalString(props.textColor),
+        hoverColor: toOptionalString(props.hoverColor),
+        activeColor: toOptionalString(props.activeColor),
+        borderColor: toOptionalString(props.borderColor),
+        useGradient: props.useGradient,
+        gradientColors: props.gradientColors,
+        gradientDirection: props.gradientDirection,
+        gradientType: props.gradientType,
+        borderRadius: toOptionalString(props.borderRadius),
+        borderWidth: toOptionalString(props.borderWidth),
+        shadow: props.shadow,
+        alignment: props.alignment,
+        textAlign: props.textAlign,
+        fullWidth: props.fullWidth,
+        width: props.width,
+        margin: props.margin,
+        padding: toOptionalString(props.padding),
+        marginTop: props.marginTop,
+        marginRight: props.marginRight,
+        marginBottom: props.marginBottom,
+        marginLeft: props.marginLeft,
+        paddingTop: toOptionalString(props.paddingTop),
+        paddingRight: toOptionalString(props.paddingRight),
+        paddingBottom: toOptionalString(props.paddingBottom),
+        paddingLeft: toOptionalString(props.paddingLeft),
+        fontFamily: toOptionalString(props.fontFamily),
+        fontSize: toOptionalString(props.fontSize),
+        fontWeight: props.fontWeight,
+        letterSpacing: props.letterSpacing,
+        textTransform: props.textTransform,
+        lineHeight: props.lineHeight,
+        icon: props.icon,
+        iconPosition: props.iconPosition,
+        iconSize: props.iconSize,
+        iconSpacing: props.iconSpacing,
+        disabled: props.disabled,
+        loading: props.loading,
+        hoverEffect: props.hoverEffect,
+        hoverScale: props.hoverScale,
+        hoverShadow: props.hoverShadow,
+        animationType: props.animationType,
+        animationDuration: props.animationDuration,
+        className: props.className,
+        customClass: props.customClass,
+        customId: props.customId,
+        onClick: props.onClick,
+        dataTracking: props.dataTracking,
+      },
+      responsive: {
+        desktop: props.responsive?.desktop || {},
+        tablet: props.responsive?.tablet || {},
+        mobile: {
+          size: props.mobileSize,
+          fullWidth: props.mobileFullWidth,
+          hidden: props.hideOnMobile,
+        },
+      },
+    })
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
   }
 
   const resolvedBlockKey = resolveBlockType(type)

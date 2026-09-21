@@ -24,22 +24,53 @@ function getVariantColors(viewModel: ButtonProps) {
   const textColor = viewModel.textColor || '#FFFFFF'
   const borderColor = viewModel.borderColor && viewModel.borderColor.toLowerCase() !== '#7c6dfa' ? viewModel.borderColor : primary
 
+  const hasCustomBg = Boolean(viewModel.backgroundColor && viewModel.backgroundColor.toLowerCase() !== '#7c6dfa')
+  const hasCustomBorder = Boolean(viewModel.borderColor && viewModel.borderColor.toLowerCase() !== '#7c6dfa')
+
   switch (viewModel.variant) {
     case 'secondary':
-      return { backgroundColor: viewModel.backgroundColor || '#475569', color: textColor, borderColor: borderColor || '#475569' }
+      return {
+        backgroundColor: hasCustomBg ? viewModel.backgroundColor! : '#475569',
+        color: viewModel.textColor ?? textColor,
+        borderColor: hasCustomBorder ? viewModel.borderColor! : '#475569',
+      }
     case 'outline':
-      return { backgroundColor: 'transparent', color: textColor || primary, borderColor }
+      return {
+        backgroundColor: hasCustomBg ? viewModel.backgroundColor! : 'transparent',
+        color: viewModel.textColor ?? primary,
+        borderColor: hasCustomBorder ? viewModel.borderColor! : borderColor,
+      }
     case 'ghost':
-      return { backgroundColor: 'transparent', color: textColor || primary, borderColor: 'transparent' }
+      return {
+        backgroundColor: hasCustomBg ? viewModel.backgroundColor! : 'transparent',
+        color: viewModel.textColor ?? primary,
+        borderColor: hasCustomBorder ? viewModel.borderColor! : 'transparent',
+      }
     case 'danger':
-      return { backgroundColor: viewModel.backgroundColor || '#dc2626', color: '#ffffff', borderColor: viewModel.borderColor || '#dc2626' }
+      return {
+        backgroundColor: hasCustomBg ? viewModel.backgroundColor! : '#dc2626',
+        color: viewModel.textColor ?? '#ffffff',
+        borderColor: hasCustomBorder ? viewModel.borderColor! : '#dc2626',
+      }
     case 'success':
-      return { backgroundColor: viewModel.backgroundColor || '#16a34a', color: '#ffffff', borderColor: viewModel.borderColor || '#16a34a' }
+      return {
+        backgroundColor: hasCustomBg ? viewModel.backgroundColor! : '#16a34a',
+        color: viewModel.textColor ?? '#ffffff',
+        borderColor: hasCustomBorder ? viewModel.borderColor! : '#16a34a',
+      }
     case 'warning':
-      return { backgroundColor: viewModel.backgroundColor || '#f59e0b', color: '#111827', borderColor: viewModel.borderColor || '#f59e0b' }
+      return {
+        backgroundColor: hasCustomBg ? viewModel.backgroundColor! : '#f59e0b',
+        color: viewModel.textColor ?? '#111827',
+        borderColor: hasCustomBorder ? viewModel.borderColor! : '#f59e0b',
+      }
     case 'primary':
     default:
-      return { backgroundColor: primary, color: textColor, borderColor }
+      return {
+        backgroundColor: viewModel.backgroundColor ?? primary,
+        color: viewModel.textColor ?? textColor,
+        borderColor: viewModel.borderColor ?? borderColor,
+      }
   }
 }
 
@@ -70,20 +101,33 @@ export function createButtonViewModel(props: Record<string, any> = {}): ButtonVi
   const sizePreset = SIZE_MAP[normalized.size || 'medium']
   const variant = getVariantColors(normalized)
   const gradientBackground = buildGradientBackground(normalized)
-  const hasLink = Boolean(normalized.link && normalized.link.trim() && !normalized.disabled && !normalized.loading)
-  const target = normalized.openInNewTab ? '_blank' : '_self'
+  const link = normalized.content?.link ?? normalized.link ?? ''
+  const openInNewTab = Boolean(normalized.content?.openInNewTab ?? normalized.openInNewTab)
+  const hasLink = Boolean(link.trim() && !normalized.disabled && !normalized.loading)
+  const target = openInNewTab ? '_blank' : '_self'
   const justifyContent = normalized.alignment === 'center' ? 'center' : normalized.alignment === 'right' ? 'flex-end' : 'flex-start'
-  const paddingTop = normalized.paddingTop || sizePreset.paddingY
-  const paddingRight = normalized.paddingRight || sizePreset.paddingX
-  const paddingBottom = normalized.paddingBottom || sizePreset.paddingY
-  const paddingLeft = normalized.paddingLeft || sizePreset.paddingX
+  const hasCustomPadding = Boolean(
+    normalized.paddingTop && (normalized.size === 'medium' || normalized.paddingTop !== '14px')
+  )
+  const hasCustomFontSize = Boolean(
+    normalized.fontSize && (normalized.size === 'medium' || normalized.fontSize !== '16px')
+  )
+
+  const paddingTop = hasCustomPadding ? normalized.paddingTop! : sizePreset.paddingY
+  const paddingRight = hasCustomPadding ? (normalized.paddingRight ?? sizePreset.paddingX) : sizePreset.paddingX
+  const paddingBottom = hasCustomPadding ? (normalized.paddingBottom ?? sizePreset.paddingY) : sizePreset.paddingY
+  const paddingLeft = hasCustomPadding ? (normalized.paddingLeft ?? sizePreset.paddingX) : sizePreset.paddingX
 
   return {
     ...normalized,
+    link,
+    openInNewTab,
     hasLink,
     target,
-    rel: normalized.openInNewTab ? 'noopener noreferrer' : undefined,
-    label: normalized.loading ? normalized.loadingText || 'Loading...' : normalized.text || 'Click Me',
+    rel: openInNewTab ? 'noopener noreferrer' : undefined,
+    label: normalized.loading
+      ? (normalized.content?.loadingText || normalized.loadingText || 'Loading...')
+      : (normalized.content?.text || normalized.text || 'Click Me'),
     resolvedClassName: `${normalized.className || normalized.customClass || ''}`.trim(),
     showIcon: Boolean(String(normalized.icon || '').trim()),
     iconName: normalized.icon || '',
@@ -122,7 +166,7 @@ export function createButtonViewModel(props: Record<string, any> = {}): ButtonVi
       backgroundColor: gradientBackground ? undefined : variant.backgroundColor,
       color: variant.color,
       fontFamily: normalized.fontFamily && normalized.fontFamily !== "'DM Sans', system-ui, sans-serif" ? normalized.fontFamily : 'var(--theme-font-family, inherit)',
-      fontSize: normalized.fontSize || sizePreset.fontSize,
+      fontSize: hasCustomFontSize ? normalized.fontSize! : sizePreset.fontSize,
       fontWeight: normalized.fontWeight,
       letterSpacing: normalized.letterSpacing,
       textTransform: normalized.textTransform,

@@ -11,6 +11,7 @@ const AdvancedParagraphPreviewRenderer: React.FC<AdvancedParagraphInput> = (prop
   const view = React.useMemo(() => createAdvancedParagraphViewModel(paragraph), [paragraph])
   const [isHovered, setIsHovered] = React.useState(false)
   const [isEditor, setIsEditor] = React.useState(false)
+  const { isMobile, isTablet } = useDeviceMode()
 
   React.useEffect(() => {
     if (typeof document !== 'undefined') {
@@ -49,8 +50,6 @@ const AdvancedParagraphPreviewRenderer: React.FC<AdvancedParagraphInput> = (prop
       truncationStyle.textOverflow = 'ellipsis'
     }
   }
-
-  const { isMobile, isTablet } = useDeviceMode()
 
   const activeFontSize = isMobile
     ? (view.responsive.fontSizeMobile || view.style.fontSize)

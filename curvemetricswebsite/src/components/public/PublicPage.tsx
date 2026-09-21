@@ -86,24 +86,20 @@ function NavigationList({
   )
 }
 
-function NavigationListItem({
+function NavigationListItemInner({
   item,
   tone,
+  label,
 }: {
   item: AdminNavigationItem
   tone: 'light' | 'dark'
+  label: string
 }) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [openUpward, setOpenUpward] = React.useState(false)
   const hasChildren = !!item.children?.length
   const linkClass = tone === 'dark' ? 'text-white' : 'text-dark'
   const submenuClass = tone === 'dark' ? 'border-dark bg-black text-white' : 'border-light bg-white'
-  const label = String(item.label || '').trim()
-
-  if (!label) {
-    reportRecoverableCmsBoundaryViolation('navigation', 'Missing required navigation label.')
-    return null
-  }
 
   React.useEffect(() => {
     if (!isOpen || typeof window === 'undefined') {
@@ -170,6 +166,23 @@ function NavigationListItem({
       ) : null}
     </li>
   )
+}
+
+function NavigationListItem({
+  item,
+  tone,
+}: {
+  item: AdminNavigationItem
+  tone: 'light' | 'dark'
+}) {
+  const label = String(item.label || '').trim()
+
+  if (!label) {
+    reportRecoverableCmsBoundaryViolation('navigation', 'Missing required navigation label.')
+    return null
+  }
+
+  return <NavigationListItemInner item={item} tone={tone} label={label} />
 }
 
 function renderComponent(component: { id: string | number; type: string; props: Record<string, any> }): React.ReactNode {

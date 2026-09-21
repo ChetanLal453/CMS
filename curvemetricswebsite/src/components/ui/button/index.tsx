@@ -12,13 +12,7 @@ function isExternalUrl(href?: string) {
   return typeof href === 'string' && /^https?:\/\//i.test(href.trim())
 }
 
-const PublicButton: React.FC<Record<string, any>> = (props) => {
-  const viewModel = props.__sharedViewModel ?? null
-
-  if (!viewModel) {
-    return reportCmsBoundaryViolation('button', 'Missing required shared view model.')
-  }
-
+const ButtonInner: React.FC<{ viewModel: Record<string, any> }> = ({ viewModel }) => {
   const [isHovered, setIsHovered] = React.useState(false)
   const [isPressed, setIsPressed] = React.useState(false)
   const label = String(viewModel.label).trim()
@@ -111,6 +105,16 @@ const PublicButton: React.FC<Record<string, any>> = (props) => {
       )}
     </div>
   )
+}
+
+const PublicButton: React.FC<Record<string, any>> = (props) => {
+  const viewModel = props.__sharedViewModel ?? null
+
+  if (!viewModel) {
+    return reportCmsBoundaryViolation('button', 'Missing required shared view model.')
+  }
+
+  return <ButtonInner viewModel={viewModel} />
 }
 
 export default PublicButton

@@ -12,13 +12,7 @@ function isExternalUrl(href?: string) {
   return typeof href === 'string' && /^https?:\/\//i.test(href.trim())
 }
 
-const PublicImage: React.FC<Record<string, any>> = (props) => {
-  const viewModel = props.__sharedViewModel ?? null
-
-  if (!viewModel) {
-    return reportCmsBoundaryViolation('image', 'Missing required shared view model.')
-  }
-
+const ImageInner: React.FC<{ viewModel: Record<string, any> }> = ({ viewModel }) => {
   const [isHovered, setIsHovered] = React.useState(false)
   const [isLightboxOpen, setIsLightboxOpen] = React.useState(false)
 
@@ -101,6 +95,16 @@ const PublicImage: React.FC<Record<string, any>> = (props) => {
       ) : null}
     </figure>
   )
+}
+
+const PublicImage: React.FC<Record<string, any>> = (props) => {
+  const viewModel = props.__sharedViewModel ?? null
+
+  if (!viewModel) {
+    return reportCmsBoundaryViolation('image', 'Missing required shared view model.')
+  }
+
+  return <ImageInner viewModel={viewModel} />
 }
 
 export default PublicImage

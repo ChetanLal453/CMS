@@ -12,6 +12,10 @@ export type {
   ButtonSize,
   ButtonVariant,
   ButtonViewModel,
+  CanonicalButtonContent,
+  CanonicalButtonStyle,
+  CanonicalButtonResponsive,
+  CanonicalButtonProps,
 } from './types'
 
 export const buttonContract = {

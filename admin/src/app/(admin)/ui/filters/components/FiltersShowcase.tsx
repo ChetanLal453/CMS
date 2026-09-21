@@ -134,10 +134,8 @@ const getRange = (value: unknown): [number, number] => {
 
 const FiltersShowcaseContent = () => {
   const filterContext = useFilterState()
-
-  if (!filterContext) return null
-
-  const { state, clearAll } = filterContext
+  const state = filterContext?.state ?? {}
+  const clearAll = filterContext?.clearAll ?? (() => {})
 
   const filteredItems = useMemo(() => {
     const search = String(state.search || '').toLowerCase().trim()
@@ -184,6 +182,8 @@ const FiltersShowcaseContent = () => {
   }, [state])
 
   const stateSnapshot = useMemo(() => JSON.stringify(state, null, 2), [state])
+
+  if (!filterContext) return null
 
   return (
     <Row className="g-3">

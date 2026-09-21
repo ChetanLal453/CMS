@@ -9,6 +9,9 @@ import type {
   ButtonSize,
   ButtonTextTransform,
   ButtonVariant,
+  CanonicalButtonContent,
+  CanonicalButtonStyle,
+  CanonicalButtonResponsive,
 } from './types'
 import { asString, asBoolean, asNumber } from '../../utils/merge'
 
@@ -84,11 +87,40 @@ function parseBoxSpacing(val: unknown, fallback: { top: string; right: string; b
   return fallback
 }
 
-export function normalizeButton(props: Record<string, any> = {}): ButtonProps {
-  const primaryColor = asString(props.primaryColor ?? props.backgroundColor, defaultButtonProps.primaryColor || '#7C6DFA')
+function asOptionalString(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined
+  const str = String(value).trim()
+  return str.length > 0 ? str : undefined
+}
 
-  const rawFullWidth = props.fullWidth !== undefined && props.fullWidth !== null ? asBoolean(props.fullWidth, false) : undefined
-  const rawWidth = props.width !== undefined && props.width !== null ? String(props.width).trim() : undefined
+export function normalizeButton(props: Record<string, any> = {}): ButtonProps {
+  const contentInput = props.content && typeof props.content === 'object' ? props.content : {}
+  const styleInput = props.style && typeof props.style === 'object' ? props.style : {}
+  const responsiveInput = props.responsive && typeof props.responsive === 'object' ? props.responsive : {}
+  const mobileInput = responsiveInput.mobile && typeof responsiveInput.mobile === 'object' ? responsiveInput.mobile : {}
+
+  const text = asString(contentInput.text ?? props.text ?? props.label, defaultButtonProps.text || 'Click Me')
+  const link = asString(contentInput.link ?? props.link ?? props.linkUrl ?? props.url ?? props.href, defaultButtonProps.link || '#')
+  const linkUrl = link
+  const openInNewTab = asBoolean(contentInput.openInNewTab ?? props.openInNewTab, defaultButtonProps.openInNewTab ?? false)
+  const loadingText = asString(contentInput.loadingText ?? props.loadingText, defaultButtonProps.loadingText || 'Loading...')
+  const ariaLabel = asString(contentInput.ariaLabel ?? props.ariaLabel, defaultButtonProps.ariaLabel || '')
+
+  const primaryColor = asOptionalString(styleInput.primaryColor ?? props.primaryColor)
+
+  const rawFullWidth =
+    styleInput.fullWidth !== undefined && styleInput.fullWidth !== null
+      ? asBoolean(styleInput.fullWidth, false)
+      : props.fullWidth !== undefined && props.fullWidth !== null
+        ? asBoolean(props.fullWidth, false)
+        : undefined
+
+  const rawWidth =
+    styleInput.width !== undefined && styleInput.width !== null
+      ? String(styleInput.width).trim()
+      : props.width !== undefined && props.width !== null
+        ? String(props.width).trim()
+        : undefined
 
   let fullWidth = false
   let width = 'auto'
@@ -113,7 +145,13 @@ export function normalizeButton(props: Record<string, any> = {}): ButtonProps {
     width = defaultButtonProps.width || 'auto'
   }
 
-  const rawMargin = props.margin !== undefined && props.margin !== null ? String(props.margin).trim() : undefined
+  const rawMargin =
+    styleInput.margin !== undefined && styleInput.margin !== null
+      ? String(styleInput.margin).trim()
+      : props.margin !== undefined && props.margin !== null
+        ? String(props.margin).trim()
+        : undefined
+
   const defaultMarginBox = {
     top: defaultButtonProps.marginTop || '0px',
     right: defaultButtonProps.marginRight || '0px',
@@ -122,15 +160,30 @@ export function normalizeButton(props: Record<string, any> = {}): ButtonProps {
   }
   const parsedMargin = rawMargin ? parseBoxSpacing(rawMargin, defaultMarginBox) : defaultMarginBox
 
-  const marginTop = asString(props.marginTop ?? parsedMargin.top, '0px')
-  const marginRight = asString(props.marginRight ?? parsedMargin.right, '0px')
-  const marginBottom = asString(props.marginBottom ?? parsedMargin.bottom, '0px')
-  const marginLeft = asString(props.marginLeft ?? parsedMargin.left, '0px')
-  const margin = rawMargin ?? (props.marginTop || props.marginRight || props.marginBottom || props.marginLeft
-    ? `${marginTop} ${marginRight} ${marginBottom} ${marginLeft}`
-    : defaultButtonProps.margin || '0px')
+  const marginTop = asString(styleInput.marginTop ?? props.marginTop ?? parsedMargin.top, '0px')
+  const marginRight = asString(styleInput.marginRight ?? props.marginRight ?? parsedMargin.right, '0px')
+  const marginBottom = asString(styleInput.marginBottom ?? props.marginBottom ?? parsedMargin.bottom, '0px')
+  const marginLeft = asString(styleInput.marginLeft ?? props.marginLeft ?? parsedMargin.left, '0px')
+  const margin =
+    rawMargin ??
+    (styleInput.marginTop ||
+    props.marginTop ||
+    styleInput.marginRight ||
+    props.marginRight ||
+    styleInput.marginBottom ||
+    props.marginBottom ||
+    styleInput.marginLeft ||
+    props.marginLeft
+      ? `${marginTop} ${marginRight} ${marginBottom} ${marginLeft}`
+      : defaultButtonProps.margin || '0px')
 
-  const rawPadding = props.padding !== undefined && props.padding !== null ? String(props.padding).trim() : undefined
+  const rawPadding =
+    styleInput.padding !== undefined && styleInput.padding !== null
+      ? String(styleInput.padding).trim()
+      : props.padding !== undefined && props.padding !== null
+        ? String(props.padding).trim()
+        : undefined
+
   const defaultPaddingBox = {
     top: defaultButtonProps.paddingTop || '14px',
     right: defaultButtonProps.paddingRight || '28px',
@@ -139,38 +192,83 @@ export function normalizeButton(props: Record<string, any> = {}): ButtonProps {
   }
   const parsedPadding = rawPadding ? parseBoxSpacing(rawPadding, defaultPaddingBox) : defaultPaddingBox
 
-  const paddingTop = asString(props.paddingTop ?? parsedPadding.top, '14px')
-  const paddingRight = asString(props.paddingRight ?? parsedPadding.right, '28px')
-  const paddingBottom = asString(props.paddingBottom ?? parsedPadding.bottom, '14px')
-  const paddingLeft = asString(props.paddingLeft ?? parsedPadding.left, '28px')
-  const padding = rawPadding ?? (props.paddingTop || props.paddingRight || props.paddingBottom || props.paddingLeft
-    ? `${paddingTop} ${paddingRight} ${paddingBottom} ${paddingLeft}`
-    : defaultButtonProps.padding || '14px 28px')
+  const paddingTop = asOptionalString(styleInput.paddingTop ?? props.paddingTop)
+  const paddingRight = asOptionalString(styleInput.paddingRight ?? props.paddingRight)
+  const paddingBottom = asOptionalString(styleInput.paddingBottom ?? props.paddingBottom)
+  const paddingLeft = asOptionalString(styleInput.paddingLeft ?? props.paddingLeft)
+  const padding = asOptionalString(rawPadding)
 
-  return {
-    ...defaultButtonProps,
-    ...props,
-    text: asString(props.text ?? props.label, defaultButtonProps.text || 'Click Me'),
-    link: asString(props.link ?? props.linkUrl ?? props.url ?? props.href, defaultButtonProps.link || '#'),
-    linkUrl: asString(props.linkUrl ?? props.link ?? props.url ?? props.href, defaultButtonProps.link || '#'),
-    openInNewTab: asBoolean(props.openInNewTab, defaultButtonProps.openInNewTab ?? false),
-    variant: asVariant(props.variant, defaultButtonProps.variant || 'primary'),
-    size: asSize(props.size, defaultButtonProps.size || 'medium'),
+  const variant = asVariant(styleInput.variant ?? props.variant, defaultButtonProps.variant || 'primary')
+  const size = asSize(styleInput.size ?? props.size, defaultButtonProps.size || 'medium')
+  const backgroundColor = asOptionalString(styleInput.backgroundColor ?? props.backgroundColor)
+  const textColor = asOptionalString(styleInput.textColor ?? props.textColor)
+  const hoverColor = asOptionalString(styleInput.hoverColor ?? props.hoverColor)
+  const activeColor = asOptionalString(styleInput.activeColor ?? props.activeColor)
+  const borderColor = asOptionalString(styleInput.borderColor ?? props.borderColor)
+  const useGradient = asBoolean(styleInput.useGradient ?? props.useGradient, defaultButtonProps.useGradient ?? false)
+  const gradientColors = asString(styleInput.gradientColors ?? props.gradientColors, defaultButtonProps.gradientColors || '#7f00ff, #e100ff')
+  const gradientDirection = asString(styleInput.gradientDirection ?? props.gradientDirection, defaultButtonProps.gradientDirection || '135deg')
+  const gradientType = asGradientType(styleInput.gradientType ?? props.gradientType, defaultButtonProps.gradientType || 'linear')
+  const borderRadius = asOptionalString(styleInput.borderRadius ?? props.borderRadius)
+  const borderWidth = asOptionalString(styleInput.borderWidth ?? props.borderWidth)
+  const shadow = asShadow(styleInput.shadow ?? props.shadow, defaultButtonProps.shadow || 'md')
+  const alignment = asAlignment(styleInput.alignment ?? styleInput.textAlign ?? props.alignment ?? props.textAlign ?? props.align, defaultButtonProps.alignment || 'left')
+  const textAlign = alignment
+  const fontFamily = asOptionalString(styleInput.fontFamily ?? props.fontFamily)
+  const fontSize = asOptionalString(styleInput.fontSize ?? props.fontSize)
+  const fontWeight = asString(styleInput.fontWeight ?? props.fontWeight, defaultButtonProps.fontWeight || '600')
+  const letterSpacing = asString(styleInput.letterSpacing ?? props.letterSpacing, defaultButtonProps.letterSpacing || '0px')
+  const textTransform = asTextTransform(styleInput.textTransform ?? props.textTransform, defaultButtonProps.textTransform || 'none')
+  const lineHeight = asString(styleInput.lineHeight ?? props.lineHeight, defaultButtonProps.lineHeight || '1.5')
+  const icon = asString(styleInput.icon ?? props.icon, defaultButtonProps.icon || '')
+  const iconPosition = asString(styleInput.iconPosition ?? props.iconPosition, defaultButtonProps.iconPosition || 'left') as ButtonProps['iconPosition']
+  const iconSize = asString(styleInput.iconSize ?? props.iconSize, defaultButtonProps.iconSize || '16px')
+  const iconSpacing = asString(styleInput.iconSpacing ?? props.iconSpacing, defaultButtonProps.iconSpacing || '8px')
+  const disabled = asBoolean(styleInput.disabled ?? props.disabled, defaultButtonProps.disabled ?? false)
+  const loading = asBoolean(styleInput.loading ?? props.loading, defaultButtonProps.loading ?? false)
+  const hoverEffect = asHoverEffect(styleInput.hoverEffect ?? props.hoverEffect, defaultButtonProps.hoverEffect || 'scale')
+  const hoverScale = asNumber(styleInput.hoverScale ?? props.hoverScale, defaultButtonProps.hoverScale || 1.05)
+  const hoverShadow = asShadow(styleInput.hoverShadow ?? props.hoverShadow, defaultButtonProps.hoverShadow || 'lg')
+  const animationType = asAnimationType(styleInput.animationType ?? props.animationType, defaultButtonProps.animationType || 'none')
+  const animationDuration = asString(styleInput.animationDuration ?? props.animationDuration, defaultButtonProps.animationDuration || '0.3s')
+
+  const mergedPropsForClass = { ...props, ...styleInput }
+  const className = normalizeClassName(mergedPropsForClass)
+  const customClass = className
+  const customId = asString(styleInput.customId ?? props.customId, defaultButtonProps.customId || '')
+  const onClick = asString(styleInput.onClick ?? props.onClick, defaultButtonProps.onClick || '')
+  const dataTracking = asString(styleInput.dataTracking ?? props.dataTracking, defaultButtonProps.dataTracking || '')
+
+  const mobileSize = asSize(mobileInput.size ?? props.mobileSize, defaultButtonProps.mobileSize || 'medium')
+  const mobileFullWidth = asBoolean(mobileInput.fullWidth ?? props.mobileFullWidth, defaultButtonProps.mobileFullWidth ?? false)
+  const hideOnMobile = asBoolean(mobileInput.hidden ?? props.hideOnMobile, defaultButtonProps.hideOnMobile ?? false)
+
+  const content: CanonicalButtonContent = {
+    text,
+    link,
+    openInNewTab,
+    loadingText,
+    ariaLabel,
+  }
+
+  const style: CanonicalButtonStyle = {
+    variant,
+    size,
     primaryColor,
-    backgroundColor: asString(props.backgroundColor ?? primaryColor, defaultButtonProps.backgroundColor || primaryColor),
-    textColor: asString(props.textColor, defaultButtonProps.textColor || '#FFFFFF'),
-    hoverColor: asString(props.hoverColor, defaultButtonProps.hoverColor || '#A594FF'),
-    activeColor: asString(props.activeColor, defaultButtonProps.activeColor || '#6A5AE5'),
-    borderColor: asString(props.borderColor ?? primaryColor, defaultButtonProps.borderColor || primaryColor),
-    useGradient: asBoolean(props.useGradient, defaultButtonProps.useGradient ?? false),
-    gradientColors: asString(props.gradientColors, defaultButtonProps.gradientColors || '#7f00ff, #e100ff'),
-    gradientDirection: asString(props.gradientDirection, defaultButtonProps.gradientDirection || '135deg'),
-    gradientType: asGradientType(props.gradientType, defaultButtonProps.gradientType || 'linear'),
-    borderRadius: asString(props.borderRadius, defaultButtonProps.borderRadius || '8px'),
-    borderWidth: asString(props.borderWidth, defaultButtonProps.borderWidth || '2px'),
-    shadow: asShadow(props.shadow, defaultButtonProps.shadow || 'md'),
-    alignment: asAlignment(props.alignment ?? props.textAlign ?? props.align, defaultButtonProps.alignment || 'left'),
-    textAlign: asAlignment(props.textAlign ?? props.alignment ?? props.align, defaultButtonProps.alignment || 'left'),
+    backgroundColor,
+    textColor,
+    hoverColor,
+    activeColor,
+    borderColor,
+    useGradient,
+    gradientColors,
+    gradientDirection,
+    gradientType,
+    borderRadius,
+    borderWidth,
+    shadow,
+    alignment,
+    textAlign,
     fullWidth,
     width,
     margin,
@@ -183,32 +281,106 @@ export function normalizeButton(props: Record<string, any> = {}): ButtonProps {
     paddingRight,
     paddingBottom,
     paddingLeft,
-    fontFamily: asString(props.fontFamily, defaultButtonProps.fontFamily || 'inherit'),
-    fontSize: asString(props.fontSize, defaultButtonProps.fontSize || '16px'),
-    fontWeight: asString(props.fontWeight, defaultButtonProps.fontWeight || '600'),
-    letterSpacing: asString(props.letterSpacing, defaultButtonProps.letterSpacing || '0px'),
-    textTransform: asTextTransform(props.textTransform, defaultButtonProps.textTransform || 'none'),
-    lineHeight: asString(props.lineHeight, defaultButtonProps.lineHeight || '1.5'),
-    icon: asString(props.icon, defaultButtonProps.icon || ''),
-    iconPosition: asString(props.iconPosition, defaultButtonProps.iconPosition || 'left') as ButtonProps['iconPosition'],
-    iconSize: asString(props.iconSize, defaultButtonProps.iconSize || '16px'),
-    iconSpacing: asString(props.iconSpacing, defaultButtonProps.iconSpacing || '8px'),
-    disabled: asBoolean(props.disabled, defaultButtonProps.disabled ?? false),
-    loading: asBoolean(props.loading, defaultButtonProps.loading ?? false),
-    loadingText: asString(props.loadingText, defaultButtonProps.loadingText || 'Loading...'),
-    hoverEffect: asHoverEffect(props.hoverEffect, defaultButtonProps.hoverEffect || 'scale'),
-    hoverScale: asNumber(props.hoverScale, defaultButtonProps.hoverScale || 1.05),
-    hoverShadow: asShadow(props.hoverShadow, defaultButtonProps.hoverShadow || 'lg'),
-    animationType: asAnimationType(props.animationType, defaultButtonProps.animationType || 'none'),
-    animationDuration: asString(props.animationDuration, defaultButtonProps.animationDuration || '0.3s'),
-    className: normalizeClassName(props),
-    customClass: normalizeClassName(props),
-    customId: asString(props.customId, defaultButtonProps.customId || ''),
-    ariaLabel: asString(props.ariaLabel, defaultButtonProps.ariaLabel || ''),
-    onClick: asString(props.onClick, defaultButtonProps.onClick || ''),
-    dataTracking: asString(props.dataTracking, defaultButtonProps.dataTracking || ''),
-    mobileSize: asSize(props.mobileSize, defaultButtonProps.mobileSize || 'medium'),
-    mobileFullWidth: asBoolean(props.mobileFullWidth, defaultButtonProps.mobileFullWidth ?? false),
-    hideOnMobile: asBoolean(props.hideOnMobile, defaultButtonProps.hideOnMobile ?? false),
+    fontFamily,
+    fontSize,
+    fontWeight,
+    letterSpacing,
+    textTransform,
+    lineHeight,
+    icon,
+    iconPosition,
+    iconSize,
+    iconSpacing,
+    disabled,
+    loading,
+    hoverEffect,
+    hoverScale,
+    hoverShadow,
+    animationType,
+    animationDuration,
+    className,
+    customClass,
+    customId,
+    onClick,
+    dataTracking,
+  }
+
+  const responsive: CanonicalButtonResponsive = {
+    desktop: responsiveInput.desktop && typeof responsiveInput.desktop === 'object' ? responsiveInput.desktop : {},
+    tablet: responsiveInput.tablet && typeof responsiveInput.tablet === 'object' ? responsiveInput.tablet : {},
+    mobile: {
+      size: mobileSize,
+      fullWidth: mobileFullWidth,
+      hidden: hideOnMobile,
+    },
+  }
+
+  return {
+    ...defaultButtonProps,
+    ...props,
+    version: 1,
+    content,
+    style,
+    responsive,
+    text,
+    link,
+    linkUrl,
+    openInNewTab,
+    variant,
+    size,
+    primaryColor,
+    backgroundColor,
+    textColor,
+    hoverColor,
+    activeColor,
+    borderColor,
+    useGradient,
+    gradientColors,
+    gradientDirection,
+    gradientType,
+    borderRadius,
+    borderWidth,
+    shadow,
+    alignment,
+    textAlign,
+    fullWidth,
+    width,
+    margin,
+    padding,
+    marginTop,
+    marginRight,
+    marginBottom,
+    marginLeft,
+    paddingTop,
+    paddingRight,
+    paddingBottom,
+    paddingLeft,
+    fontFamily,
+    fontSize,
+    fontWeight,
+    letterSpacing,
+    textTransform,
+    lineHeight,
+    icon,
+    iconPosition,
+    iconSize,
+    iconSpacing,
+    disabled,
+    loading,
+    loadingText,
+    hoverEffect,
+    hoverScale,
+    hoverShadow,
+    animationType,
+    animationDuration,
+    className,
+    customClass,
+    customId,
+    ariaLabel,
+    onClick,
+    dataTracking,
+    mobileSize,
+    mobileFullWidth,
+    hideOnMobile,
   }
 }

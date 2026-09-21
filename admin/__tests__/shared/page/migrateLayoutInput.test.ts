@@ -381,4 +381,174 @@ describe('migrateLayoutInput', () => {
     expect(result.migrations).toHaveLength(0)
     expect(infoSpy).not.toHaveBeenCalled()
   })
+
+  it('migrates legacy flat button props to canonical format and retains flat fields', () => {
+    const layout = createLegacyLayout('button', {
+      text: 'Click Here',
+      link: '/contact',
+      openInNewTab: true,
+      variant: 'secondary',
+      size: 'large',
+      backgroundColor: '#123456',
+      mobileSize: 'small',
+      mobileFullWidth: true,
+      hideOnMobile: false,
+    })
+
+    const result = migrateLayoutInput<MigratedTestLayout>(layout)
+    const component = result.value.sections[0].rows[0].columns[0].components[0]
+
+    expect(component.props.version).toBe(1)
+    expect(component.props.content).toEqual({
+      text: 'Click Here',
+      link: '/contact',
+      openInNewTab: true,
+      loadingText: undefined,
+      ariaLabel: undefined,
+    })
+    expect(component.props.style).toMatchObject({
+      variant: 'secondary',
+      size: 'large',
+      backgroundColor: '#123456',
+    })
+    expect(component.props.responsive).toEqual({
+      desktop: {},
+      tablet: {},
+      mobile: {
+        size: 'small',
+        fullWidth: true,
+        hidden: false,
+      },
+    })
+    expect(component.props.text).toBe('Click Here')
+    expect(component.props.link).toBe('/contact')
+    expect(component.props.variant).toBe('secondary')
+
+    expect(result.migrations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'auto_migration',
+          migration: 'button_legacy_to_canonical',
+          blockOrSectionType: 'button',
+        }),
+      ]),
+    )
+  })
+
+  it('does not re-migrate canonical button that already has content and style', () => {
+    const canonicalProps = {
+      version: 1,
+      content: { text: 'Canonical Button', link: '#' },
+      style: { variant: 'primary', size: 'medium' },
+      responsive: { desktop: {}, tablet: {}, mobile: { size: 'medium', fullWidth: false, hidden: false } },
+    }
+    const layout = {
+      id: 'layout-1',
+      name: 'Layout',
+      sections: [
+        {
+          id: 'section-1',
+          name: 'Section',
+          type: 'custom',
+          props: {},
+          settings: {},
+          rows: [
+            {
+              id: 'row-1',
+              columns: [
+                {
+                  id: 'col-1',
+                  width: 100,
+                  components: [
+                    {
+                      id: 'comp-1',
+                      type: 'button',
+                      props: canonicalProps,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+
+    const result = migrateLayoutInput<MigratedTestLayout>(layout)
+    const buttonMigrations = result.migrations.filter((m) => m.migration === 'button_legacy_to_canonical')
+    expect(buttonMigrations).toHaveLength(0)
+  })
+
+  it('cleans up dumped default backgroundColor, fontSize, and padding on legacy unversioned buttons with non-default variant/size', () => {
+    const layout = createLegacyLayout('button', {
+      text: 'Secondary Action',
+      link: '/secondary',
+      variant: 'secondary',
+      size: 'small',
+      backgroundColor: '#7C6DFA', // dumped default primary color
+      fontSize: '16px', // dumped default medium font size
+      paddingTop: '14px', // dumped default medium padding
+      paddingRight: '28px',
+      paddingBottom: '14px',
+      paddingLeft: '28px',
+    })
+
+    const result = migrateLayoutInput<MigratedTestLayout>(layout)
+    const component = result.value.sections[0].rows[0].columns[0].components[0]
+
+    expect(component.props.version).toBe(1)
+    expect(component.props.style.variant).toBe('secondary')
+    expect(component.props.style.size).toBe('small')
+    // Defaults stripped so variant and size natural presets take effect:
+    expect(component.props.style.backgroundColor).toBeUndefined()
+    expect(component.props.style.fontSize).toBeUndefined()
+    expect(component.props.style.paddingTop).toBeUndefined()
+    expect(component.props.backgroundColor).toBeUndefined()
+    expect(component.props.fontSize).toBeUndefined()
+    expect(component.props.paddingTop).toBeUndefined()
+  })
+
+  it('preserves explicit #7C6DFA on version 1 buttons (does not strip customized buttons)', () => {
+    const layout = {
+      id: 'layout-1',
+      name: 'Layout',
+      sections: [
+        {
+          id: 'section-1',
+          name: 'Section',
+          type: 'custom',
+          props: {},
+          settings: {},
+          rows: [
+            {
+              id: 'row-1',
+              columns: [
+                {
+                  id: 'col-1',
+                  width: 100,
+                  components: [
+                    {
+                      id: 'comp-1',
+                      type: 'button',
+                      props: {
+                        version: 1,
+                        content: { text: 'Custom Purple Secondary', link: '#' },
+                        style: { variant: 'secondary', size: 'medium', backgroundColor: '#7C6DFA' },
+                        responsive: { desktop: {}, tablet: {}, mobile: { size: 'medium', fullWidth: false, hidden: false } },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+
+    const result = migrateLayoutInput<MigratedTestLayout>(layout)
+    const component = result.value.sections[0].rows[0].columns[0].components[0]
+    expect(component.props.style.backgroundColor).toBe('#7C6DFA')
+    expect(result.migrations.filter((m) => m.migration === 'button_legacy_to_canonical')).toHaveLength(0)
+  })
 })

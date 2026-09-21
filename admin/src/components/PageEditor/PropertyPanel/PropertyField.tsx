@@ -9,6 +9,480 @@ interface PropertyFieldProps {
   onChange: (value: any) => void
 }
 
+const slugifyValue = (input: string) =>
+  input
+    .toLowerCase()
+    .trim()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+const normalizeOptionItem = (item: any, index: number) => {
+  if (!item || typeof item !== 'object') {
+    return {
+      id: `option-${index}`,
+      label: '',
+      value: '',
+      disabled: false,
+      icon: '',
+      badge: '',
+      group: '',
+    }
+  }
+
+  const label = String(item.label ?? '')
+  const value = String(item.value ?? '')
+
+  return {
+    id: String(item.id ?? `option-${index}`),
+    label,
+    value,
+    disabled: Boolean(item.disabled ?? item.isDisabled ?? false),
+    icon: String(item.icon ?? ''),
+    badge: String(item.badge ?? ''),
+    group: String(item.group ?? ''),
+  }
+}
+
+const OptionListField: React.FC<{
+  propName: string
+  config: any
+  value: any
+  onChange: (value: any) => void
+}> = ({ propName, config, value, onChange }) => {
+  const optionItems = Array.isArray(value) ? value.map((item: any, index: number) => normalizeOptionItem(item, index)) : []
+  const [autoGenerateValue, setAutoGenerateValue] = useState(config.autoGenerateValue !== false)
+
+  useEffect(() => {
+    setAutoGenerateValue(config.autoGenerateValue !== false)
+  }, [config.autoGenerateValue])
+
+  const updateOptionItem = (index: number, field: string, nextValue: any) => {
+    const nextItems = optionItems.map((item: any, itemIndex: number) => {
+      if (itemIndex !== index) return item
+
+      const updated = { ...item, [field]: nextValue }
+      if (field === 'label' && autoGenerateValue) {
+        const generated = slugifyValue(String(nextValue || ''))
+        if (!updated.value || updated.value === slugifyValue(String(item.label || ''))) {
+          updated.value = generated
+        }
+      }
+      return updated
+    })
+    onChange(nextItems)
+  }
+
+  const addOptionItem = () => {
+    const nextIndex = optionItems.length
+    onChange([
+      ...optionItems,
+      {
+        id: `option-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        label: `Option ${nextIndex + 1}`,
+        value: slugifyValue(`Option ${nextIndex + 1}`),
+        disabled: false,
+        icon: '',
+        badge: '',
+        group: '',
+      },
+    ])
+  }
+
+  const removeOptionItem = (index: number) => {
+    onChange(optionItems.filter((_: any, itemIndex: number) => itemIndex !== index))
+  }
+
+  const duplicateOptionItem = (index: number) => {
+    const itemToCopy = optionItems[index]
+    if (!itemToCopy) return
+    const nextLabel = `${itemToCopy.label || 'Option'} (copy)`
+    onChange([
+      ...optionItems.slice(0, index + 1),
+      {
+        ...itemToCopy,
+        id: `option-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        label: nextLabel,
+        value: autoGenerateValue ? slugifyValue(nextLabel) : `${itemToCopy.value || 'option'}-copy`,
+      },
+      ...optionItems.slice(index + 1),
+    ])
+  }
+
+  const moveOptionItem = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= optionItems.length || fromIndex === toIndex) return
+    const nextItems = [...optionItems]
+    const [movedItem] = nextItems.splice(fromIndex, 1)
+    if (!movedItem) return
+    nextItems.splice(toIndex, 0, movedItem)
+    onChange(nextItems)
+  }
+
+  const handleDragStart = (index: number, event: React.DragEvent<HTMLDivElement>) => {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', String(index))
+  }
+
+  const handleDrop = (index: number, event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    const fromIndex = Number(event.dataTransfer.getData('text/plain'))
+    if (Number.isFinite(fromIndex)) {
+      moveOptionItem(fromIndex, index)
+    }
+  }
+
+  return (
+    <div className="mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <label className="text-sm font-medium text-gray-700">{config.label}</label>
+          {config.description ? <div className="text-xs text-gray-500 mt-1">{config.description}</div> : null}
+        </div>
+        <span className="text-xs text-gray-500">{optionItems.length} options</span>
+      </div>
+
+      <div className="mb-3 flex items-center gap-2">
+        <input
+          type="checkbox"
+          id={`${propName}-auto-generate`}
+          checked={autoGenerateValue}
+          onChange={() => {
+            const nextState = !autoGenerateValue
+            setAutoGenerateValue(nextState)
+            onChange(
+              optionItems.map((item: any) => ({
+                ...item,
+                value: nextState ? slugifyValue(String(item.label || '')) : item.value,
+              })),
+            )
+          }}
+          className="h-4 w-4"
+        />
+        <label htmlFor={`${propName}-auto-generate`} className="text-xs text-gray-600">
+          Auto-generate values from label
+        </label>
+      </div>
+
+      <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+        {optionItems.map((item: any, index: number) => (
+          <div
+            key={item.id || `${propName}-${index}`}
+            draggable
+            onDragStart={(event) => handleDragStart(index, event)}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => handleDrop(index, event)}
+            className="border rounded-lg p-3 bg-white hover:border-blue-300 transition-colors">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <span className="cursor-grab select-none" title="Drag to reorder">
+                  ⋮⋮
+                </span>
+                <span className="font-mono bg-gray-100 px-2 py-1 rounded">{index + 1}</span>
+              </div>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => duplicateOptionItem(index)}
+                  className="px-2 py-1 text-gray-500 hover:text-green-600 text-xs"
+                  title="Duplicate option">
+                  ⎘
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeOptionItem(index)}
+                  className="px-2 py-1 text-red-500 hover:text-red-700 text-xs"
+                  title="Delete option">
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Label</label>
+                <input
+                  type="text"
+                  value={item.label ?? ''}
+                  onChange={(e) => updateOptionItem(index, 'label', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  placeholder="Option label"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Value</label>
+                <input
+                  type="text"
+                  value={item.value ?? ''}
+                  onChange={(e) => updateOptionItem(index, 'value', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  placeholder="Option value"
+                />
+                <button
+                  type="button"
+                  className="mt-1 text-xs text-blue-600 hover:text-blue-700"
+                  onClick={() => updateOptionItem(index, 'value', slugifyValue(String(item.label || '')))}>
+                  Use label as value
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Icon</label>
+                <input
+                  type="text"
+                  value={item.icon ?? ''}
+                  onChange={(e) => updateOptionItem(index, 'icon', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  placeholder="Optional icon"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Badge</label>
+                <input
+                  type="text"
+                  value={item.badge ?? ''}
+                  onChange={(e) => updateOptionItem(index, 'badge', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  placeholder="Optional badge"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Group</label>
+                <input
+                  type="text"
+                  value={item.group ?? ''}
+                  onChange={(e) => updateOptionItem(index, 'group', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  placeholder="Optional group"
+                />
+              </div>
+
+              <div className="flex items-end">
+                <label className="flex items-center gap-2 text-xs text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(item.disabled)}
+                    onChange={(e) => updateOptionItem(index, 'disabled', e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  Disabled
+                </label>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={addOptionItem}
+        className="w-full mt-3 px-4 py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-blue-400 hover:text-blue-500 flex items-center justify-center gap-2">
+        <span>+</span>
+        <span>Add option</span>
+      </button>
+    </div>
+  )
+}
+
+const AccordionItemsField: React.FC<{
+  config: any
+  value: any
+  onChange: (value: any) => void
+}> = ({ config, value, onChange }) => {
+  const accordionItems = Array.isArray(value)
+    ? value
+    : [
+        {
+          id: '1',
+          title: 'Frequently Asked Question 1',
+          content: 'This is the detailed answer for the first question.',
+          visible: true,
+        },
+        {
+          id: '2',
+          title: 'Frequently Asked Question 2',
+          content: 'This is the detailed answer for the second question.',
+          visible: true,
+        },
+      ]
+
+  const updateAccordionItem = useCallback(
+    (index: number, field: string, newValue: any) => {
+      const newItems = [...accordionItems]
+      if (newItems[index]?.[field] !== newValue) {
+        newItems[index] = { ...newItems[index], [field]: newValue }
+        onChange(newItems)
+      }
+    },
+    [accordionItems, onChange],
+  )
+
+  const addAccordionItem = useCallback(() => {
+    const newItem = {
+      id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: 'New Question',
+      content: 'Answer goes here...',
+      visible: true,
+    }
+    onChange([...accordionItems, newItem])
+  }, [accordionItems, onChange])
+
+  const removeAccordionItem = useCallback(
+    (index: number) => {
+      const newItems = accordionItems.filter((_: any, i: number) => i !== index)
+      onChange(newItems)
+    },
+    [accordionItems, onChange],
+  )
+
+  const moveAccordionItem = useCallback(
+    (index: number, direction: 'up' | 'down') => {
+      const newItems = [...accordionItems]
+      if (direction === 'up' && index > 0) {
+        ;[newItems[index], newItems[index - 1]] = [newItems[index - 1], newItems[index]]
+      } else if (direction === 'down' && index < newItems.length - 1) {
+        ;[newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]]
+      }
+      onChange(newItems)
+    },
+    [accordionItems, onChange],
+  )
+
+  const [debouncedInputs, setDebouncedInputs] = useState<{ [key: string]: string }>({})
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>()
+
+  const handleTitleChange = useCallback(
+    (index: number, newValue: string) => {
+      setDebouncedInputs((prev) => ({
+        ...prev,
+        [`title-${index}`]: newValue,
+      }))
+
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+
+      debounceTimeoutRef.current = setTimeout(() => {
+        updateAccordionItem(index, 'title', newValue)
+      }, 500)
+    },
+    [updateAccordionItem],
+  )
+
+  const handleContentChange = useCallback(
+    (index: number, newValue: string) => {
+      setDebouncedInputs((prev) => ({
+        ...prev,
+        [`content-${index}`]: newValue,
+      }))
+
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+
+      debounceTimeoutRef.current = setTimeout(() => {
+        updateAccordionItem(index, 'content', newValue)
+      }, 500)
+    },
+    [updateAccordionItem],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-3">{config.label}</label>
+
+      <div className="space-y-3 max-h-96 overflow-y-auto">
+        {accordionItems.map((item: any, index: number) => (
+          <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-gray-900 text-sm">Question {index + 1}</h4>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => moveAccordionItem(index, 'up')}
+                  disabled={index === 0}
+                  className="px-2 py-1 text-gray-500 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                  title="Move up">
+                  ↑
+                </button>
+                <button
+                  onClick={() => moveAccordionItem(index, 'down')}
+                  disabled={index === accordionItems.length - 1}
+                  className="px-2 py-1 text-gray-500 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                  title="Move down">
+                  ↓
+                </button>
+                <button
+                  onClick={() => removeAccordionItem(index)}
+                  className="px-2 py-1 text-red-500 hover:text-red-700 text-xs"
+                  title="Remove question">
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Question</label>
+              <input
+                type="text"
+                value={debouncedInputs[`title-${index}`] !== undefined ? debouncedInputs[`title-${index}`] : item.title}
+                onChange={(e) => handleTitleChange(index, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                placeholder="Enter question..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Answer</label>
+              <textarea
+                value={debouncedInputs[`content-${index}`] !== undefined ? debouncedInputs[`content-${index}`] : item.content}
+                onChange={(e) => handleContentChange(index, e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                placeholder="Enter answer..."
+              />
+            </div>
+
+            <div className="mt-2 flex items-center">
+              <input
+                type="checkbox"
+                id={`visible-${item.id}`}
+                checked={item.visible !== false}
+                onChange={(e) => updateAccordionItem(index, 'visible', e.target.checked)}
+                className="mr-2 h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor={`visible-${item.id}`} className="text-xs text-gray-700">
+                Visible
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={addAccordionItem}
+        className="w-full mt-3 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors duration-200 flex items-center justify-center gap-2">
+        <span className="text-lg">+</span>
+        <span>Add New Question</span>
+      </button>
+
+      <div className="mt-3 flex justify-between items-center text-xs text-gray-500">
+        <span>Total questions: {accordionItems.length}</span>
+        <span>Visible: {accordionItems.filter((item: any) => item.visible !== false).length}</span>
+      </div>
+    </div>
+  )
+}
+
 export const PropertyField: React.FC<PropertyFieldProps> = function PropertyField({ propName, config, value, onChange }) {
   const [localValue, setLocalValue] = useState(value ?? '')
   const timeoutRef = useRef<NodeJS.Timeout>()
@@ -54,41 +528,6 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
 
   const normalizeSelectValue = (val: any) => {
     return Array.isArray(val) ? val[0] ?? '' : val ?? ''
-  }
-
-  const slugifyValue = (input: string) =>
-    input
-      .toLowerCase()
-      .trim()
-      .replace(/['"]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-
-  const normalizeOptionItem = (item: any, index: number) => {
-    if (!item || typeof item !== 'object') {
-      return {
-        id: `option-${index}`,
-        label: '',
-        value: '',
-        disabled: false,
-        icon: '',
-        badge: '',
-        group: '',
-      }
-    }
-
-    const label = String(item.label ?? '')
-    const value = String(item.value ?? '')
-
-    return {
-      id: String(item.id ?? `option-${index}`),
-      label,
-      value,
-      disabled: Boolean(item.disabled ?? item.isDisabled ?? false),
-      icon: String(item.icon ?? ''),
-      badge: String(item.badge ?? ''),
-      group: String(item.group ?? ''),
-    }
   }
 
   switch (config.type) {
@@ -234,230 +673,7 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
       )
 
     case 'option-list':
-      const optionItems = Array.isArray(value) ? value.map((item: any, index: number) => normalizeOptionItem(item, index)) : []
-      const [autoGenerateValue, setAutoGenerateValue] = useState(config.autoGenerateValue !== false)
-
-      useEffect(() => {
-        setAutoGenerateValue(config.autoGenerateValue !== false)
-      }, [config.autoGenerateValue])
-
-      const updateOptionItem = (index: number, field: string, nextValue: any) => {
-        const nextItems = optionItems.map((item: any, itemIndex: number) => {
-          if (itemIndex !== index) return item
-
-          const updated = { ...item, [field]: nextValue }
-          if (field === 'label' && autoGenerateValue) {
-            const generated = slugifyValue(String(nextValue || ''))
-            if (!updated.value || updated.value === slugifyValue(String(item.label || ''))) {
-              updated.value = generated
-            }
-          }
-          return updated
-        })
-        onChange(nextItems)
-      }
-
-      const addOptionItem = () => {
-        const nextIndex = optionItems.length
-        onChange([
-          ...optionItems,
-          {
-            id: `option-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            label: `Option ${nextIndex + 1}`,
-            value: slugifyValue(`Option ${nextIndex + 1}`),
-            disabled: false,
-            icon: '',
-            badge: '',
-            group: '',
-          },
-        ])
-      }
-
-      const removeOptionItem = (index: number) => {
-        onChange(optionItems.filter((_: any, itemIndex: number) => itemIndex !== index))
-      }
-
-      const duplicateOptionItem = (index: number) => {
-        const itemToCopy = optionItems[index]
-        if (!itemToCopy) return
-        const nextLabel = `${itemToCopy.label || 'Option'} (copy)`
-        onChange([
-          ...optionItems.slice(0, index + 1),
-          {
-            ...itemToCopy,
-            id: `option-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            label: nextLabel,
-            value: autoGenerateValue ? slugifyValue(nextLabel) : `${itemToCopy.value || 'option'}-copy`,
-          },
-          ...optionItems.slice(index + 1),
-        ])
-      }
-
-      const moveOptionItem = (fromIndex: number, toIndex: number) => {
-        if (toIndex < 0 || toIndex >= optionItems.length || fromIndex === toIndex) return
-        const nextItems = [...optionItems]
-        const [movedItem] = nextItems.splice(fromIndex, 1)
-        if (!movedItem) return
-        nextItems.splice(toIndex, 0, movedItem)
-        onChange(nextItems)
-      }
-
-      const handleDragStart = (index: number, event: React.DragEvent<HTMLDivElement>) => {
-        event.dataTransfer.effectAllowed = 'move'
-        event.dataTransfer.setData('text/plain', String(index))
-      }
-
-      const handleDrop = (index: number, event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault()
-        const fromIndex = Number(event.dataTransfer.getData('text/plain'))
-        if (Number.isFinite(fromIndex)) {
-          moveOptionItem(fromIndex, index)
-        }
-      }
-
-      return (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <label className="text-sm font-medium text-gray-700">{config.label}</label>
-              {config.description ? <div className="text-xs text-gray-500 mt-1">{config.description}</div> : null}
-            </div>
-            <span className="text-xs text-gray-500">{optionItems.length} options</span>
-          </div>
-
-          <div className="mb-3 flex items-center gap-2">
-          <input
-              type="checkbox"
-              id={`${propName}-auto-generate`}
-              checked={autoGenerateValue}
-              onChange={() => {
-                const nextState = !autoGenerateValue
-                setAutoGenerateValue(nextState)
-                onChange(optionItems.map((item: any) => ({
-                  ...item,
-                  value: nextState ? slugifyValue(String(item.label || '')) : item.value,
-                })))
-              }}
-              className="h-4 w-4"
-            />
-            <label htmlFor={`${propName}-auto-generate`} className="text-xs text-gray-600">
-              Auto-generate values from label
-            </label>
-          </div>
-
-          <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-            {optionItems.map((item: any, index: number) => (
-              <div
-                key={item.id || `${propName}-${index}`}
-                draggable
-                onDragStart={(event) => handleDragStart(index, event)}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={(event) => handleDrop(index, event)}
-                className="border rounded-lg p-3 bg-white hover:border-blue-300 transition-colors">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <span className="cursor-grab select-none" title="Drag to reorder">
-                      ⋮⋮
-                    </span>
-                    <span className="font-mono bg-gray-100 px-2 py-1 rounded">{index + 1}</span>
-                  </div>
-                  <div className="flex gap-1">
-                    <button type="button" onClick={() => duplicateOptionItem(index)} className="px-2 py-1 text-gray-500 hover:text-green-600 text-xs" title="Duplicate option">
-                      ⎘
-                    </button>
-                    <button type="button" onClick={() => removeOptionItem(index)} className="px-2 py-1 text-red-500 hover:text-red-700 text-xs" title="Delete option">
-                      ×
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Label</label>
-                <input
-                  type="text"
-                  value={item.label ?? ''}
-                  onChange={(e) => updateOptionItem(index, 'label', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                      placeholder="Option label"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Value</label>
-                <input
-                  type="text"
-                  value={item.value ?? ''}
-                  onChange={(e) => updateOptionItem(index, 'value', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                      placeholder="Option value"
-                    />
-                    <button
-                      type="button"
-                      className="mt-1 text-xs text-blue-600 hover:text-blue-700"
-                      onClick={() => updateOptionItem(index, 'value', slugifyValue(String(item.label || '')))}>
-                      Use label as value
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Icon</label>
-                    <input
-                      type="text"
-                      value={item.icon ?? ''}
-                      onChange={(e) => updateOptionItem(index, 'icon', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                      placeholder="Optional icon"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Badge</label>
-                    <input
-                      type="text"
-                      value={item.badge ?? ''}
-                      onChange={(e) => updateOptionItem(index, 'badge', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                      placeholder="Optional badge"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Group</label>
-                    <input
-                      type="text"
-                      value={item.group ?? ''}
-                      onChange={(e) => updateOptionItem(index, 'group', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                      placeholder="Optional group"
-                    />
-                  </div>
-
-                  <div className="flex items-end">
-                    <label className="flex items-center gap-2 text-xs text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(item.disabled)}
-                        onChange={(e) => updateOptionItem(index, 'disabled', e.target.checked)}
-                        className="h-4 w-4"
-                      />
-                      Disabled
-                    </label>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={addOptionItem}
-            className="w-full mt-3 px-4 py-2 border-2 border-dashed border-gray-300 rounded text-gray-500 hover:border-blue-400 hover:text-blue-500 flex items-center justify-center gap-2">
-            <span>+</span>
-            <span>Add option</span>
-          </button>
-        </div>
-      )
+      return <OptionListField propName={propName} config={config} value={value} onChange={onChange} />
 
     case 'list-items':
       // ✅ FIXED: Declare listItems FIRST at the top
@@ -806,205 +1022,8 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
       )
 
     case 'accordion-items':
-      const accordionItems = Array.isArray(value)
-        ? value
-        : [
-            {
-              id: '1',
-              title: 'Frequently Asked Question 1',
-              content: 'This is the detailed answer for the first question.',
-              visible: true,
-            },
-            {
-              id: '2',
-              title: 'Frequently Asked Question 2',
-              content: 'This is the detailed answer for the second question.',
-              visible: true,
-            },
-          ]
+      return <AccordionItemsField config={config} value={value} onChange={onChange} />
 
-      // Use useCallback to prevent unnecessary re-renders
-      const updateAccordionItem = useCallback(
-        (index: number, field: string, newValue: any) => {
-          const newItems = [...accordionItems]
-          if (newItems[index]?.[field] !== newValue) {
-            newItems[index] = { ...newItems[index], [field]: newValue }
-            onChange(newItems)
-          }
-        },
-        [accordionItems, onChange],
-      )
-
-      const addAccordionItem = useCallback(() => {
-        const newItem = {
-          id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title: 'New Question',
-          content: 'Answer goes here...',
-          visible: true,
-        }
-        onChange([...accordionItems, newItem])
-      }, [accordionItems, onChange])
-
-      const removeAccordionItem = useCallback(
-        (index: number) => {
-          const newItems = accordionItems.filter((_: any, i: number) => i !== index)
-          onChange(newItems)
-        },
-        [accordionItems, onChange],
-      )
-
-      const moveAccordionItem = useCallback(
-        (index: number, direction: 'up' | 'down') => {
-          const newItems = [...accordionItems]
-          if (direction === 'up' && index > 0) {
-            ;[newItems[index], newItems[index - 1]] = [newItems[index - 1], newItems[index]]
-          } else if (direction === 'down' && index < newItems.length - 1) {
-            ;[newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]]
-          }
-          onChange(newItems)
-        },
-        [accordionItems, onChange],
-      )
-
-      // Debounced input handlers for text fields
-      const [debouncedInputs, setDebouncedInputs] = useState<{ [key: string]: string }>({})
-      const debounceTimeoutRef = useRef<NodeJS.Timeout>()
-
-      const handleTitleChange = useCallback(
-        (index: number, newValue: string) => {
-          setDebouncedInputs((prev) => ({
-            ...prev,
-            [`title-${index}`]: newValue,
-          }))
-
-          if (debounceTimeoutRef.current) {
-            clearTimeout(debounceTimeoutRef.current)
-          }
-
-          debounceTimeoutRef.current = setTimeout(() => {
-            updateAccordionItem(index, 'title', newValue)
-          }, 500)
-        },
-        [updateAccordionItem],
-      )
-
-      const handleContentChange = useCallback(
-        (index: number, newValue: string) => {
-          setDebouncedInputs((prev) => ({
-            ...prev,
-            [`content-${index}`]: newValue,
-          }))
-
-          if (debounceTimeoutRef.current) {
-            clearTimeout(debounceTimeoutRef.current)
-          }
-
-          debounceTimeoutRef.current = setTimeout(() => {
-            updateAccordionItem(index, 'content', newValue)
-          }, 500)
-        },
-        [updateAccordionItem],
-      )
-
-      // Cleanup timeout on unmount
-      useEffect(() => {
-        return () => {
-          if (debounceTimeoutRef.current) {
-            clearTimeout(debounceTimeoutRef.current)
-          }
-        }
-      }, [])
-
-      return (
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-3">{config.label}</label>
-
-          {/* Accordion Items */}
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {accordionItems.map((item: any, index: number) => (
-              <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-900 text-sm">Question {index + 1}</h4>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => moveAccordionItem(index, 'up')}
-                      disabled={index === 0}
-                      className="px-2 py-1 text-gray-500 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                      title="Move up">
-                      ↑
-                    </button>
-                    <button
-                      onClick={() => moveAccordionItem(index, 'down')}
-                      disabled={index === accordionItems.length - 1}
-                      className="px-2 py-1 text-gray-500 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                      title="Move down">
-                      ↓
-                    </button>
-                    <button
-                      onClick={() => removeAccordionItem(index)}
-                      className="px-2 py-1 text-red-500 hover:text-red-700 text-xs"
-                      title="Remove question">
-                      ×
-                    </button>
-                  </div>
-                </div>
-
-                {/* Question Title */}
-                <div className="mb-3">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Question</label>
-                  <input
-                    type="text"
-                    value={debouncedInputs[`title-${index}`] !== undefined ? debouncedInputs[`title-${index}`] : item.title}
-                    onChange={(e) => handleTitleChange(index, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    placeholder="Enter question..."
-                  />
-                </div>
-
-                {/* Answer Content */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Answer</label>
-                  <textarea
-                    value={debouncedInputs[`content-${index}`] !== undefined ? debouncedInputs[`content-${index}`] : item.content}
-                    onChange={(e) => handleContentChange(index, e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    placeholder="Enter answer..."
-                  />
-                </div>
-
-                {/* Visibility Toggle */}
-                <div className="mt-2 flex items-center">
-                  <input
-                    type="checkbox"
-                    id={`visible-${item.id}`}
-                    checked={item.visible !== false}
-                    onChange={(e) => updateAccordionItem(index, 'visible', e.target.checked)}
-                    className="mr-2 h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor={`visible-${item.id}`} className="text-xs text-gray-700">
-                    Visible
-                  </label>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Add Question Button */}
-          <button
-            onClick={addAccordionItem}
-            className="w-full mt-3 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors duration-200 flex items-center justify-center gap-2">
-            <span className="text-lg">+</span>
-            <span>Add New Question</span>
-          </button>
-
-          {/* Statistics */}
-          <div className="mt-3 flex justify-between items-center text-xs text-gray-500">
-            <span>Total questions: {accordionItems.length}</span>
-            <span>Visible: {accordionItems.filter((item: any) => item.visible !== false).length}</span>
-          </div>
-        </div>
-      )
     case 'carousel-slides':
       const slides = Array.isArray(value) ? value : []
 

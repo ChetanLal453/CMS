@@ -197,6 +197,156 @@ function migrateBlock(
     }
   }
 
+  if (resolvedType === 'button') {
+    if (migrated.props && (!isObject(migrated.props.content) || !isObject(migrated.props.style) || !migrated.props.version)) {
+      const isLegacyUnversioned = !migrated.props.version
+      const legacyVariant = migrated.props.variant || 'primary'
+      const legacySize = migrated.props.size || 'medium'
+
+      const isDefaultBg =
+        typeof migrated.props.backgroundColor === 'string' &&
+        migrated.props.backgroundColor.trim().toLowerCase() === '#7c6dfa'
+      const shouldStripBg = isLegacyUnversioned && legacyVariant !== 'primary' && isDefaultBg
+
+      const isDefaultFontSize =
+        typeof migrated.props.fontSize === 'string' &&
+        migrated.props.fontSize.trim() === '16px'
+      const shouldStripFontSize = isLegacyUnversioned && legacySize !== 'medium' && isDefaultFontSize
+
+      const isDefaultPaddingTop =
+        typeof migrated.props.paddingTop === 'string' &&
+        migrated.props.paddingTop.trim() === '14px'
+      const shouldStripPadding = isLegacyUnversioned && legacySize !== 'medium' && isDefaultPaddingTop
+
+      const backgroundColor = shouldStripBg ? undefined : migrated.props.backgroundColor
+      const fontSize = shouldStripFontSize ? undefined : migrated.props.fontSize
+      const paddingTop = shouldStripPadding ? undefined : migrated.props.paddingTop
+      const paddingRight = shouldStripPadding ? undefined : migrated.props.paddingRight
+      const paddingBottom = shouldStripPadding ? undefined : migrated.props.paddingBottom
+      const paddingLeft = shouldStripPadding ? undefined : migrated.props.paddingLeft
+      const padding = shouldStripPadding ? undefined : migrated.props.padding
+
+      const content = {
+        text: migrated.props.text ?? migrated.props.label,
+        link: migrated.props.link ?? migrated.props.linkUrl ?? migrated.props.url ?? migrated.props.href,
+        openInNewTab: migrated.props.openInNewTab,
+        loadingText: migrated.props.loadingText,
+        ariaLabel: migrated.props.ariaLabel,
+      }
+
+      const style = {
+        variant: migrated.props.variant,
+        size: migrated.props.size,
+        primaryColor: migrated.props.primaryColor,
+        backgroundColor,
+        textColor: migrated.props.textColor,
+        hoverColor: migrated.props.hoverColor,
+        activeColor: migrated.props.activeColor,
+        borderColor: migrated.props.borderColor,
+        useGradient: migrated.props.useGradient,
+        gradientColors: migrated.props.gradientColors,
+        gradientDirection: migrated.props.gradientDirection,
+        gradientType: migrated.props.gradientType,
+        borderRadius: migrated.props.borderRadius,
+        borderWidth: migrated.props.borderWidth,
+        shadow: migrated.props.shadow,
+        alignment: migrated.props.alignment ?? migrated.props.textAlign,
+        textAlign: migrated.props.textAlign ?? migrated.props.alignment,
+        fullWidth: migrated.props.fullWidth,
+        width: migrated.props.width,
+        margin: migrated.props.margin,
+        padding,
+        marginTop: migrated.props.marginTop,
+        marginRight: migrated.props.marginRight,
+        marginBottom: migrated.props.marginBottom,
+        marginLeft: migrated.props.marginLeft,
+        paddingTop,
+        paddingRight,
+        paddingBottom,
+        paddingLeft,
+        fontFamily: migrated.props.fontFamily,
+        fontSize,
+        fontWeight: migrated.props.fontWeight,
+        letterSpacing: migrated.props.letterSpacing,
+        textTransform: migrated.props.textTransform,
+        lineHeight: migrated.props.lineHeight,
+        icon: migrated.props.icon,
+        iconPosition: migrated.props.iconPosition,
+        iconSize: migrated.props.iconSize,
+        iconSpacing: migrated.props.iconSpacing,
+        disabled: migrated.props.disabled,
+        loading: migrated.props.loading,
+        hoverEffect: migrated.props.hoverEffect,
+        hoverScale: migrated.props.hoverScale,
+        hoverShadow: migrated.props.hoverShadow,
+        animationType: migrated.props.animationType,
+        animationDuration: migrated.props.animationDuration,
+        className: migrated.props.className ?? migrated.props.customClass,
+        customClass: migrated.props.customClass ?? migrated.props.className,
+        customId: migrated.props.customId,
+        onClick: migrated.props.onClick,
+        dataTracking: migrated.props.dataTracking,
+      }
+
+      const responsive = {
+        desktop: isObject(migrated.props.responsive?.desktop) ? migrated.props.responsive.desktop : {},
+        tablet: isObject(migrated.props.responsive?.tablet) ? migrated.props.responsive.tablet : {},
+        mobile: {
+          size: migrated.props.mobileSize ?? migrated.props.responsive?.mobile?.size,
+          fullWidth: migrated.props.mobileFullWidth ?? migrated.props.responsive?.mobile?.fullWidth,
+          hidden: migrated.props.hideOnMobile ?? migrated.props.responsive?.mobile?.hidden,
+        },
+      }
+
+      if (shouldStripBg) {
+        delete migrated.props.backgroundColor
+      }
+      if (shouldStripFontSize) {
+        delete migrated.props.fontSize
+      }
+      if (shouldStripPadding) {
+        delete migrated.props.paddingTop
+        delete migrated.props.paddingRight
+        delete migrated.props.paddingBottom
+        delete migrated.props.paddingLeft
+        delete migrated.props.padding
+      }
+
+      const before = summarize({
+        text: migrated.props.text,
+        variant: migrated.props.variant,
+      })
+
+      migrated.props.version = 1
+      migrated.props.content = {
+        ...(isObject(migrated.props.content) ? migrated.props.content : {}),
+        ...content,
+      }
+      migrated.props.style = {
+        ...(isObject(migrated.props.style) ? migrated.props.style : {}),
+        ...style,
+      }
+      migrated.props.responsive = responsive
+
+      const entry = {
+        type: 'auto_migration' as const,
+        migration: 'button_legacy_to_canonical',
+        targetType: 'block' as const,
+        blockOrSectionType: resolvedType,
+        path: `${path}.props`,
+        before,
+        after: summarize({
+          version: 1,
+          content: migrated.props.content,
+          style: migrated.props.style,
+        }),
+        traceId,
+      }
+      migrations.push(entry)
+      logAutoMigration(entry)
+    }
+  }
+
   return migrated
 }
 
