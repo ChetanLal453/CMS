@@ -3,6 +3,18 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
+import { PageEditorErrorBoundary } from '@/components/PageEditor/PageEditorErrorBoundary'
+
+const PageEditor = dynamic(() => import('@/components/PageEditor/index-unified'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#a9a894', background: '#191c15', borderRadius: '12px', border: '1px solid rgba(230,228,214,0.12)' }}>
+      <div style={{ fontSize: '15px', fontWeight: 500, marginBottom: '8px', color: '#e9e7d8' }}>Loading Page Editor...</div>
+      <div style={{ fontSize: '12px', color: '#74735f' }}>Connecting to canonical 18 blocks canvas and MySQL</div>
+    </div>
+  ),
+})
 
 interface PageItem {
   id: number
@@ -568,7 +580,7 @@ export default function WorkspacePage() {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
           </svg>
-          Visual editor
+          Page editor
         </button>
 
         <button
@@ -678,12 +690,15 @@ export default function WorkspacePage() {
                     </span>
 
                     <div className="menu">
-                      <Link
-                        href={`/page-editor?site=${site.slug}&page=${p.slug}`}
+                      <button
+                        onClick={() => {
+                          setSelectedEditorPageId(p.id)
+                          setActiveTab('editor')
+                        }}
                         className="btn small"
                       >
                         Open in editor
-                      </Link>
+                      </button>
                       <button
                         className="dots"
                         onClick={() => setOpenSeoRow(isOpen ? null : p.id)}
@@ -807,13 +822,13 @@ export default function WorkspacePage() {
         </div>
       )}
 
-      {/* PILLAR 2: VISUAL EDITOR */}
+      {/* PILLAR 2: PAGE EDITOR */}
       {activeTab === 'editor' && (
-        <div className="tab-pane">
+        <div className="tab-pane page-editor-pane">
           <div className="row-between" style={{ alignItems: 'flex-start', marginBottom: '1rem' }}>
             <div>
-              <h1>Visual editor &mdash; {currentEditorPage?.title || 'Services'} page</h1>
-              <p className="sub">Desktop, tablet and mobile breakpoints, powered by the 18 canonical blocks.</p>
+              <h1>Page editor &mdash; {currentEditorPage?.title || 'Home'}</h1>
+              <p className="sub">Real canonical block studio with live visual canvas, navigator, inspector, and auto-save.</p>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <select
@@ -830,137 +845,23 @@ export default function WorkspacePage() {
               {currentEditorPage && (
                 <Link
                   href={`/page-editor?site=${site.slug}&page=${currentEditorPage.slug}`}
-                  className="btn small primary"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn small"
                 >
-                  Launch Full Studio Canvas ↗
+                  Open in full window ↗
                 </Link>
               )}
             </div>
           </div>
 
-          <div className="editor">
-            {/* Left Components & Navigator Pane */}
-            <div className="epane">
-              <h4>18 Canonical Blocks</h4>
-              <div className="blocklist">
-                {[
-                  { name: 'Heading', icon: 'H' },
-                  { name: 'Text', icon: '¶' },
-                  { name: 'Image', icon: '🖼' },
-                  { name: 'Button', icon: '▭' },
-                  { name: 'Cards', icon: '🗂' },
-                  { name: 'Grid', icon: '⊞' },
-                  { name: 'Navbar', icon: '☰' },
-                  { name: 'Carousel', icon: '⇄' },
-                  { name: 'Hero', icon: '★' },
-                  { name: 'Stats', icon: '📈' },
-                  { name: 'Testimonials', icon: '💬' },
-                  { name: 'Pricing', icon: '💲' },
-                ].map((b, idx) => (
-                  <div key={idx} className="blockitem" title={`Canonical Block: ${b.name}`}>
-                    <span style={{ fontSize: '15px', display: 'block', marginBottom: '2px' }}>{b.icon}</span>
-                    {b.name}
-                  </div>
-                ))}
-              </div>
-
-              <h4 style={{ marginTop: '16px' }}>Navigator</h4>
-              <div className="tree-item">Section (Hero Container)</div>
-              <div className="tree-item l2">Row (2-Columns)</div>
-              <div className="tree-item l3">Column (Left Content)</div>
-              <div className="tree-item l3">Card (Right Visual)</div>
-            </div>
-
-            {/* Mid Canvas Pane */}
-            <div className="epane canvas-mid">
-              <div className="canvas-bar">
-                <button
-                  className={`dev ${deviceBreakpoint === 'desktop' ? 'active' : ''}`}
-                  onClick={() => setDeviceBreakpoint('desktop')}
-                  title="Desktop"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                  </svg>
-                </button>
-                <button
-                  className={`dev ${deviceBreakpoint === 'tablet' ? 'active' : ''}`}
-                  onClick={() => setDeviceBreakpoint('tablet')}
-                  title="Tablet"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-                    <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                  </svg>
-                </button>
-                <button
-                  className={`dev ${deviceBreakpoint === 'mobile' ? 'active' : ''}`}
-                  onClick={() => setDeviceBreakpoint('mobile')}
-                  title="Mobile"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-                    <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                  </svg>
-                </button>
-                <span style={{ marginLeft: 'auto', color: 'var(--faint)' }}>
-                  {deviceBreakpoint === 'desktop' ? '1200px' : deviceBreakpoint === 'tablet' ? '768px' : '375px'} (100%)
-                </span>
-              </div>
-
-              <div className={`canvas-area dev-${deviceBreakpoint}`}>
-                <div className="canvas-placeholder">
-                  <div className="canvas-pill">Page: {currentEditorPage?.title}</div>
-                  <h3 style={{ margin: '10px 0 6px', color: 'var(--ink)' }}>Interactive Canvas Workspace</h3>
-                  <p style={{ margin: 0, color: 'var(--dim)', maxWidth: '360px' }}>
-                    Visual block editing with live 2-way sync to MySQL is active. Click below to enter the full canvas studio.
-                  </p>
-                  {currentEditorPage && (
-                    <Link
-                      href={`/page-editor?site=${site.slug}&page=${currentEditorPage.slug}`}
-                      className="btn small primary"
-                      style={{ marginTop: '14px' }}
-                    >
-                      Open Full Screen Studio
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Right Properties Pane */}
-            <div className="epane">
-              <div className="prop-tab">
-                <span className="active">Content</span>
-                <span>Style</span>
-                <span>Advanced</span>
-              </div>
-              <div className="prop-field">
-                <label>Heading text</label>
-                <input type="text" defaultValue={currentEditorPage?.title || 'Our services'} />
-              </div>
-              <div className="prop-field">
-                <label>Container Padding</label>
-                <input type="text" defaultValue="24px" />
-              </div>
-              <div className="prop-field">
-                <label>Background color</label>
-                <div className="swatch">
-                  <span style={{ background: themeColors.primary }}></span>
-                  <span style={{ background: themeColors.secondary }}></span>
-                  <span style={{ background: '#D85A30' }}></span>
-                </div>
-              </div>
-              <div className="prop-field">
-                <label>Visibility</label>
-                <div style={{ fontSize: '11px', color: 'var(--dim)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span>Hide on mobile</span>
-                  <input type="checkbox" />
-                </div>
-              </div>
-            </div>
+          <div className="real-editor-wrapper">
+            <PageEditorErrorBoundary>
+              <PageEditor
+                key={selectedEditorPageId || 'default'}
+                pageId={selectedEditorPageId ? String(selectedEditorPageId) : undefined}
+              />
+            </PageEditorErrorBoundary>
           </div>
         </div>
       )}
@@ -1310,11 +1211,12 @@ export default function WorkspacePage() {
       {/* STYLES MATCHING USER PROTOTYPE */}
       <style jsx>{`
         .workspace-app {
-          max-width: 1140px;
+          max-width: ${activeTab === 'editor' ? '100%' : '1140px'};
           margin: 0 auto;
-          padding: 1.25rem 1.25rem 4rem;
+          padding: ${activeTab === 'editor' ? '1rem 1rem 3rem' : '1.25rem 1.25rem 4rem'};
           color: var(--ink);
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          transition: max-width 0.15s ease;
           --bg: #12140f;
           --raised: #191c15;
           --line: rgba(230, 228, 214, 0.12);
@@ -1654,145 +1556,17 @@ export default function WorkspacePage() {
           font-size: 12px;
         }
 
-        /* Editor 3-Pane */
-        .editor {
-          display: grid;
-          grid-template-columns: 200px 1fr 210px;
-          gap: 10px;
-          min-height: 400px;
-        }
-        .epane {
-          background: var(--raised);
-          border: 0.5px solid var(--line);
-          border-radius: 10px;
-          padding: 0.8rem;
-          font-size: 12px;
-        }
-        .epane h4 {
-          font-size: 11px;
-          color: var(--faint);
-          font-weight: 500;
-          margin: 0 0 8px;
-        }
-        .blocklist {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 6px;
-        }
-        .blockitem {
-          border: 0.5px solid var(--line-strong);
-          border-radius: 8px;
-          padding: 8px 6px;
-          text-align: center;
-          color: var(--dim);
-          font-size: 10.5px;
-          background: rgba(0, 0, 0, 0.15);
-        }
-        .tree-item {
-          padding: 5px 0 5px 6px;
-          color: var(--dim);
-          border-left: 1px dashed var(--line-strong);
-          margin-left: 4px;
-          font-size: 11px;
-        }
-        .tree-item.l2 { margin-left: 16px; }
-        .tree-item.l3 { margin-left: 28px; }
-
-        .canvas-mid {
-          display: flex;
-          flex-direction: column;
-        }
-        .canvas-bar {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin-bottom: 8px;
-        }
-        .canvas-bar .dev {
-          background: none;
-          border: 0.5px solid var(--line-strong);
-          border-radius: 6px;
-          padding: 4px 8px;
-          color: var(--faint);
-          cursor: pointer;
-        }
-        .canvas-bar .dev.active {
-          color: var(--ink);
-          background: var(--line);
-        }
-        .canvas-area {
-          flex: 1;
-          background: var(--bg);
-          border: 0.5px dashed var(--line-strong);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--faint);
-          font-size: 12px;
-          text-align: center;
-          padding: 1.5rem;
-          transition: max-width 0.2s ease;
-          margin: 0 auto;
+        /* Real Studio Page Editor Container */
+        .page-editor-pane {
           width: 100%;
         }
-        .canvas-area.dev-desktop { max-width: 100%; }
-        .canvas-area.dev-tablet { max-width: 580px; }
-        .canvas-area.dev-mobile { max-width: 320px; }
-
-        .canvas-pill {
-          display: inline-block;
-          font-size: 11px;
-          padding: 2px 10px;
+        .real-editor-wrapper {
+          background: #11141a;
+          border: 0.5px solid var(--line-strong);
           border-radius: 12px;
-          background: rgba(201, 138, 75, 0.15);
-          color: var(--copper);
-          font-family: ui-monospace, Menlo, monospace;
-        }
-
-        .prop-tab {
-          display: flex;
-          gap: 4px;
-          margin-bottom: 10px;
-        }
-        .prop-tab span {
-          font-size: 11px;
-          padding: 3px 8px;
-          border-radius: 6px;
-          color: var(--faint);
-          cursor: pointer;
-        }
-        .prop-tab span.active {
-          background: var(--line-strong);
-          color: var(--ink);
-        }
-        .prop-field {
-          margin-bottom: 10px;
-        }
-        .prop-field label {
-          display: block;
-          color: var(--faint);
-          font-size: 11px;
-          margin-bottom: 3px;
-        }
-        .prop-field input[type="text"] {
-          width: 100%;
-          background: var(--bg);
-          border: 0.5px solid var(--line-strong);
-          border-radius: 6px;
-          padding: 5px 7px;
-          color: var(--ink);
-          font-size: 12px;
-        }
-        .prop-field .swatch {
-          display: flex;
-          gap: 5px;
-        }
-        .swatch span {
-          width: 20px;
-          height: 20px;
-          border-radius: 4px;
-          display: block;
+          overflow: hidden;
+          min-height: 820px;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         .page-select,
