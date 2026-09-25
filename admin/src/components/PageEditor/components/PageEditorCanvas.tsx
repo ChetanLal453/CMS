@@ -439,6 +439,7 @@ export const CanvasToolbar: React.FC<{
   onDisablePage?: (pageId: string, disabled: boolean) => void
   onRenamePage?: (pageId: string, name: string) => void
   onPreviewDraft?: () => void
+  showPagePills?: boolean
 }> = ({
   pages,
   currentPageId,
@@ -471,6 +472,7 @@ export const CanvasToolbar: React.FC<{
   onDeletePage,
   onDisablePage,
   onRenamePage,
+  showPagePills = false,
 }) => {
   const { currentPage, isCriticalPage, handleDelete, handleToggleDisable } = usePageActions(currentPageId, pages, onDeletePage, onDisablePage)
 
@@ -481,35 +483,39 @@ export const CanvasToolbar: React.FC<{
   return (
     <>
       <div className="canvas-toolbar">
-        <div className="pg-pills">
-          {pages.map((page) => (
-            <button
-              key={page.id}
-              type="button"
-              onClick={() => onPageSelect(page.id == null ? null : String(page.id))}
-              onDoubleClick={() => {
-                if (!onRenamePage || page.id == null) return
-                const rawName = window.prompt('Rename page', page.name || 'Untitled Page')
-                if (rawName === null) return
-                const nextName = rawName.trim()
-                if (!nextName) return
-                onRenamePage(String(page.id), nextName)
-              }}
-              className={`pgpill ${String(currentPageId ?? '') === String(page.id) ? 'active' : ''}`}
-              title={page.disabled ? `${page.name} (Disabled)` : page.name}>
-              <span className="dot" style={{ background: page.disabled ? 'var(--am)' : 'var(--gr)' }} />
-              <span>{page.name}</span>
-            </button>
-          ))}
-          <button type="button" onClick={onAddPage} className="pgpill pgpill-new">
-            + New
-          </button>
-        </div>
+        {showPagePills ? (
+          <>
+            <div className="pg-pills">
+              {pages.map((page) => (
+                <button
+                  key={page.id}
+                  type="button"
+                  onClick={() => onPageSelect(page.id == null ? null : String(page.id))}
+                  onDoubleClick={() => {
+                    if (!onRenamePage || page.id == null) return
+                    const rawName = window.prompt('Rename page', page.name || 'Untitled Page')
+                    if (rawName === null) return
+                    const nextName = rawName.trim()
+                    if (!nextName) return
+                    onRenamePage(String(page.id), nextName)
+                  }}
+                  className={`pgpill ${String(currentPageId ?? '') === String(page.id) ? 'active' : ''}`}
+                  title={page.disabled ? `${page.name} (Disabled)` : page.name}>
+                  <span className="dot" style={{ background: page.disabled ? 'var(--am)' : 'var(--gr)' }} />
+                  <span>{page.name}</span>
+                </button>
+              ))}
+              <button type="button" onClick={onAddPage} className="pgpill pgpill-new">
+                + New
+              </button>
+            </div>
 
-        <div className="autosave">
-          <span className="autosave-dot" />
-          <span>{saveStatusLabel}</span>
-        </div>
+            <div className="autosave">
+              <span className="autosave-dot" />
+              <span>{saveStatusLabel}</span>
+            </div>
+          </>
+        ) : null}
 
         <div className="ed-bar-mid">
           <button type="button" className={`tool ${canUndo ? 'on' : ''}`} title="Undo" onClick={onUndo} disabled={!canUndo}>

@@ -27,6 +27,8 @@ interface PageEditorProps {
   isModal?: boolean
   showSaveButton?: boolean
   pageId?: string
+  siteSlug?: string
+  showPagePills?: boolean
 }
 
 const debugLog = (..._args: unknown[]) => {}
@@ -464,7 +466,15 @@ const ColumnSelectionModal: React.FC<{
   )
 }
 
-const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel, isModal = false, showSaveButton = true, pageId }) => {
+const PageEditor: React.FC<PageEditorProps> = ({
+  initialLayout,
+  onSave,
+  onCancel,
+  isModal = false,
+  showSaveButton = true,
+  pageId,
+  showPagePills = false,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [selectedSectionId, setSelectedSectionId] = useState<string | undefined>()
   const [canvasZoom, setCanvasZoom] = useState(100)
@@ -2246,6 +2256,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
             <CanvasToolbar
               pages={pages.map((p) => ({ id: p.id, name: p.name, active: p.active, disabled: p.disabled }))}
               currentPageId={currentPageId}
+              showPagePills={showPagePills}
               onPageSelect={(pageId) => {
                 void handlePageSelect(pageId)
               }}
