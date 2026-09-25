@@ -500,138 +500,149 @@ export default function WorkspacePage() {
       {/* Toast Notification */}
       {toastMessage ? <div className="toast">{toastMessage}</div> : null}
 
-      {/* TOPBAR */}
-      <div className="topbar">
-        <Link href="/dashboard" className="back">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-          All sites
-        </Link>
+      {/* UNIFIED STUDIO COMMAND BAR (ONE SLEEK HEADER) */}
+      <header className="ws-header">
+        {/* Left: Back to sites + Site Identity */}
+        <div className="ws-left">
+          <Link href="/dashboard" className="ws-back-btn" title="Back to All Sites">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>All sites</span>
+          </Link>
 
-        <div className="site-id">
-          <span className="ic">{site.name.charAt(0).toUpperCase()}</span>
-          <span>{site.name}</span>
+          <div className="ws-vdiv" />
+
+          <div className="ws-site-info">
+            <span className="ws-site-avatar">{site.name.charAt(0).toUpperCase()}</span>
+            <span className="ws-site-name">{site.name}</span>
+            <span className={`ws-badge ${isLive ? 'live' : 'draft'}`}>
+              {isLive ? 'Live' : 'Draft'}
+            </span>
+          </div>
+
+          <a
+            href={site.domain ? `https://${site.domain}` : `/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ws-domain-badge"
+            title="Open live site"
+          >
+            <span>{site.domain || `${site.slug}.curvemetrics.com`}</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </a>
         </div>
 
-        <span className={`badge ${isLive ? 'badge-ok' : 'badge-draft'}`}>
-          {isLive ? 'Published' : 'Draft'}
-        </span>
+        {/* Center: The 6 Pillar Navigation Tabs */}
+        <nav className="ws-nav-tabs">
+          <button
+            className={`ws-tab-btn ${activeTab === 'pages' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('pages'); setOpenSeoRow(null); }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+            </svg>
+            <span>Pages &amp; sitemap</span>
+          </button>
 
-        <a
-          href={site.domain ? `https://${site.domain}` : `/${slug}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="domainlink"
-        >
-          {site.domain || `${site.slug}.curvemetrics.com`}
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 3 }}>
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <line x1="10" y1="14" x2="21" y2="3"></line>
-          </svg>
-        </a>
+          <button
+            className={`ws-tab-btn ${activeTab === 'editor' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('editor'); setOpenSeoRow(null); }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+            </svg>
+            <span>Page editor</span>
+          </button>
 
-        <div className="spacer">
+          <button
+            className={`ws-tab-btn ${activeTab === 'theme' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('theme'); setOpenSeoRow(null); }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+              <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+              <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+              <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
+            </svg>
+            <span>Layout &amp; theme</span>
+          </button>
+
+          <button
+            className={`ws-tab-btn ${activeTab === 'media' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('media'); setOpenSeoRow(null); }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span>Media</span>
+          </button>
+
+          <button
+            className={`ws-tab-btn ${activeTab === 'leads' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('leads'); setOpenSeoRow(null); }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+            </svg>
+            <span>Leads</span>
+            {leads.length > 0 && <span className="ws-badge-count">{leads.length}</span>}
+          </button>
+
+          <button
+            className={`ws-tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('settings'); setOpenSeoRow(null); }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>Settings</span>
+          </button>
+        </nav>
+
+        {/* Right: Preview & Publish Actions */}
+        <div className="ws-actions">
           <a
             href={currentEditorPage ? `/page-editor?site=${site.slug}&page=${currentEditorPage.slug}` : `/page-editor?site=${site.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn small"
+            className="ws-action-btn secondary"
+            title="Preview Live Site"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            Preview
+            <span>Preview</span>
           </a>
 
-          <button className={`btn small ${isLive ? '' : 'primary'}`} onClick={handleTogglePublish}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button
+            className={`ws-action-btn primary ${isLive ? 'is-live' : ''}`}
+            onClick={handleTogglePublish}
+            title={isLive ? 'Unpublish website' : 'Publish website live'}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
               <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
               <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
               <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
             </svg>
-            {isLive ? 'Unpublish' : 'Publish'}
+            <span>{isLive ? 'Unpublish' : 'Publish'}</span>
           </button>
         </div>
-      </div>
-
-      {/* THE 6 PILLARS TABS */}
-      <div className="pillars">
-        <button
-          className={activeTab === 'pages' ? 'active' : ''}
-          onClick={() => { setActiveTab('pages'); setOpenSeoRow(null); }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="7"></rect>
-            <rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
-          Pages and sitemap
-        </button>
-
-        <button
-          className={activeTab === 'editor' ? 'active' : ''}
-          onClick={() => { setActiveTab('editor'); setOpenSeoRow(null); }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-          </svg>
-          Page editor
-        </button>
-
-        <button
-          className={activeTab === 'theme' ? 'active' : ''}
-          onClick={() => { setActiveTab('theme'); setOpenSeoRow(null); }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
-            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
-            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
-            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
-            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
-          </svg>
-          Layout and theme
-        </button>
-
-        <button
-          className={activeTab === 'media' ? 'active' : ''}
-          onClick={() => { setActiveTab('media'); setOpenSeoRow(null); }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-            <polyline points="21 15 16 10 5 21"></polyline>
-          </svg>
-          Media library
-        </button>
-
-        <button
-          className={activeTab === 'leads' ? 'active' : ''}
-          onClick={() => { setActiveTab('leads'); setOpenSeoRow(null); }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
-            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
-          </svg>
-          Leads and forms
-          <span className="count">{leads.length}</span>
-        </button>
-
-        <button
-          className={activeTab === 'settings' ? 'active' : ''}
-          onClick={() => { setActiveTab('settings'); setOpenSeoRow(null); }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-          Site settings
-        </button>
-      </div>
+      </header>
 
       {/* PILLAR 1: PAGES AND SITEMAP */}
       {activeTab === 'pages' && (
@@ -825,36 +836,6 @@ export default function WorkspacePage() {
       {/* PILLAR 2: PAGE EDITOR */}
       {activeTab === 'editor' && (
         <div className="tab-pane page-editor-pane">
-          <div className="row-between" style={{ alignItems: 'flex-start', marginBottom: '1rem' }}>
-            <div>
-              <h1>Page editor &mdash; {currentEditorPage?.title || 'Home'}</h1>
-              <p className="sub">Real canonical block studio with live visual canvas, navigator, inspector, and auto-save.</p>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <select
-                className="page-select"
-                value={selectedEditorPageId || ''}
-                onChange={(e) => setSelectedEditorPageId(Number(e.target.value))}
-              >
-                {pages.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title} ({p.path})
-                  </option>
-                ))}
-              </select>
-              {currentEditorPage && (
-                <Link
-                  href={`/page-editor?site=${site.slug}&page=${currentEditorPage.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn small"
-                >
-                  Open in full window ↗
-                </Link>
-              )}
-            </div>
-          </div>
-
           <div className="real-editor-wrapper">
             <PageEditorErrorBoundary>
               <PageEditor
@@ -1211,12 +1192,13 @@ export default function WorkspacePage() {
       {/* STYLES MATCHING USER PROTOTYPE */}
       <style jsx>{`
         .workspace-app {
-          max-width: ${activeTab === 'editor' ? '100%' : '1140px'};
-          margin: 0 auto;
-          padding: ${activeTab === 'editor' ? '1rem 1rem 3rem' : '1.25rem 1.25rem 4rem'};
+          width: 100%;
+          min-height: 100vh;
+          margin: 0;
+          padding: 0;
           color: var(--ink);
+          background: #0d0f14;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          transition: max-width 0.15s ease;
           --bg: #12140f;
           --raised: #191c15;
           --line: rgba(230, 228, 214, 0.12);
@@ -1252,166 +1234,248 @@ export default function WorkspacePage() {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        .topbar {
+        .ws-header {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 0.7rem 1rem;
-          border: 0.5px solid var(--line);
-          border-radius: 10px;
-          background: var(--raised);
-          margin-bottom: 0.75rem;
-          flex-wrap: wrap;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 0 16px;
+          height: 52px;
+          min-height: 52px;
+          background: rgba(18, 20, 26, 0.98);
+          border-bottom: 1px solid var(--line);
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          backdrop-filter: blur(16px);
         }
 
-        .back {
-          background: none;
-          border: none;
-          color: var(--dim);
-          font-size: 13px;
-          cursor: pointer;
+        .ws-left {
           display: flex;
           align-items: center;
-          gap: 4px;
-          padding: 4px 6px;
+          gap: 10px;
+          flex-shrink: 0;
+        }
+
+        .ws-back-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 12px;
+          color: var(--dim);
+          padding: 5px 9px;
           border-radius: 6px;
           text-decoration: none;
+          transition: all 0.15s ease;
         }
-        .back:hover {
+        .ws-back-btn:hover {
           background: var(--line);
           color: var(--ink);
         }
 
-        .site-id {
+        .ws-vdiv {
+          width: 1px;
+          height: 18px;
+          background: var(--line-strong);
+        }
+
+        .ws-site-info {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 13.5px;
-          font-weight: 500;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--ink);
         }
-        .site-id .ic {
+
+        .ws-site-avatar {
           width: 24px;
           height: 24px;
           border-radius: 6px;
           background: #378ADD;
+          color: #042C53;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 12px;
-          color: #042C53;
+          font-size: 11px;
           font-weight: 700;
         }
 
-        .badge {
-          font-size: 11px;
-          padding: 2px 8px;
-          border-radius: 6px;
+        .ws-badge {
+          font-size: 10.5px;
+          padding: 2px 7px;
+          border-radius: 5px;
           font-family: ui-monospace, Menlo, monospace;
+          font-weight: 500;
         }
-        .badge-ok {
-          background: var(--ok-bg);
-          color: var(--ok-ink);
+        .ws-badge.live {
+          background: rgba(62, 207, 142, 0.15);
+          color: #3ecf8e;
+          border: 1px solid rgba(62, 207, 142, 0.25);
         }
-        .badge-draft {
-          background: var(--warn-bg);
-          color: var(--warn-ink);
+        .ws-badge.draft {
+          background: rgba(201, 138, 75, 0.15);
+          color: #d9a86b;
+          border: 1px solid rgba(201, 138, 75, 0.25);
         }
 
-        .domainlink {
-          font-size: 12px;
-          color: var(--faint);
+        .ws-domain-badge {
           display: inline-flex;
           align-items: center;
+          gap: 4px;
+          font-size: 11.5px;
+          color: var(--faint);
           text-decoration: none;
+          padding: 3px 6px;
+          border-radius: 4px;
+          transition: color 0.15s ease;
         }
-        .domainlink:hover {
+        .ws-domain-badge:hover {
           color: var(--ink);
         }
 
-        .spacer {
-          margin-left: auto;
+        /* Center: 6 Pillars Tabs */
+        .ws-nav-tabs {
           display: flex;
-          gap: 8px;
+          align-items: center;
+          gap: 3px;
+          background: rgba(0, 0, 0, 0.35);
+          padding: 3px 4px;
+          border-radius: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+        .ws-nav-tabs::-webkit-scrollbar {
+          display: none;
         }
 
-        .btn {
-          font-size: 13px;
-          padding: 7px 13px;
-          border-radius: 7px;
-          border: 0.5px solid var(--line-strong);
-          background: transparent;
-          color: var(--ink);
-          cursor: pointer;
+        .ws-tab-btn {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          text-decoration: none;
-          transition: background 0.15s ease;
-        }
-        .btn:hover {
-          background: var(--line);
-        }
-        .btn.primary {
-          background: var(--copper);
-          color: var(--bg);
-          border-color: var(--copper);
-          font-weight: 500;
-        }
-        .btn.primary:hover {
-          background: var(--copper-dim);
-        }
-        .btn.small {
+          padding: 6px 12px;
+          border-radius: 6px;
           font-size: 12px;
-          padding: 5px 10px;
+          font-weight: 500;
+          color: var(--dim);
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          white-space: nowrap;
         }
-        .btn.danger {
-          color: var(--danger-ink);
-          border-color: rgba(217, 112, 112, 0.4);
+        .ws-tab-btn:hover {
+          color: var(--ink);
+          background: rgba(255, 255, 255, 0.05);
         }
-        .btn.danger:hover {
-          background: rgba(217, 112, 112, 0.12);
+        .ws-tab-btn.active {
+          color: #fff;
+          background: rgba(255, 255, 255, 0.12);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
         }
 
-        /* Pillars Tabs Bar */
-        .pillars {
-          display: flex;
-          gap: 4px;
-          flex-wrap: wrap;
-          padding: 0.6rem;
-          border: 0.5px solid var(--line);
+        .ws-badge-count {
+          font-size: 10px;
+          padding: 1px 5px;
           border-radius: 10px;
-          background: var(--raised);
-          margin-bottom: 1.1rem;
+          background: rgba(201, 138, 75, 0.25);
+          color: #c98a4b;
+          font-weight: 600;
         }
-        .pillars button {
-          background: none;
-          border: none;
-          color: var(--dim);
-          font-size: 13px;
-          padding: 7px 12px;
-          border-radius: 7px;
-          cursor: pointer;
+
+        /* Right Actions */
+        .ws-actions {
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 8px;
+          flex-shrink: 0;
+        }
+
+        .ws-action-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          font-weight: 500;
+          padding: 6px 13px;
+          border-radius: 7px;
+          cursor: pointer;
+          text-decoration: none;
           transition: all 0.15s ease;
         }
-        .pillars button:hover {
-          background: var(--line);
+        .ws-action-btn.secondary {
+          background: transparent;
           color: var(--ink);
+          border: 1px solid rgba(255, 255, 255, 0.16);
         }
-        .pillars button.active {
-          background: var(--line-strong);
-          color: var(--ink);
-          font-weight: 500;
+        .ws-action-btn.secondary:hover {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.28);
         }
-        .pillars .count {
-          background: rgba(201, 138, 75, 0.22);
-          color: var(--copper);
-          font-size: 10px;
-          padding: 1px 6px;
-          border-radius: 8px;
-          margin-left: 2px;
+        .ws-action-btn.primary {
+          background: var(--copper);
+          color: #12140f;
+          border: 1px solid var(--copper);
+          font-weight: 600;
+        }
+        .ws-action-btn.primary:hover {
+          background: var(--copper-dim);
+          border-color: var(--copper-dim);
+        }
+        .ws-action-btn.primary.is-live {
+          background: rgba(62, 207, 142, 0.15);
+          color: #3ecf8e;
+          border: 1px solid rgba(62, 207, 142, 0.35);
+        }
+        .ws-action-btn.primary.is-live:hover {
+          background: rgba(62, 207, 142, 0.25);
+        }
+
+        /* Workspace Tab Panes */
+        .tab-pane:not(.page-editor-pane) {
+          max-width: 1140px;
+          margin: 0 auto;
+          padding: 1.75rem 1.5rem 5rem;
+          width: 100%;
+        }
+
+        /* Real Page Editor Studio Container */
+        .page-editor-pane {
+          width: 100%;
+          height: calc(100vh - 52px);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .real-editor-wrapper {
+          flex: 1 1 auto;
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: #0d0f14;
+        }
+
+        .real-editor-wrapper :global(.cm-page-editor.editor-shell) {
+          height: 100% !important;
+          flex: 1 1 auto !important;
+          min-height: 0 !important;
+        }
+
+        .real-editor-wrapper :global(.canvas-col) {
+          height: 100% !important;
+          min-height: 0 !important;
+          flex: 1 1 auto !important;
+        }
+
+        .real-editor-wrapper :global(.canvas-scroll) {
+          height: calc(100vh - 100px) !important;
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
         }
 
         h1 {

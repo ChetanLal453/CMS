@@ -50,6 +50,7 @@ const TabIcon = ({ type }: { type: string }) => {
 const TopNavigationBar = () => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const isWorkspace = pathname?.startsWith('/workspace')
   const isPageEditor = pathname?.startsWith('/page-editor')
   const siteSlug = searchParams?.get('site') || 'Apex dental clinic'
 
@@ -65,6 +66,10 @@ const TopNavigationBar = () => {
     if (typeof window === 'undefined') return
     window.dispatchEvent(new CustomEvent('cm-admin-action', { detail: { action } }))
   }, [])
+
+  if (isWorkspace) {
+    return null
+  }
 
   return (
     <div className="gnav">

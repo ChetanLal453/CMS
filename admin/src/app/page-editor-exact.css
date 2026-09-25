@@ -49,11 +49,25 @@ body {
   box-shadow: none !important;
 }
 
-.cm-admin-shell .body,
+.cm-admin-shell .body {
+  min-height: 0 !important;
+  height: calc(100vh - 48px);
+  overflow: hidden !important;
+}
+
 .cm-admin-shell .main-panel,
 .cm-admin-shell .main-panel.active {
   min-height: 0 !important;
-  overflow: hidden !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Full height for workspace and studio without global nav */
+.cm-admin-shell:not(:has(.gnav)) .body,
+.cm-admin-shell:not(:has(.gnav)) .main-panel,
+.cm-admin-shell:not(:has(.gnav)) .main-panel.active {
+  height: 100vh !important;
 }
 
 .cm-page-editor.editor-shell {
