@@ -714,14 +714,17 @@ export default function WorkspacePage() {
           <p className="sub">Every page on {site.domain || site.name}, with per-page SEO and live database structure.</p>
 
           <div className="card">
-            <div className="row-between" style={{ marginBottom: '8px' }}>
-              <span style={{ fontSize: '12px', color: 'var(--faint)' }}>{pages.length} pages in MySQL</span>
-              <button className="btn small" onClick={() => setIsNewPageModalOpen(true)}>
+            <div className="card-top-bar">
+              <div className="card-count-badge">
+                <span className="count-dot" />
+                <span>{pages.length} pages in MySQL</span>
+              </div>
+              <button className="btn small primary" onClick={() => setIsNewPageModalOpen(true)}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                Add page
+                <span>Add page</span>
               </button>
             </div>
 
@@ -738,14 +741,15 @@ export default function WorkspacePage() {
                 return (
                   <div key={p.id} className={`prow ${isSub ? 'sub' : ''} ${isOpen ? 'open' : ''}`}>
                     <svg
-                      width="14"
-                      height="14"
+                      width="15"
+                      height="15"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="var(--faint)"
+                      stroke="#818cf8"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                      className="prow-icon"
                     >
                       {isSub ? (
                         <polyline points="9 10 4 15 9 20"></polyline>
@@ -760,7 +764,8 @@ export default function WorkspacePage() {
                     <span className="prow-title">{p.title}</span>
                     <span className="path">{p.path}</span>
                     <span className={`status-pill ${p.status === 'published' ? 'published' : 'draft'}`}>
-                      {p.status === 'published' ? 'Published' : 'Draft'}
+                      <span className="status-dot" />
+                      <span>{p.status === 'published' ? 'Published' : 'Draft'}</span>
                     </span>
 
                     <div className="menu">
@@ -769,9 +774,13 @@ export default function WorkspacePage() {
                           setSelectedEditorPageId(p.id)
                           setActiveTab('editor')
                         }}
-                        className="btn small"
+                        className="btn small open-editor-btn"
+                        title="Edit page in visual canvas"
                       >
-                        Open in editor
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                        </svg>
+                        <span>Open in editor</span>
                       </button>
                       <button
                         className="dots"
@@ -1261,22 +1270,23 @@ export default function WorkspacePage() {
           margin: 0;
           padding: 0;
           color: var(--ink);
-          background: #0d0f14;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          --bg: #12140f;
-          --raised: #191c15;
-          --line: rgba(230, 228, 214, 0.12);
-          --line-strong: rgba(230, 228, 214, 0.22);
-          --ink: #e9e7d8;
-          --dim: #a9a894;
-          --faint: #74735f;
-          --copper: #c98a4b;
-          --copper-dim: #8a6337;
-          --ok-bg: rgba(139, 178, 90, 0.14);
-          --ok-ink: #a6c47d;
-          --warn-bg: rgba(201, 138, 75, 0.14);
-          --warn-ink: #d9a86b;
-          --danger-ink: #d97070;
+          background: #090b10;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+          --bg: #090b10;
+          --raised: #131622;
+          --raised-hover: #191d2c;
+          --line: rgba(255, 255, 255, 0.08);
+          --line-strong: rgba(255, 255, 255, 0.16);
+          --ink: #f1f3f9;
+          --dim: #9ea4b8;
+          --faint: #646a82;
+          --copper: #6366f1;
+          --copper-dim: #5254e0;
+          --ok-bg: rgba(16, 185, 129, 0.12);
+          --ok-ink: #10b981;
+          --warn-bg: rgba(245, 158, 11, 0.12);
+          --warn-ink: #f59e0b;
+          --danger-ink: #f43f5e;
         }
 
         .toast {
@@ -1598,22 +1608,51 @@ export default function WorkspacePage() {
         }
 
         h1 {
-          font-size: 17px;
-          font-weight: 500;
-          margin: 0 0 3px;
-          color: var(--ink);
+          font-size: 20px;
+          font-weight: 600;
+          letter-spacing: -0.015em;
+          margin: 0 0 4px;
+          color: #f1f3f9;
         }
         .sub {
-          font-size: 12px;
-          color: var(--faint);
-          margin: 0 0 1.1rem;
+          font-size: 13px;
+          color: var(--dim);
+          margin: 0 0 1.25rem;
+          line-height: 1.5;
         }
 
         .card {
           background: var(--raised);
-          border: 0.5px solid var(--line);
-          border-radius: 12px;
-          padding: 1rem;
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          padding: 1.25rem;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+        }
+        .card-top-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-bottom: 12px;
+          margin-bottom: 6px;
+          border-bottom: 1px solid var(--line);
+        }
+        .card-count-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--dim);
+          background: rgba(255, 255, 255, 0.04);
+          padding: 3px 9px;
+          border-radius: 6px;
+          border: 1px solid var(--line);
+        }
+        .count-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #6366f1;
         }
         .row-between {
           display: flex;
@@ -1621,87 +1660,182 @@ export default function WorkspacePage() {
           justify-content: space-between;
         }
 
+        /* Generic Buttons */
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 7px 14px;
+          border-radius: 7px;
+          font-size: 12.5px;
+          font-weight: 500;
+          cursor: pointer;
+          border: 1px solid var(--line-strong);
+          background: rgba(255, 255, 255, 0.05);
+          color: #e2e5f0;
+          transition: all 0.15s ease;
+          font-family: inherit;
+          white-space: nowrap;
+        }
+        .btn:hover {
+          background: rgba(255, 255, 255, 0.09);
+          border-color: rgba(255, 255, 255, 0.24);
+          color: #ffffff;
+        }
+        .btn.small {
+          padding: 5px 11px;
+          font-size: 12px;
+          border-radius: 6px;
+        }
+        .btn.primary {
+          background: #6366f1;
+          border-color: #7c6dfa;
+          color: #ffffff;
+          font-weight: 600;
+          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+        }
+        .btn.primary:hover {
+          background: #5254e0;
+          border-color: #6366f1;
+        }
+        .btn.danger {
+          background: rgba(244, 63, 94, 0.12);
+          border-color: rgba(244, 63, 94, 0.28);
+          color: #f43f5e;
+        }
+        .btn.danger:hover {
+          background: rgba(244, 63, 94, 0.22);
+          border-color: rgba(244, 63, 94, 0.4);
+        }
+        .btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
         /* Pages Tree */
         .pagetree {
           display: flex;
           flex-direction: column;
+          gap: 2px;
         }
         .prow {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 10px 6px;
-          border-bottom: 0.5px solid var(--line);
+          gap: 12px;
+          padding: 11px 12px;
+          border-radius: 8px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.04);
           font-size: 13.5px;
           position: relative;
+          transition: background 0.15s ease;
         }
         .prow:last-child {
           border-bottom: none;
         }
+        .prow:hover {
+          background: rgba(255, 255, 255, 0.035);
+        }
         .prow.sub {
-          padding-left: 34px;
-          font-size: 13px;
-          color: var(--dim);
+          padding-left: 36px;
+        }
+        .prow-icon {
+          color: #818cf8;
+          flex-shrink: 0;
         }
         .prow-title {
-          font-weight: 500;
+          font-weight: 600;
+          color: #f1f3f9;
+          font-size: 13.5px;
         }
         .prow .path {
           color: var(--faint);
-          font-size: 11px;
-          font-family: ui-monospace, Menlo, monospace;
+          font-size: 11.5px;
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+          background: rgba(255, 255, 255, 0.04);
+          padding: 2px 7px;
+          border-radius: 4px;
         }
         .prow .menu {
           margin-left: auto;
           display: flex;
-          gap: 6px;
+          gap: 8px;
           align-items: center;
+        }
+        .open-editor-btn {
+          background: rgba(99, 102, 241, 0.08) !important;
+          border-color: rgba(99, 102, 241, 0.22) !important;
+          color: #a5b4fc !important;
+          font-weight: 500 !important;
+        }
+        .open-editor-btn:hover {
+          background: rgba(99, 102, 241, 0.18) !important;
+          border-color: rgba(99, 102, 241, 0.38) !important;
+          color: #ffffff !important;
         }
         .prow .dots {
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: var(--faint);
-          padding: 4px 6px;
+          width: 28px;
+          height: 28px;
           border-radius: 6px;
+          border: 1px solid transparent;
+          background: transparent;
+          color: var(--dim);
           display: flex;
           align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s ease;
         }
         .prow .dots:hover {
-          background: var(--line);
-          color: var(--ink);
+          background: rgba(255, 255, 255, 0.07);
+          border-color: var(--line);
+          color: #ffffff;
         }
 
         .status-pill {
-          font-size: 10.5px;
-          padding: 1px 7px;
-          border-radius: 6px;
-          font-family: ui-monospace, Menlo, monospace;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 11px;
+          font-weight: 500;
+          padding: 2.5px 9px;
+          border-radius: 999px;
+          letter-spacing: 0.01em;
+          text-transform: capitalize;
+        }
+        .status-pill .status-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: currentColor;
+          box-shadow: 0 0 5px currentColor;
         }
         .status-pill.published {
-          background: var(--ok-bg);
-          color: var(--ok-ink);
+          background: rgba(16, 185, 129, 0.12);
+          border: 1px solid rgba(16, 185, 129, 0.28);
+          color: #10b981;
         }
         .status-pill.draft {
-          background: var(--warn-bg);
-          color: var(--warn-ink);
+          background: rgba(245, 158, 11, 0.12);
+          border: 1px solid rgba(245, 158, 11, 0.28);
+          color: #f59e0b;
         }
         .status-pill.new {
-          background: var(--ok-bg);
-          color: var(--ok-ink);
-          border: none;
+          background: rgba(16, 185, 129, 0.12);
+          border: 1px solid rgba(16, 185, 129, 0.28);
+          color: #10b981;
           cursor: pointer;
         }
         .status-pill.read {
-          background: rgba(120, 120, 120, 0.2);
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           color: var(--dim);
-          border: none;
           cursor: pointer;
         }
         .status-pill.replied {
-          background: rgba(55, 138, 221, 0.2);
-          color: #378ADD;
-          border: none;
+          background: rgba(99, 102, 241, 0.12);
+          border: 1px solid rgba(99, 102, 241, 0.28);
+          color: #818cf8;
           cursor: pointer;
         }
 
@@ -1709,34 +1843,40 @@ export default function WorkspacePage() {
         .seo-pop {
           position: absolute;
           right: 0;
-          top: 42px;
-          background: var(--bg);
-          border: 0.5px solid var(--line-strong);
-          border-radius: 10px;
-          padding: 12px;
-          width: 280px;
+          top: 46px;
+          background: #181b28;
+          border: 1px solid var(--line-strong);
+          border-radius: 12px;
+          padding: 14px;
+          width: 320px;
           z-index: 50;
           font-size: 12px;
           color: var(--dim);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
         }
         .seo-pop .field {
-          margin-bottom: 8px;
+          margin-bottom: 10px;
         }
         .seo-pop label {
           display: block;
           font-size: 11px;
-          color: var(--faint);
-          margin-bottom: 3px;
+          font-weight: 500;
+          color: var(--dim);
+          margin-bottom: 4px;
         }
         .seo-pop input {
           width: 100%;
-          background: var(--raised);
-          border: 0.5px solid var(--line-strong);
+          background: #0f111a;
+          border: 1px solid var(--line-strong);
           border-radius: 6px;
-          padding: 6px 8px;
+          padding: 7px 10px;
           color: var(--ink);
-          font-size: 12px;
+          font-size: 12.5px;
+          outline: none;
+          transition: border-color 0.15s;
+        }
+        .seo-pop input:focus {
+          border-color: #6366f1;
         }
 
         /* Real Studio Page Editor Container */
@@ -1905,7 +2045,7 @@ export default function WorkspacePage() {
           transition: background 0.15s ease;
         }
         .toggle.on {
-          background: var(--copper);
+          background: #6366f1;
         }
         .toggle .dot {
           width: 15px;
@@ -1927,8 +2067,8 @@ export default function WorkspacePage() {
           justify-content: space-between;
           align-items: center;
           font-size: 12.5px;
-          padding: 7px 0;
-          border-bottom: 0.5px solid var(--line);
+          padding: 8px 0;
+          border-bottom: 1px solid var(--line);
         }
         .versionrow:last-child {
           border-bottom: none;
@@ -1947,19 +2087,21 @@ export default function WorkspacePage() {
           align-items: center;
           justify-content: center;
           z-index: 1000;
+          backdrop-filter: blur(4px);
         }
         .modal-box {
-          background: var(--raised);
-          border: 0.5px solid var(--line-strong);
-          border-radius: 12px;
+          background: #141724;
+          border: 1px solid var(--line-strong);
+          border-radius: 14px;
           padding: 1.5rem;
-          width: 380px;
+          width: 400px;
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
         }
         .modal-box h3 {
           font-size: 16px;
+          font-weight: 600;
           margin: 0 0 1rem;
-          color: var(--ink);
+          color: #f1f3f9;
         }
         .modal-box .field {
           margin-bottom: 12px;
@@ -1968,16 +2110,21 @@ export default function WorkspacePage() {
           display: block;
           font-size: 12px;
           color: var(--dim);
-          margin-bottom: 4px;
+          margin-bottom: 5px;
         }
         .modal-box input {
           width: 100%;
-          background: var(--bg);
-          border: 0.5px solid var(--line-strong);
+          background: #0a0c12;
+          border: 1px solid var(--line-strong);
           border-radius: 7px;
-          padding: 7px 10px;
-          color: var(--ink);
+          padding: 8px 12px;
+          color: #f1f3f9;
           font-size: 13px;
+          outline: none;
+          transition: border-color 0.15s ease;
+        }
+        .modal-box input:focus {
+          border-color: #6366f1;
         }
         .modal-buttons {
           display: flex;
