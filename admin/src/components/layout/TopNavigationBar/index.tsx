@@ -67,7 +67,7 @@ const TopNavigationBar = () => {
     window.dispatchEvent(new CustomEvent('cm-admin-action', { detail: { action } }))
   }, [])
 
-  if (isWorkspace) {
+  if (isWorkspace || pathname?.startsWith('/content')) {
     return null
   }
 
