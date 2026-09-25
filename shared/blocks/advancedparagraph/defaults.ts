@@ -1,10 +1,13 @@
 import type { AdvancedParagraph } from './types'
 
 export const defaultAdvancedParagraphProps: AdvancedParagraph = {
+  version: 1,
   type: 'advancedparagraph',
   schemaVersion: 1,
   content: {
     text: '<p>Paragraph text...</p>',
+    enableRichText: true,
+    allowedFormats: ['bold', 'italic', 'underline', 'color'],
   },
   layout: {
     alignment: 'left',
@@ -38,6 +41,16 @@ export const defaultAdvancedParagraphProps: AdvancedParagraph = {
     textDecoration: 'none',
     fontStyle: 'normal',
     transition: 'all 0.2s ease',
+  },
+  responsive: {
+    fontSizeMobile: '',
+    fontSizeTablet: '',
+    textAlignMobile: 'left',
+    textAlignTablet: 'left',
+    lineHeightMobile: '',
+    desktop: {},
+    tablet: {},
+    mobile: {},
   },
   interaction: {
     hover: {

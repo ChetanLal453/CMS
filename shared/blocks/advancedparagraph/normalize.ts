@@ -6,12 +6,30 @@ import type {
   AdvancedParagraphInput,
   AdvancedParagraphTextDecoration,
   AdvancedParagraphTextTransform,
+  CanonicalAdvancedParagraphContent,
+  CanonicalAdvancedParagraphResponsive,
+  CanonicalAdvancedParagraphStyle,
   LegacyAdvancedParagraphProps,
 } from './types'
 import { deepMerge, isPlainObject, asString, asBoolean, asNumber, asStringArray } from '../../utils/merge'
 import type { DeepPartial } from '../../utils/merge'
 
+function asStringOrUndefined(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined
+  const str = String(value).trim()
+  return str.length > 0 ? str : undefined
+}
 
+function asBooleanOrUndefined(value: unknown): boolean | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  return Boolean(value)
+}
+
+function asNumberOrUndefined(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  const num = Number(value)
+  return Number.isNaN(num) ? undefined : num
+}
 
 function asAlignment(value: unknown, fallback: AdvancedParagraphAlignment): AdvancedParagraphAlignment {
   const normalized = String(value ?? '').trim().toLowerCase()
@@ -281,6 +299,122 @@ export function normalizeAdvancedParagraph(input: AdvancedParagraphInput = {}): 
   normalized.aria.enableRichText = asBoolean(normalized.aria.enableRichText, defaultAdvancedParagraphProps.aria.enableRichText)
   normalized.aria.allowedFormats = asStringArray(normalized.aria.allowedFormats, defaultAdvancedParagraphProps.aria.allowedFormats)
   normalized.aria.componentId = asString(normalized.aria.componentId, defaultAdvancedParagraphProps.aria.componentId)
+
+  const contentInput = (input as any).content && typeof (input as any).content === 'object' ? (input as any).content : {}
+  const layoutInput = (input as any).layout && typeof (input as any).layout === 'object' ? (input as any).layout : {}
+  const styleInput = (input as any).style && typeof (input as any).style === 'object' ? (input as any).style : {}
+  const responsiveInput = (input as any).responsive && typeof (input as any).responsive === 'object' ? (input as any).responsive : {}
+  const interactionInput = (input as any).interaction && typeof (input as any).interaction === 'object' ? (input as any).interaction : {}
+  const hoverInput = interactionInput.hover && typeof interactionInput.hover === 'object' ? interactionInput.hover : {}
+  const ariaInput = (input as any).aria && typeof (input as any).aria === 'object' ? (input as any).aria : {}
+
+  const rawText = contentInput.text ?? (input as any).text ?? (input as any).content ?? (input as any).html
+  const rawEnableRichText = contentInput.enableRichText ?? ariaInput.enableRichText ?? (input as any).enableRichText
+  const rawAllowedFormats = contentInput.allowedFormats ?? ariaInput.allowedFormats ?? (input as any).allowedFormats
+
+  const content: CanonicalAdvancedParagraphContent = {}
+  if (asStringOrUndefined(rawText) !== undefined) content.text = asStringOrUndefined(rawText)
+  if (asBooleanOrUndefined(rawEnableRichText) !== undefined) content.enableRichText = asBooleanOrUndefined(rawEnableRichText)
+  if (Array.isArray(rawAllowedFormats)) content.allowedFormats = asStringArray(rawAllowedFormats, defaultAdvancedParagraphProps.aria.allowedFormats)
+
+  const rawColor = styleInput.color ?? (input as any).color ?? (input as any).textColor ?? (input as any).fontColor
+  const rawFontSize = styleInput.fontSize ?? (input as any).fontSize
+  const rawFontWeight = styleInput.fontWeight ?? (input as any).fontWeight
+  const rawFontFamily = styleInput.fontFamily ?? (input as any).fontFamily
+  const rawLineHeight = styleInput.lineHeight ?? (input as any).lineHeight
+  const rawLetterSpacing = styleInput.letterSpacing ?? (input as any).letterSpacing
+  const rawMaxWidth = styleInput.maxWidth ?? (input as any).maxWidth
+  const rawBackgroundColor = styleInput.backgroundColor ?? (input as any).backgroundColor
+  const rawMargin = styleInput.margin ?? (input as any).margin
+  const rawPadding = styleInput.padding ?? (input as any).padding
+  const rawWidth = styleInput.width ?? (input as any).width
+  const rawMinHeight = styleInput.minHeight ?? (input as any).minHeight
+  const rawDisplay = styleInput.display ?? (input as any).display
+  const rawBorder = styleInput.border ?? (input as any).border
+  const rawBorderRadius = styleInput.borderRadius ?? (input as any).borderRadius
+  const rawBorderColor = styleInput.borderColor ?? (input as any).borderColor
+  const rawTextShadow = styleInput.textShadow ?? (input as any).textShadow
+  const rawBoxShadow = styleInput.boxShadow ?? (input as any).boxShadow
+  const rawOpacity = styleInput.opacity ?? (input as any).opacity
+  const rawTextTransform = styleInput.textTransform ?? (input as any).textTransform
+  const rawTextDecoration = styleInput.textDecoration ?? (input as any).textDecoration
+  const rawFontStyle = styleInput.fontStyle ?? (input as any).fontStyle
+  const rawTransition = styleInput.transition ?? (input as any).transition
+  const rawAlignment = styleInput.alignment ?? layoutInput.alignment ?? (input as any).alignment ?? (input as any).textAlign ?? (input as any).align
+  const rawHoverEffect = styleInput.hoverEffect ?? hoverInput.effect ?? (input as any).hoverEffect
+  const rawHoverColor = styleInput.hoverColor ?? hoverInput.color ?? (input as any).hoverTextColor ?? (input as any).hoverColor
+  const rawHoverBackgroundColor = styleInput.hoverBackgroundColor ?? hoverInput.backgroundColor ?? (input as any).hoverBackgroundColor
+  const rawClassName = styleInput.className ?? ariaInput.className ?? (input as any).className
+  const rawCustomId = styleInput.customId ?? ariaInput.customId ?? (input as any).customId
+  const rawSelectable = styleInput.selectable ?? ariaInput.selectable ?? (input as any).selectable
+  const rawEditable = styleInput.editable ?? ariaInput.editable ?? (input as any).editable
+  const rawTruncate = styleInput.truncate ?? ariaInput.truncate ?? (input as any).truncate
+  const rawMaxLines = styleInput.maxLines ?? ariaInput.maxLines ?? (input as any).maxLines
+  const rawVisible = styleInput.visible ?? ariaInput.visible ?? (input as any).visible
+  const rawAriaLabel = styleInput.ariaLabel ?? ariaInput.ariaLabel ?? (input as any).ariaLabel
+  const rawRole = styleInput.role ?? ariaInput.role ?? (input as any).role
+  const rawTabIndex = styleInput.tabIndex ?? ariaInput.tabIndex ?? (input as any).tabIndex
+
+  const style: CanonicalAdvancedParagraphStyle = {}
+  if (asStringOrUndefined(rawColor) !== undefined) style.color = asStringOrUndefined(rawColor)
+  if (asStringOrUndefined(rawFontSize) !== undefined) style.fontSize = asStringOrUndefined(rawFontSize)
+  if (asStringOrUndefined(rawFontWeight) !== undefined) style.fontWeight = asStringOrUndefined(rawFontWeight)
+  if (asStringOrUndefined(rawFontFamily) !== undefined) style.fontFamily = asStringOrUndefined(rawFontFamily)
+  if (asStringOrUndefined(rawLineHeight) !== undefined) style.lineHeight = asStringOrUndefined(rawLineHeight)
+  if (asStringOrUndefined(rawLetterSpacing) !== undefined) style.letterSpacing = asStringOrUndefined(rawLetterSpacing)
+  if (asStringOrUndefined(rawMaxWidth) !== undefined) style.maxWidth = asStringOrUndefined(rawMaxWidth)
+  if (asStringOrUndefined(rawBackgroundColor) !== undefined) style.backgroundColor = asStringOrUndefined(rawBackgroundColor)
+  if (asStringOrUndefined(rawMargin) !== undefined) style.margin = asStringOrUndefined(rawMargin)
+  if (asStringOrUndefined(rawPadding) !== undefined) style.padding = asStringOrUndefined(rawPadding)
+  if (asStringOrUndefined(rawWidth) !== undefined) style.width = asStringOrUndefined(rawWidth)
+  if (asStringOrUndefined(rawMinHeight) !== undefined) style.minHeight = asStringOrUndefined(rawMinHeight)
+  if (asStringOrUndefined(rawDisplay) !== undefined) style.display = asStringOrUndefined(rawDisplay) as any
+  if (asStringOrUndefined(rawBorder) !== undefined) style.border = asStringOrUndefined(rawBorder)
+  if (asStringOrUndefined(rawBorderRadius) !== undefined) style.borderRadius = asStringOrUndefined(rawBorderRadius)
+  if (asStringOrUndefined(rawBorderColor) !== undefined) style.borderColor = asStringOrUndefined(rawBorderColor)
+  if (asStringOrUndefined(rawTextShadow) !== undefined) style.textShadow = asStringOrUndefined(rawTextShadow)
+  if (asStringOrUndefined(rawBoxShadow) !== undefined) style.boxShadow = asStringOrUndefined(rawBoxShadow)
+  if (asNumberOrUndefined(rawOpacity) !== undefined) style.opacity = asNumberOrUndefined(rawOpacity)
+  if (asStringOrUndefined(rawTextTransform) !== undefined) style.textTransform = asTextTransform(rawTextTransform, 'none')
+  if (asStringOrUndefined(rawTextDecoration) !== undefined) style.textDecoration = asTextDecoration(rawTextDecoration, 'none')
+  if (asStringOrUndefined(rawFontStyle) !== undefined) style.fontStyle = asFontStyle(rawFontStyle, 'normal')
+  if (asStringOrUndefined(rawTransition) !== undefined) style.transition = asStringOrUndefined(rawTransition)
+  if (asStringOrUndefined(rawAlignment) !== undefined) style.alignment = asAlignment(rawAlignment, 'left')
+  if (asStringOrUndefined(rawHoverEffect) !== undefined) style.hoverEffect = asStringOrUndefined(rawHoverEffect) as any
+  if (asStringOrUndefined(rawHoverColor) !== undefined) style.hoverColor = asStringOrUndefined(rawHoverColor)
+  if (asStringOrUndefined(rawHoverBackgroundColor) !== undefined) style.hoverBackgroundColor = asStringOrUndefined(rawHoverBackgroundColor)
+  if (asStringOrUndefined(rawClassName) !== undefined) style.className = asStringOrUndefined(rawClassName)
+  if (asStringOrUndefined(rawCustomId) !== undefined) style.customId = asStringOrUndefined(rawCustomId)
+  if (asBooleanOrUndefined(rawSelectable) !== undefined) style.selectable = asBooleanOrUndefined(rawSelectable)
+  if (asBooleanOrUndefined(rawEditable) !== undefined) style.editable = asBooleanOrUndefined(rawEditable)
+  if (asBooleanOrUndefined(rawTruncate) !== undefined) style.truncate = asBooleanOrUndefined(rawTruncate)
+  if (asNumberOrUndefined(rawMaxLines) !== undefined) style.maxLines = asNumberOrUndefined(rawMaxLines)
+  if (asBooleanOrUndefined(rawVisible) !== undefined) style.visible = asBooleanOrUndefined(rawVisible)
+  if (asStringOrUndefined(rawAriaLabel) !== undefined) style.ariaLabel = asStringOrUndefined(rawAriaLabel)
+  if (asStringOrUndefined(rawRole) !== undefined) style.role = asStringOrUndefined(rawRole)
+  if (asNumberOrUndefined(rawTabIndex) !== undefined) style.tabIndex = asNumberOrUndefined(rawTabIndex)
+
+  const rawFontSizeMobile = responsiveInput.fontSizeMobile ?? styleInput.fontSizeMobile ?? (input as any).fontSizeMobile
+  const rawFontSizeTablet = responsiveInput.fontSizeTablet ?? styleInput.fontSizeTablet ?? (input as any).fontSizeTablet
+  const rawTextAlignMobile = responsiveInput.textAlignMobile ?? styleInput.textAlignMobile ?? (input as any).textAlignMobile
+  const rawTextAlignTablet = responsiveInput.textAlignTablet ?? styleInput.textAlignTablet ?? (input as any).textAlignTablet
+  const rawLineHeightMobile = responsiveInput.lineHeightMobile ?? styleInput.lineHeightMobile ?? (input as any).lineHeightMobile
+
+  const responsive: CanonicalAdvancedParagraphResponsive = {
+    ...(asStringOrUndefined(rawFontSizeMobile) !== undefined ? { fontSizeMobile: asStringOrUndefined(rawFontSizeMobile) } : {}),
+    ...(asStringOrUndefined(rawFontSizeTablet) !== undefined ? { fontSizeTablet: asStringOrUndefined(rawFontSizeTablet) } : {}),
+    ...(asStringOrUndefined(rawTextAlignMobile) !== undefined ? { textAlignMobile: asAlignment(rawTextAlignMobile, 'left') } : {}),
+    ...(asStringOrUndefined(rawTextAlignTablet) !== undefined ? { textAlignTablet: asAlignment(rawTextAlignTablet, 'left') } : {}),
+    ...(asStringOrUndefined(rawLineHeightMobile) !== undefined ? { lineHeightMobile: asStringOrUndefined(rawLineHeightMobile) } : {}),
+    desktop: responsiveInput.desktop && typeof responsiveInput.desktop === 'object' ? responsiveInput.desktop : {},
+    tablet: responsiveInput.tablet && typeof responsiveInput.tablet === 'object' ? responsiveInput.tablet : {},
+    mobile: responsiveInput.mobile && typeof responsiveInput.mobile === 'object' ? responsiveInput.mobile : {},
+  }
+
+  normalized.version = 1
+  normalized.content = content as any
+  normalized.style = style as any
+  normalized.responsive = responsive
 
   return normalized
 }

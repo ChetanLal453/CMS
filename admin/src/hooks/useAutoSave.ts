@@ -111,7 +111,7 @@ export function useAutoSave<T>({
       clearTimeout(debounceTimeoutRef.current)
     }
 
-    if (serializedData !== previousDataRef.current) {
+    if (debounceMs && debounceMs > 0 && serializedData !== previousDataRef.current) {
       debounceTimeoutRef.current = setTimeout(() => {
         void saveNow()
       }, debounceMs)

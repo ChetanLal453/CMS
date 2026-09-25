@@ -1,6 +1,7 @@
 import type { FlexboxProps } from './types'
 
 export const defaultFlexboxProps: FlexboxProps = {
+  version: 1,
   direction: 'row',
   justifyContent: 'flex-start',
   alignItems: 'stretch',
@@ -12,5 +13,15 @@ export const defaultFlexboxProps: FlexboxProps = {
   padding: '16px',
   minHeight: 'auto',
   backgroundColor: '#ffffff',
+  stackOnMobile: true,
+  directionMobile: 'column',
+  mobileGap: '12px',
+  borderRadius: '0px',
+  border: 'none',
+  shadow: 'none',
+  width: '100%',
+  maxWidth: 'none',
+  preset: 'custom',
+  className: '',
   children: [],
 }

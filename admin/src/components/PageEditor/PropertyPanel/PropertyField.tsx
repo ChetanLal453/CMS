@@ -486,15 +486,20 @@ const AccordionItemsField: React.FC<{
 export const PropertyField: React.FC<PropertyFieldProps> = function PropertyField({ propName, config, value, onChange }) {
   const [localValue, setLocalValue] = useState(value ?? '')
   const timeoutRef = useRef<NodeJS.Timeout>()
+  const isFocusedRef = useRef(false)
+  const lastEmittedValueRef = useRef<any>(value)
 
   const getColorInputValue = (input: unknown) => {
     const normalized = String(input ?? '').trim()
     return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized : '#000000'
   }
 
-  // Update local value when prop changes from parent
+  // Update local value when prop changes from parent, but NEVER overwrite when user is actively focused/typing
   useEffect(() => {
-    setLocalValue(value ?? '')
+    if (!isFocusedRef.current) {
+      setLocalValue(value ?? '')
+      lastEmittedValueRef.current = value
+    }
   }, [value])
 
   // Cleanup timeout on unmount
@@ -506,6 +511,22 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
     }
   }, [])
 
+  const handleFocus = useCallback(() => {
+    isFocusedRef.current = true
+  }, [])
+
+  const handleBlur = useCallback(() => {
+    isFocusedRef.current = false
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = undefined
+    }
+    if (localValue !== lastEmittedValueRef.current) {
+      lastEmittedValueRef.current = localValue
+      onChange(localValue)
+    }
+  }, [localValue, onChange])
+
   const handleTextChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const newValue = e.target.value
@@ -516,8 +537,9 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
       }
 
       timeoutRef.current = setTimeout(() => {
+        lastEmittedValueRef.current = newValue
         onChange(newValue)
-      }, 300)
+      }, 400)
     },
     [onChange],
   )
@@ -535,7 +557,15 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
       return (
         <div className="rp-field frow">
           <label className="flbl">{config.label}</label>
-          <input type="text" value={localValue} onChange={handleTextChange} className="rp-input fi" placeholder={config.placeholder} />
+          <input
+            type="text"
+            value={localValue}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onChange={handleTextChange}
+            className="rp-input fi"
+            placeholder={config.placeholder}
+          />
         </div>
       )
 
@@ -545,6 +575,8 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
           <label className="flbl">{config.label}</label>
           <textarea
             value={localValue}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             onChange={handleTextChange}
             rows={4}
             className="rp-input ta"
@@ -559,6 +591,8 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
           <label className="flbl">{config.label}</label>
           <textarea
             value={localValue}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             onChange={handleTextChange}
             rows={6}
             className="rp-input ta"
@@ -625,15 +659,38 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
           <label className="flbl">{config.label}</label>
           <input
             type="number"
-            value={value ?? ''}
+            value={localValue}
+            onFocus={handleFocus}
+            onBlur={() => {
+              isFocusedRef.current = false
+              if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current)
+                timeoutRef.current = undefined
+              }
+              const parsed = localValue === '' ? '' : Number(localValue)
+              const finalVal = Number.isNaN(parsed) ? localValue : parsed
+              if (finalVal !== lastEmittedValueRef.current) {
+                lastEmittedValueRef.current = finalVal
+                onChange(finalVal)
+              }
+            }}
             onChange={(e) => {
               const val = e.target.value
-              if (val === '') {
-                onChange('')
-              } else {
-                const parsed = Number(val)
-                onChange(Number.isNaN(parsed) ? val : parsed)
+              setLocalValue(val)
+              if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current)
               }
+              timeoutRef.current = setTimeout(() => {
+                if (val === '') {
+                  lastEmittedValueRef.current = ''
+                  onChange('')
+                } else {
+                  const parsed = Number(val)
+                  const finalVal = Number.isNaN(parsed) ? val : parsed
+                  lastEmittedValueRef.current = finalVal
+                  onChange(finalVal)
+                }
+              }, 400)
             }}
             min={config.min}
             max={config.max}
@@ -1128,8 +1185,10 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
             <div className="flex gap-2 items-center">
               <input
                 type="text"
-                value={value ?? ''}
-                onChange={handleImmediateChange}
+                value={localValue}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onChange={handleTextChange}
                 className="fi flex-1 !min-w-0"
                 placeholder="Image URL or upload"
               />
@@ -1144,7 +1203,10 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
                     if (file) {
                       const reader = new FileReader()
                       reader.onload = (event) => {
-                        onChange(event.target?.result as string)
+                        const dataUrl = event.target?.result as string
+                        setLocalValue(dataUrl)
+                        lastEmittedValueRef.current = dataUrl
+                        onChange(dataUrl)
                       }
                       reader.readAsDataURL(file)
                     }
@@ -1173,8 +1235,10 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
           </label>
           <input
             type="text"
-            value={value ?? ''}
-            onChange={handleImmediateChange}
+            value={localValue}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onChange={handleTextChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>

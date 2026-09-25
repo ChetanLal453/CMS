@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { PageLayout, Section, LayoutComponent, ComponentDefinition } from '@/types/page-editor'
 import { componentRegistry } from '@/lib/componentRegistry'
 import { getBlockDefaults, normalizeBlockProps } from '../../../../../shared/blocks/registry'
@@ -240,199 +240,197 @@ const findComponentEverywhere = (layout: PageLayout, id: string): LayoutComponen
   return null
 }
 
+// 🔹 Pure helper to update component props in layout tree without side-effects
+const updateComponentInLayout = (
+  layout: PageLayout,
+  componentId: string,
+  props: Record<string, any>,
+): { newLayout: PageLayout; updated: boolean } => {
+  const newLayout = cloneLayoutForUpdate(layout)
+  let componentUpdated = false
+
+  // 1. Search in swiper/carousel slides
+  const searchAndUpdateInSwiperSlides = (): boolean => {
+    for (const section of newLayout.sections) {
+      for (const row of getSectionRows(section)) {
+        for (const col of row.columns) {
+          for (const comp of col.components) {
+            if (!comp) continue
+
+            // Search in swipercontainer slides
+            if (comp.type === 'swipercontainer' && comp.props?.slides) {
+              for (let slideIndex = 0; slideIndex < comp.props.slides.length; slideIndex++) {
+                const slide = comp.props.slides[slideIndex]
+                if (slide?.components) {
+                  for (let compIndex = 0; compIndex < slide.components.length; compIndex++) {
+                    const slideComponent = slide.components[compIndex]
+                    if (slideComponent?.id === componentId) {
+                      slide.components[compIndex] = {
+                        ...slideComponent,
+                        props: {
+                          ...slideComponent.props,
+                          ...props,
+                        },
+                      }
+                      comp.props = { ...comp.props }
+                      componentUpdated = true
+                      return true
+                    }
+                  }
+                }
+              }
+            }
+
+            // Search in carousel slides
+            if (comp.type === 'carousel' && comp.props?.slides) {
+              for (let slideIndex = 0; slideIndex < comp.props.slides.length; slideIndex++) {
+                const slide = comp.props.slides[slideIndex]
+                if (slide?.components) {
+                  for (let compIndex = 0; compIndex < slide.components.length; compIndex++) {
+                    const slideComponent = slide.components[compIndex]
+                    if (slideComponent?.id === componentId) {
+                      slide.components[compIndex] = {
+                        ...slideComponent,
+                        props: {
+                          ...slideComponent.props,
+                          ...props,
+                        },
+                      }
+                      componentUpdated = true
+                      return true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return false
+  }
+
+  if (!searchAndUpdateInSwiperSlides()) {
+    const updateComponentRecursively = (components: LayoutComponent[]): boolean => {
+      let updated = false
+
+      for (let i = 0; i < components.length; i++) {
+        const comp = components[i]
+        if (!comp) continue
+
+        // Direct component match
+        if (comp.id === componentId) {
+          components[i] = {
+            ...comp,
+            props: {
+              ...comp.props,
+              ...props,
+            },
+          }
+          updated = true
+          componentUpdated = true
+        }
+
+        // Search in grid cells
+        const compTypeLow = String(comp.type || '').trim().toLowerCase()
+        if ((compTypeLow === 'newgrid' || compTypeLow === 'grid') && comp.props?.cells) {
+          for (let rowIndex = 0; rowIndex < comp.props.cells.length; rowIndex++) {
+            const row = comp.props.cells[rowIndex]
+            for (let colIndex = 0; colIndex < row.length; colIndex++) {
+              const cell = row[colIndex]
+              if (cell?.component && cell.component.id === componentId) {
+                row[colIndex] = {
+                  ...cell,
+                  component: {
+                    ...cell.component,
+                    props: {
+                      ...cell.component.props,
+                      ...props,
+                    },
+                  },
+                }
+                comp.props = { ...comp.props, cells: [...comp.props.cells] }
+                updated = true
+                componentUpdated = true
+                break
+              }
+            }
+            if (updated) break
+          }
+        }
+
+        // Search in flexbox children
+        if (compTypeLow === 'flexbox' && Array.isArray(comp.props?.children)) {
+          if (updateComponentRecursively(comp.props.children)) {
+            comp.props = { ...comp.props, children: [...comp.props.children] }
+            updated = true
+            componentUpdated = true
+          }
+        }
+
+        // Search in nested components
+        if (comp.props?.components) {
+          const validComponents = comp.props.components.filter((c: LayoutComponent | null) => c !== null) as LayoutComponent[]
+          if (updateComponentRecursively(validComponents)) {
+            updated = true
+            componentUpdated = true
+          }
+        }
+      }
+      return updated
+    }
+
+    // Search in sections
+    for (const section of newLayout.sections) {
+      for (const row of getSectionRows(section)) {
+        for (const col of row.columns) {
+          if (updateComponentRecursively(col.components)) {
+            componentUpdated = true
+          }
+        }
+      }
+    }
+
+    // Search in layout.components
+    if (newLayout.components) {
+      if (updateComponentRecursively(newLayout.components)) {
+        componentUpdated = true
+      }
+    }
+  }
+
+  return { newLayout, updated: componentUpdated }
+}
+
 // In useLayoutActions.ts - add saveLayout parameter
 export const useLayoutActions = (
   layout: PageLayout,
   setLayout: (layout: PageLayout | ((prev: PageLayout) => PageLayout)) => void,
   saveLayout?: (layout: PageLayout) => Promise<boolean>,
 ) => {
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const layoutRef = useRef(layout)
 
-  // 🔥 CRITICAL FIX: Enhanced component update handler WITH SWIPER SUPPORT
+  useEffect(() => {
+    layoutRef.current = layout
+  }, [layout])
+
+  // Pure component update handler - updates local layout state immediately without network side-effects
   const handleComponentUpdate = useCallback(
     (componentId: string, props: Record<string, any>) => {
-      setLayout((prevLayout) => {
-        const newLayout = cloneLayoutForUpdate(prevLayout)
-        let componentUpdated = false
+      const baseLayout = layoutRef.current
+      const { newLayout, updated } = updateComponentInLayout(baseLayout, componentId, props)
 
-        // 🆕 CRITICAL: Search in SWIPER SLIDES
-        const searchAndUpdateInSwiperSlides = (): boolean => {
-          for (const section of newLayout.sections) {
-            for (const row of getSectionRows(section)) {
-              for (const col of row.columns) {
-                for (const comp of col.components) {
-                  if (!comp) continue
+      if (!updated) {
+        console.warn('Component update skipped because the component was not found in the current editor layout.', {
+          componentId,
+        })
+        return
+      }
 
-                  // ✅ SEARCH IN SWIPER CONTAINER SLIDES
-                  if (comp.type === 'swipercontainer' && comp.props?.slides) {
-                    for (let slideIndex = 0; slideIndex < comp.props.slides.length; slideIndex++) {
-                      const slide = comp.props.slides[slideIndex]
-                      if (slide?.components) {
-                        for (let compIndex = 0; compIndex < slide.components.length; compIndex++) {
-                          const slideComponent = slide.components[compIndex]
-                          if (slideComponent?.id === componentId) {
-                            // Update the component props
-                            slide.components[compIndex] = {
-                              ...slideComponent,
-                              props: {
-                                ...slideComponent.props,
-                                ...props,
-                              },
-                            }
-
-                            // Force update the swiper props
-                            comp.props = { ...comp.props }
-
-                            componentUpdated = true
-                            return true
-                          }
-                        }
-                      }
-                    }
-                  }
-
-                  // ✅ SEARCH IN CAROUSEL SLIDES
-                  if (comp.type === 'carousel' && comp.props?.slides) {
-                    for (let slideIndex = 0; slideIndex < comp.props.slides.length; slideIndex++) {
-                      const slide = comp.props.slides[slideIndex]
-                      if (slide?.components) {
-                        for (let compIndex = 0; compIndex < slide.components.length; compIndex++) {
-                          const slideComponent = slide.components[compIndex]
-                          if (slideComponent?.id === componentId) {
-                            slide.components[compIndex] = {
-                              ...slideComponent,
-                              props: {
-                                ...slideComponent.props,
-                                ...props,
-                              },
-                            }
-
-                            componentUpdated = true
-                            return true
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-          return false
-        }
-
-        // First search in swiper/carousel slides
-        if (!searchAndUpdateInSwiperSlides()) {
-          // If not found in swiper, use original recursive search
-          const updateComponentRecursively = (components: LayoutComponent[]): boolean => {
-            let updated = false
-
-            for (let i = 0; i < components.length; i++) {
-              const comp = components[i]
-              if (!comp) continue
-
-              // ✅ DIRECT MATCH
-              if (comp.id === componentId) {
-                components[i] = {
-                  ...comp,
-                  props: {
-                    ...comp.props,
-                    ...props,
-                  },
-                }
-                updated = true
-                componentUpdated = true
-              }
-
-              // ✅ SEARCH IN GRID CELLS
-              const compTypeLow = String(comp.type || '').trim().toLowerCase()
-              if ((compTypeLow === 'newgrid' || compTypeLow === 'grid') && comp.props?.cells) {
-                for (let rowIndex = 0; rowIndex < comp.props.cells.length; rowIndex++) {
-                  const row = comp.props.cells[rowIndex]
-                  for (let colIndex = 0; colIndex < row.length; colIndex++) {
-                    const cell = row[colIndex]
-                    if (cell?.component && cell.component.id === componentId) {
-                      row[colIndex] = {
-                        ...cell,
-                        component: {
-                          ...cell.component,
-                          props: {
-                            ...cell.component.props,
-                            ...props,
-                          },
-                        },
-                      }
-                      comp.props = { ...comp.props, cells: [...comp.props.cells] }
-                      updated = true
-                      componentUpdated = true
-                      break
-                    }
-                  }
-                  if (updated) break
-                }
-              }
-
-              // ✅ SEARCH IN NESTED COMPONENTS
-              if (comp.props?.components) {
-                const validComponents = comp.props.components.filter((c: LayoutComponent | null) => c !== null) as LayoutComponent[]
-                if (updateComponentRecursively(validComponents)) {
-                  updated = true
-                  componentUpdated = true
-                }
-              }
-            }
-            return updated
-          }
-
-          // Search in sections
-          for (const section of newLayout.sections) {
-            for (const row of getSectionRows(section)) {
-              for (const col of row.columns) {
-                if (updateComponentRecursively(col.components)) {
-                  componentUpdated = true
-                }
-              }
-            }
-          }
-
-          // Search in layout.components
-          if (newLayout.components) {
-            if (updateComponentRecursively(newLayout.components)) {
-              componentUpdated = true
-            }
-          }
-        }
-
-        if (componentUpdated) {
-          // ✅✅✅ CRITICAL: AUTO-SAVE AFTER UPDATE
-          if (saveLayout) {
-            // Debounce multiple rapid changes
-            if (debounceTimeoutRef.current) {
-              clearTimeout(debounceTimeoutRef.current)
-            }
-
-            debounceTimeoutRef.current = setTimeout(() => {
-              saveLayout(newLayout)
-                .then((success) => {
-                  console.log(
-                    success ? '✅ [useLayoutActions] Property changes saved to database' : '❌ [useLayoutActions] Failed to save property changes',
-                  )
-                })
-                .catch((error) => {
-                  console.error('❌ [useLayoutActions] Save error:', error)
-                })
-            }, 500)
-          }
-        } else {
-          console.warn('Component update skipped because the component was not found in the current editor layout.', {
-            componentId,
-          })
-        }
-
-        return newLayout
-      })
+      // Pure state update - updates canvas live instantly
+      setLayout(newLayout)
     },
-    [setLayout, saveLayout],
+    [setLayout],
   )
 
   // 🆕 FIXED: Complete drag end handler with carousel support

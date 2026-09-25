@@ -103,12 +103,18 @@ export function normalizeNewGrid(input: NewGridInput = {}): NewGrid {
   const snapToGrid = asBoolean(input.snapToGrid ?? legacy.snapToGrid ?? behavior.snapToGrid, defaultNewGridProps.behavior.snapToGrid)
   const visible = asBoolean(input.visible ?? legacy.visible ?? behavior.visible, defaultNewGridProps.behavior.visible)
 
-  const cells = normalizeCells(input.cells ?? legacy.cells, rows, columns)
-  const components = normalizeComponents(input.components ?? legacy.components, cells, rows, columns)
+  const contentInput = (input as any).content && typeof (input as any).content === 'object' ? (input as any).content : {}
+  const cells = normalizeCells(contentInput.cells ?? input.cells ?? legacy.cells, rows, columns)
+  const components = normalizeComponents(contentInput.components ?? input.components ?? legacy.components, cells, rows, columns)
 
   return {
     type: 'newgrid',
     schemaVersion: 1,
+    version: 1,
+    content: {
+      cells,
+      components,
+    },
     columns,
     rows,
     gap,

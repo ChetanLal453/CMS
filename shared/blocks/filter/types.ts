@@ -36,7 +36,107 @@ export type FilterOption = {
   description?: string
 }
 
-export interface FilterProps {
+export interface CanonicalFilterContent {
+  filterType?: AnyFilterType
+  filterKey?: string
+  bindTo?: string
+  label?: string
+  helpText?: string
+  placeholder?: string
+  defaultValue?: FilterValue
+  defaultChecked?: boolean
+  value?: FilterValue
+  sourceType?: FilterSourceType
+  presetKey?: string
+  options?: FilterOption[]
+  apiEndpoint?: string
+  apiMethod?: string
+  apiLabelField?: string
+  apiValueField?: string
+  min?: number
+  max?: number
+  step?: number
+  rangeMode?: 'single' | 'double'
+  prefix?: string
+  suffix?: string
+  defaultSort?: string
+  sortField?: string
+  sortDirection?: 'asc' | 'desc'
+  onLabel?: string
+  offLabel?: string
+  selectAllLabel?: string
+  applyButtonLabel?: string
+  sectionTitle?: string
+  dependsOn?: string | string[]
+  visibleWhen?: string | boolean
+  disabledWhen?: string | boolean
+  storageKey?: string
+  queryParam?: string
+  emitEventName?: string
+}
+
+export interface CanonicalFilterStyle {
+  variant?: string
+  size?: string
+  density?: string
+  fullWidth?: boolean
+  labelPosition?: string
+  orientation?: 'horizontal' | 'vertical'
+  mobileVariant?: string
+  desktopVariant?: string
+  columns?: number
+  inline?: boolean
+  radioStyle?: 'default' | 'button'
+  toggleColor?: string
+  chipStyle?: string
+  chipVariant?: string
+  showLabel?: boolean
+  showClearButton?: boolean
+  showStateLabel?: boolean
+  showSelectedCount?: boolean
+  showTooltip?: boolean
+  showTicks?: boolean
+  showMinMaxLabels?: boolean
+  showDivider?: boolean
+  sticky?: boolean
+  collapsedByDefault?: boolean
+  disabled?: boolean
+  required?: boolean
+  clearable?: boolean
+  searchable?: boolean
+  closeMenuOnSelect?: boolean
+  maxSelections?: number
+  selectAllEnabled?: boolean
+  allowMultiple?: boolean
+  removable?: boolean
+  debounceMs?: number
+  autoFocus?: boolean
+  persistState?: boolean
+  syncWithUrl?: boolean
+  autoApply?: boolean
+  resetOnChange?: boolean
+  reloadOptionsOnDependencyChange?: boolean
+  className?: string
+  wrapperClassName?: string
+  ariaLabel?: string
+  ariaDescription?: string
+  tabIndex?: number
+}
+
+export interface CanonicalFilterResponsive {
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: Record<string, any>
+}
+
+export interface CanonicalFilterProps {
+  version?: number
+  content?: CanonicalFilterContent
+  style?: CanonicalFilterStyle
+  responsive?: CanonicalFilterResponsive
+}
+
+export type FilterProps = CanonicalFilterProps & {
   filterType: AnyFilterType
   filterKey: string
   bindTo?: string

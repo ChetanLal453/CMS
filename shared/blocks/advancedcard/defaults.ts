@@ -133,6 +133,7 @@ export const LEGACY_ADVANCED_CARD_DEFAULTS: LegacyAdvancedCardProps = {
 export const advancedCardDefaultProps = LEGACY_ADVANCED_CARD_DEFAULTS
 
 export const ADVANCED_CARD_BASE_DEFAULTS: AdvancedCard = {
+  version: 1,
   id: '',
   type: 'advancedCard',
   variant: 'default',

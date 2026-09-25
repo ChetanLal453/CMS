@@ -1,8 +1,55 @@
 import type { AdvancedList } from './types'
 
 export const defaultAdvancedListProps: AdvancedList = {
+  version: 1,
   type: 'advancedlist',
   schemaVersion: 1,
+  content: {
+    items: [
+      {
+        id: '1',
+        title: 'Lightning Fast',
+        description: 'Loads in under 2 seconds',
+        visible: true,
+        iconType: 'emoji',
+        iconEmoji: '⚡',
+        iconImage: '',
+        iconFontAwesome: 'FaBolt',
+        iconNumber: 1,
+        order: 1,
+      },
+      {
+        id: '2',
+        title: 'Secure Payment',
+        description: 'Bank-level security with SSL encryption',
+        visible: true,
+        iconType: 'emoji',
+        iconEmoji: '🔒',
+        iconImage: '',
+        iconFontAwesome: 'FaLock',
+        iconNumber: 2,
+        order: 2,
+      },
+      {
+        id: '3',
+        title: '24/7 Support',
+        description: 'Always available to help you',
+        visible: true,
+        iconType: 'emoji',
+        iconEmoji: '📞',
+        iconImage: '',
+        iconFontAwesome: 'FaHeadset',
+        iconNumber: 3,
+        order: 3,
+      },
+    ],
+    listType: 'icon',
+  },
+  responsive: {
+    desktop: {},
+    tablet: {},
+    mobile: {},
+  },
   items: [
     {
       id: '1',

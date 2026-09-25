@@ -1,4 +1,4 @@
-import { coerceValueForType, normalizeFilter, normalizeFilterType, normalizeOptions } from './normalize'
+import { coerceValueForType, fallbackOptionsForType, normalizeFilter, normalizeFilterType, normalizeOptions } from './normalize'
 import type { FilterViewModel } from './types'
 
 function getEmptyValue(viewModel: Pick<FilterViewModel, 'resolvedFilterType' | 'rangeMode'> & { min?: number; max?: number }): FilterViewModel['emptyValue'] {
@@ -24,21 +24,31 @@ function getEmptyValue(viewModel: Pick<FilterViewModel, 'resolvedFilterType' | '
 
 export function createFilterViewModel(props: Record<string, any> = {}): FilterViewModel {
   const normalized = normalizeFilter(props)
-  const resolvedFilterType = normalizeFilterType(String(normalized.filterType || 'dropdown'))
-  const normalizedOptions = normalizeOptions(normalized.options)
-  const effectiveValue = coerceValueForType(resolvedFilterType, normalized.value ?? normalized.defaultValue, normalized)
-  const rangeMin = typeof normalized.min === 'number' ? normalized.min : Number(normalized.min) || 0
-  const rangeMax = typeof normalized.max === 'number' ? normalized.max : Number(normalized.max) || 100
+  const resolvedFilterType = normalizeFilterType(String(normalized.content?.filterType || normalized.filterType || 'dropdown'))
+  const rawOptions = normalized.content?.options ?? normalized.options
+  const normalizedOptions = normalizeOptions(rawOptions)
+  const optionsWithFallback = normalizedOptions.length ? normalizedOptions : fallbackOptionsForType(resolvedFilterType)
+  const effectiveValue = coerceValueForType(
+    resolvedFilterType,
+    normalized.content?.value ?? normalized.content?.defaultValue ?? normalized.value ?? normalized.defaultValue,
+    normalized,
+  )
+  const min = normalized.content?.min !== undefined ? normalized.content.min : normalized.min
+  const max = normalized.content?.max !== undefined ? normalized.content.max : normalized.max
+  const rangeMin = typeof min === 'number' ? min : Number(min) || 0
+  const rangeMax = typeof max === 'number' ? max : Number(max) || 100
+  const rangeMode = normalized.content?.rangeMode || normalized.rangeMode
 
   return {
     ...normalized,
     filterType: resolvedFilterType,
     resolvedFilterType,
-    normalizedOptions,
+    normalizedOptions: optionsWithFallback,
+    options: optionsWithFallback,
     effectiveValue,
     emptyValue: getEmptyValue({
       resolvedFilterType,
-      rangeMode: normalized.rangeMode,
+      rangeMode,
       min: rangeMin,
       max: rangeMax,
     }),

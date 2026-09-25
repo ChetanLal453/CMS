@@ -268,7 +268,58 @@ export interface AdvancedCardMeta {
   notes?: string[]
 }
 
+export interface CanonicalAdvancedCardContent {
+  title?: string
+  subtitle?: string
+  description?: string
+  image?: string
+  alt?: string
+  icon?: string
+  badgeText?: string
+  buttonText?: string
+  buttonLink?: string
+  buttonIcon?: string
+  [key: string]: any
+}
+
+export interface CanonicalAdvancedCardStyle {
+  variant?: AdvancedCardVariant
+  textAlignment?: CardAlignment
+  titleAlignment?: CardAlignment
+  subtitleAlignment?: CardAlignment
+  descriptionAlignment?: CardAlignment
+  buttonAlignment?: CardButtonAlignment
+  buttonFullWidth?: boolean
+  backgroundColor?: string
+  borderColor?: string
+  borderWidth?: number
+  borderRadius?: number
+  shadow?: CardShadow
+  padding?: number
+  margin?: string
+  width?: string
+  height?: string
+  [key: string]: any
+}
+
+export interface CanonicalAdvancedCardResponsive {
+  hideOnMobile?: boolean
+  hideOnTablet?: boolean
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: Record<string, any>
+  [key: string]: any
+}
+
+export interface CanonicalAdvancedCardProps {
+  version?: number
+  content?: CanonicalAdvancedCardContent
+  style?: CanonicalAdvancedCardStyle
+  responsive?: CanonicalAdvancedCardResponsive
+}
+
 export interface AdvancedCard {
+  version?: number
   id: string
   type: AdvancedCardType
   variant: AdvancedCardVariant
@@ -281,6 +332,7 @@ export interface AdvancedCard {
   responsive: AdvancedCardResponsive
   system: AdvancedCardSystem
   meta: AdvancedCardMeta
+  [key: string]: any
 }
 
 export interface LegacyAdvancedCardProps {

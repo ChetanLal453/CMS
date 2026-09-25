@@ -23,6 +23,7 @@ export const createDefaultSlide = (id: string, slideIndex = 0): SwiperSlideItem 
 })
 
 export const defaultSwiperContainerProps: SwiperContainerProps = {
+  version: 1,
   slidesPerView: 3,
   slidesPerGroup: 1,
   spaceBetween: 12,

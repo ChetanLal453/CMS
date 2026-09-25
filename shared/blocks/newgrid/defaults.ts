@@ -3,8 +3,13 @@ import type { NewGrid } from './types'
 const emptyRow = (columns: number) => Array.from({ length: columns }, () => ({ component: null }))
 
 export const defaultNewGridProps: NewGrid = {
+  version: 1,
   type: 'newgrid',
   schemaVersion: 1,
+  content: {
+    cells: [emptyRow(3), emptyRow(3)],
+    components: [null, null, null, null, null, null],
+  },
   layout: {
     columns: 3,
     rows: 2,

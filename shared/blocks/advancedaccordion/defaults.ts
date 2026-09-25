@@ -1,8 +1,37 @@
 import type { AdvancedAccordion } from './types'
 
 export const defaultAdvancedAccordionProps: AdvancedAccordion = {
+  version: 1,
   type: 'advancedaccordion',
   schemaVersion: 1,
+  content: {
+    items: [
+      {
+        id: '1',
+        title: 'What is CurveMetrics?',
+        content:
+          'CurveMetrics is a unified analytics platform that helps teams track their most important metrics across channels — all in one dashboard.',
+        visible: true,
+      },
+      {
+        id: '2',
+        title: 'How does pricing work?',
+        content: 'Choose a plan based on monthly tracked events and active workspaces, then scale as your team grows.',
+        visible: true,
+      },
+      {
+        id: '3',
+        title: 'Can I export my data?',
+        content: 'Yes, you can export reports and dashboards in CSV and JSON formats with role-based access controls.',
+        visible: true,
+      },
+    ],
+  },
+  responsive: {
+    desktop: {},
+    tablet: {},
+    mobile: {},
+  },
   items: [
     {
       id: '1',

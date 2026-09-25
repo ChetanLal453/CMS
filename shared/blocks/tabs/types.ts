@@ -10,7 +10,49 @@ export interface TabItem {
   disabled: boolean
 }
 
-export interface TabsStyleGroup {
+export interface CanonicalTabsContent {
+  tabs?: TabItem[]
+  activeTab?: number
+}
+
+export interface CanonicalTabsStyle {
+  width?: string
+  tabGap?: string
+  tabPadding?: string
+  contentPadding?: string
+  borderColor?: string
+  activeBorderColor?: string
+  activeTextColor?: string
+  inactiveTextColor?: string
+  activeFontWeight?: string
+  inactiveFontWeight?: string
+  [key: string]: any
+}
+
+export interface CanonicalTabsAria {
+  label?: string
+  ariaLabel?: string
+  className?: string
+  customId?: string
+  [key: string]: any
+}
+
+export interface CanonicalTabsResponsive {
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: Record<string, any>
+  [key: string]: any
+}
+
+export interface CanonicalTabsProps {
+  version?: number
+  content?: CanonicalTabsContent
+  style?: CanonicalTabsStyle
+  aria?: CanonicalTabsAria
+  responsive?: CanonicalTabsResponsive
+}
+
+export interface TabsStyleGroup extends CanonicalTabsStyle {
   width: string
   tabGap: string
   tabPadding: string
@@ -23,20 +65,23 @@ export interface TabsStyleGroup {
   inactiveFontWeight: string
 }
 
-export interface TabsAriaGroup {
+export interface TabsAriaGroup extends CanonicalTabsAria {
   label: string
   ariaLabel: string
   className: string
   customId: string
 }
 
-export interface TabsBlock {
+export interface TabsBlock extends CanonicalTabsProps {
   type: TabsType
   schemaVersion: 1
+  version?: number
   tabs: TabItem[]
   activeTab: number
   style: TabsStyleGroup
   aria: TabsAriaGroup
+  responsive?: CanonicalTabsResponsive
+  [key: string]: any
 }
 
 export interface LegacyTabItem {

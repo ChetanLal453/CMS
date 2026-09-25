@@ -8,7 +8,59 @@ export type AdvancedHeadingHtmlTag = 'auto' | AdvancedHeadingLevel | 'div' | 'sp
 import type { DeepPartial } from '../../utils/merge'
 export type { DeepPartial }
 
-export interface AdvancedHeadingStyleGroup {
+export interface CanonicalAdvancedHeadingContent {
+  text?: string
+  level?: AdvancedHeadingLevel
+  highlightText?: string
+  highlightColor?: string
+  seoEnabled?: boolean
+  seoMaxLength?: number
+}
+
+export interface CanonicalAdvancedHeadingStyle {
+  usePresetStyles?: boolean
+  fontFamily?: string
+  fontSize?: string
+  fontWeight?: string
+  lineHeight?: string
+  letterSpacing?: string
+  textTransform?: AdvancedHeadingTextTransform
+  textDecoration?: AdvancedHeadingTextDecoration
+  fontStyle?: AdvancedHeadingFontStyle
+  color?: string
+  hoverColor?: string
+  alignment?: AdvancedHeadingAlignment
+  maxWidth?: string
+  margin?: string
+  padding?: string
+  className?: string
+  customId?: string
+  htmlTag?: AdvancedHeadingHtmlTag
+  ariaLevel?: number
+  ariaLabel?: string
+  role?: string
+  visible?: boolean
+  dataTracking?: string
+}
+
+export interface CanonicalAdvancedHeadingResponsive {
+  fontSizeMobile?: string
+  fontSizeTablet?: string
+  textAlignMobile?: AdvancedHeadingAlignment
+  textAlignTablet?: AdvancedHeadingAlignment
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: Record<string, any>
+}
+
+export interface CanonicalAdvancedHeadingProps {
+  version?: number
+  content?: CanonicalAdvancedHeadingContent
+  style?: CanonicalAdvancedHeadingStyle
+  responsive?: CanonicalAdvancedHeadingResponsive
+}
+
+export interface AdvancedHeadingStyleGroup extends CanonicalAdvancedHeadingStyle {
   usePresetStyles: boolean
   fontFamily: string
   fontSize: string
@@ -58,7 +110,7 @@ export interface AdvancedHeadingMeta {
   migratedFrom?: 'legacy-flat' | 'legacy-structured' | 'structured'
 }
 
-export interface AdvancedHeading {
+export interface AdvancedHeading extends CanonicalAdvancedHeadingProps {
   type: AdvancedHeadingType
   schemaVersion: 1
   text: string
@@ -68,6 +120,7 @@ export interface AdvancedHeading {
   seo: AdvancedHeadingSeoGroup
   aria: AdvancedHeadingAriaGroup
   meta: AdvancedHeadingMeta
+  [key: string]: any
 }
 
 export interface LegacyAdvancedHeadingProps {

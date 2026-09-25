@@ -1,9 +1,27 @@
 import { defaultTabsProps } from './defaults'
-import type { LegacyTabItem, LegacyTabsProps, TabItem, TabsBlock, TabsInput } from './types'
+import type {
+  CanonicalTabsAria,
+  CanonicalTabsContent,
+  CanonicalTabsResponsive,
+  CanonicalTabsStyle,
+  LegacyTabItem,
+  LegacyTabsProps,
+  TabItem,
+  TabsAriaGroup,
+  TabsBlock,
+  TabsInput,
+  TabsStyleGroup,
+} from './types'
 
 function asString(value: unknown, fallback: string): string {
   const normalized = String(value ?? '').trim()
   return normalized || fallback
+}
+
+function asStringOrUndefined(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined
+  const str = String(value).trim()
+  return str.length > 0 ? str : undefined
 }
 
 function asBoolean(value: unknown, fallback: boolean): boolean {
@@ -41,34 +59,85 @@ function normalizeTabItem(tab: TabItem | LegacyTabItem | undefined, index: numbe
 
 export function normalizeTabs(input: TabsInput = {}): TabsBlock {
   const legacy = input as LegacyTabsProps
-  const sourceTabs = Array.isArray(input.tabs) ? input.tabs : defaultTabsProps.tabs
-  const tabs = sourceTabs.length ? sourceTabs.map((tab, index) => normalizeTabItem(tab, index)) : defaultTabsProps.tabs.map((tab, index) => normalizeTabItem(tab, index))
+  const contentInput = (input as any).content && typeof (input as any).content === 'object' ? (input as any).content : {}
+  const styleInput = (input as any).style && typeof (input as any).style === 'object' ? (input as any).style : {}
+  const ariaInput = (input as any).aria && typeof (input as any).aria === 'object' ? (input as any).aria : {}
+  const responsiveInput = (input as any).responsive && typeof (input as any).responsive === 'object' ? (input as any).responsive : {}
 
-  const requestedActive = asNumber(input.activeTab ?? legacy.activeTab, defaultTabsProps.activeTab)
+  const rawTabs = Array.isArray(contentInput.tabs)
+    ? contentInput.tabs
+    : Array.isArray(input.tabs)
+      ? input.tabs
+      : Array.isArray(legacy.tabs)
+        ? legacy.tabs
+        : undefined
+
+  const sourceTabs = rawTabs !== undefined ? rawTabs : defaultTabsProps.tabs
+  const tabs = sourceTabs.length
+    ? sourceTabs.map((tab: any, index: number) => normalizeTabItem(tab, index))
+    : defaultTabsProps.tabs.map((tab, index) => normalizeTabItem(tab, index))
+
+  const rawActive = contentInput.activeTab ?? input.activeTab ?? legacy.activeTab
+  const requestedActive = asNumber(rawActive, defaultTabsProps.activeTab)
   const safeActive = Math.max(0, Math.min(requestedActive, Math.max(tabs.length - 1, 0)))
+
+  const content: CanonicalTabsContent = {}
+  if (rawTabs !== undefined) content.tabs = tabs
+  if (rawActive !== undefined) content.activeTab = safeActive
+
+  const style: CanonicalTabsStyle = {}
+  if (asStringOrUndefined(styleInput.width ?? legacy.width) !== undefined) style.width = asStringOrUndefined(styleInput.width ?? legacy.width)
+  if (asStringOrUndefined(styleInput.tabGap ?? legacy.tabGap) !== undefined) style.tabGap = asStringOrUndefined(styleInput.tabGap ?? legacy.tabGap)
+  if (asStringOrUndefined(styleInput.tabPadding ?? legacy.tabPadding) !== undefined) style.tabPadding = asStringOrUndefined(styleInput.tabPadding ?? legacy.tabPadding)
+  if (asStringOrUndefined(styleInput.contentPadding ?? legacy.contentPadding) !== undefined) style.contentPadding = asStringOrUndefined(styleInput.contentPadding ?? legacy.contentPadding)
+  if (asStringOrUndefined(styleInput.borderColor ?? legacy.borderColor) !== undefined) style.borderColor = asStringOrUndefined(styleInput.borderColor ?? legacy.borderColor)
+  if (asStringOrUndefined(styleInput.activeBorderColor ?? legacy.activeBorderColor) !== undefined) style.activeBorderColor = asStringOrUndefined(styleInput.activeBorderColor ?? legacy.activeBorderColor)
+  if (asStringOrUndefined(styleInput.activeTextColor ?? legacy.activeTextColor) !== undefined) style.activeTextColor = asStringOrUndefined(styleInput.activeTextColor ?? legacy.activeTextColor)
+  if (asStringOrUndefined(styleInput.inactiveTextColor ?? legacy.inactiveTextColor) !== undefined) style.inactiveTextColor = asStringOrUndefined(styleInput.inactiveTextColor ?? legacy.inactiveTextColor)
+  if (asStringOrUndefined(styleInput.activeFontWeight ?? legacy.activeFontWeight) !== undefined) style.activeFontWeight = asStringOrUndefined(styleInput.activeFontWeight ?? legacy.activeFontWeight)
+  if (asStringOrUndefined(styleInput.inactiveFontWeight ?? legacy.inactiveFontWeight) !== undefined) style.inactiveFontWeight = asStringOrUndefined(styleInput.inactiveFontWeight ?? legacy.inactiveFontWeight)
+
+  const aria: CanonicalTabsAria = {}
+  if (asStringOrUndefined(ariaInput.label ?? legacy.label) !== undefined) aria.label = asStringOrUndefined(ariaInput.label ?? legacy.label)
+  if (asStringOrUndefined(ariaInput.ariaLabel ?? legacy.ariaLabel ?? legacy.label) !== undefined) aria.ariaLabel = asStringOrUndefined(ariaInput.ariaLabel ?? legacy.ariaLabel ?? legacy.label)
+  if (asStringOrUndefined(ariaInput.className ?? legacy.className) !== undefined) aria.className = asStringOrUndefined(ariaInput.className ?? legacy.className)
+  if (asStringOrUndefined(ariaInput.customId ?? legacy.customId) !== undefined) aria.customId = asStringOrUndefined(ariaInput.customId ?? legacy.customId)
+
+  const responsive: CanonicalTabsResponsive = {
+    desktop: responsiveInput.desktop && typeof responsiveInput.desktop === 'object' ? responsiveInput.desktop : {},
+    tablet: responsiveInput.tablet && typeof responsiveInput.tablet === 'object' ? responsiveInput.tablet : {},
+    mobile: responsiveInput.mobile && typeof responsiveInput.mobile === 'object' ? responsiveInput.mobile : {},
+  }
+
+  const resolvedStyleGroup: TabsStyleGroup = {
+    width: style.width ?? defaultTabsProps.style.width,
+    tabGap: style.tabGap ?? defaultTabsProps.style.tabGap,
+    tabPadding: style.tabPadding ?? defaultTabsProps.style.tabPadding,
+    contentPadding: style.contentPadding ?? defaultTabsProps.style.contentPadding,
+    borderColor: style.borderColor ?? defaultTabsProps.style.borderColor,
+    activeBorderColor: style.activeBorderColor ?? defaultTabsProps.style.activeBorderColor,
+    activeTextColor: style.activeTextColor ?? defaultTabsProps.style.activeTextColor,
+    inactiveTextColor: style.inactiveTextColor ?? defaultTabsProps.style.inactiveTextColor,
+    activeFontWeight: style.activeFontWeight ?? defaultTabsProps.style.activeFontWeight,
+    inactiveFontWeight: style.inactiveFontWeight ?? defaultTabsProps.style.inactiveFontWeight,
+  }
+
+  const resolvedAriaGroup: TabsAriaGroup = {
+    label: aria.label ?? defaultTabsProps.aria.label,
+    ariaLabel: aria.ariaLabel ?? defaultTabsProps.aria.ariaLabel,
+    className: aria.className ?? defaultTabsProps.aria.className,
+    customId: aria.customId ?? defaultTabsProps.aria.customId,
+  }
 
   return {
     type: 'tabs',
     schemaVersion: 1,
+    version: 1,
+    content,
+    style: resolvedStyleGroup,
+    aria: resolvedAriaGroup,
+    responsive,
     tabs,
     activeTab: safeActive,
-    style: {
-      width: asString(input.style?.width ?? legacy.width, defaultTabsProps.style.width),
-      tabGap: asString(input.style?.tabGap ?? legacy.tabGap, defaultTabsProps.style.tabGap),
-      tabPadding: asString(input.style?.tabPadding ?? legacy.tabPadding, defaultTabsProps.style.tabPadding),
-      contentPadding: asString(input.style?.contentPadding ?? legacy.contentPadding, defaultTabsProps.style.contentPadding),
-      borderColor: asString(input.style?.borderColor ?? legacy.borderColor, defaultTabsProps.style.borderColor),
-      activeBorderColor: asString(input.style?.activeBorderColor ?? legacy.activeBorderColor, defaultTabsProps.style.activeBorderColor),
-      activeTextColor: asString(input.style?.activeTextColor ?? legacy.activeTextColor, defaultTabsProps.style.activeTextColor),
-      inactiveTextColor: asString(input.style?.inactiveTextColor ?? legacy.inactiveTextColor, defaultTabsProps.style.inactiveTextColor),
-      activeFontWeight: asString(input.style?.activeFontWeight ?? legacy.activeFontWeight, defaultTabsProps.style.activeFontWeight),
-      inactiveFontWeight: asString(input.style?.inactiveFontWeight ?? legacy.inactiveFontWeight, defaultTabsProps.style.inactiveFontWeight),
-    },
-    aria: {
-      label: asString(input.aria?.label ?? legacy.label, defaultTabsProps.aria.label),
-      ariaLabel: asString(input.aria?.ariaLabel ?? legacy.ariaLabel ?? legacy.label, defaultTabsProps.aria.ariaLabel),
-      className: asString(input.aria?.className ?? legacy.className, defaultTabsProps.aria.className),
-      customId: asString(input.aria?.customId ?? legacy.customId, defaultTabsProps.aria.customId),
-    },
   }
 }

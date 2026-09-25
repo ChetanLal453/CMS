@@ -121,6 +121,16 @@ type UniversalLocation =
       componentIndex: number
       component: LayoutComponent
     }
+  | {
+      type: 'flexbox-child'
+      sectionIndex: number
+      rowIndex: number
+      colIndex: number
+      flexboxIndex: number
+      flexboxId: string
+      componentIndex: number
+      component: LayoutComponent
+    }
 
 const findUniversalLocation = (layout: PageLayout | undefined, componentId: string): UniversalLocation | null => {
   if (!layout || !componentId) return null
@@ -201,6 +211,24 @@ const findUniversalLocation = (layout: PageLayout | undefined, componentId: stri
             }
           }
 
+          // Search in flexbox children
+          if (compType === 'flexbox' && Array.isArray(comp.props?.children)) {
+            for (let fIdx = 0; fIdx < comp.props.children.length; fIdx++) {
+              if (comp.props.children[fIdx]?.id === componentId) {
+                return {
+                  type: 'flexbox-child',
+                  sectionIndex: sIdx,
+                  rowIndex: rIdx,
+                  colIndex: cIdx,
+                  flexboxIndex: compIdx,
+                  flexboxId: comp.id,
+                  componentIndex: fIdx,
+                  component: comp.props.children[fIdx],
+                }
+              }
+            }
+          }
+
           if (Array.isArray(comp.props?.components)) {
             for (let nIdx = 0; nIdx < comp.props.components.length; nIdx++) {
               if (comp.props.components[nIdx]?.id === componentId) {
@@ -258,6 +286,14 @@ const removeUniversalComponent = (layout: any, loc: UniversalLocation): LayoutCo
     const parent = col.components?.[loc.parentIndex]
     if (!Array.isArray(parent?.props?.components)) return null
     const [removed] = parent.props.components.splice(loc.componentIndex, 1)
+    return removed || null
+  }
+
+  if (loc.type === 'flexbox-child') {
+    const flexbox = col.components?.[loc.flexboxIndex]
+    if (!Array.isArray(flexbox?.props?.children)) return null
+    const [removed] = flexbox.props.children.splice(loc.componentIndex, 1)
+    flexbox.props = { ...flexbox.props, children: [...flexbox.props.children] }
     return removed || null
   }
 
@@ -557,7 +593,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
     handleSectionDelete,
     deleteComponent,
     handleColumnDelete,
-  } = useLayoutActions(layout, setLayout, saveLayout)
+  } = useLayoutActions(layout, setLayout)
 
   const saveLayoutSilently = useCallback(async (targetLayout: PageLayout) => {
     return autosaveLayout(targetLayout)
@@ -571,8 +607,8 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
   } = useAutoSave({
     data: layout,
     onSave: saveLayoutSilently,
-    interval: 30000,
-    debounceMs: 800,
+    interval: 300000, // 5 minutes periodic auto-save
+    debounceMs: 0, // Disabled: individual keystrokes do not trigger auto-save
     enabled: Boolean(currentPageId) && !loading && !saveConflict && String(layout?.id ?? '') === String(currentPageId),
     identityKey: `${currentPageId ?? ''}:${loading ? 'loading' : 'ready'}`,
   })
@@ -1018,6 +1054,63 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
           }
         }
 
+        // Case B.5: Dropping onto a Flexbox drop zone
+        if (destinationDroppableId.startsWith('flexbox-')) {
+          const flexboxId = destinationDroppableId.replace('flexbox-', '')
+
+          const findAndAddToFlexbox = (components: any[]): boolean => {
+            for (const comp of components || []) {
+              if (!comp) continue
+              if (
+                String(comp.type || '').toLowerCase() === 'flexbox' &&
+                (comp.id === flexboxId || comp.id?.includes(flexboxId))
+              ) {
+                if (!comp.props) comp.props = {}
+                if (!Array.isArray(comp.props.children)) comp.props.children = []
+                comp.props.children.push(movedComponent)
+                comp.props = { ...comp.props }
+                toast.success(sourceLoc ? 'Component moved to Flexbox' : 'Component added to Flexbox')
+                return true
+              }
+              // Recurse into grid cells
+              if (comp.props?.cells) {
+                for (const row of comp.props.cells || []) {
+                  for (const cell of row || []) {
+                    if (cell?.component && findAndAddToFlexbox([cell.component])) return true
+                  }
+                }
+              }
+              // Recurse into swiper slides
+              if (comp.props?.slides) {
+                for (const slide of comp.props.slides || []) {
+                  if (findAndAddToFlexbox(slide.components || [])) return true
+                }
+              }
+              // Recurse into flexbox children
+              if (Array.isArray(comp.props?.children)) {
+                if (findAndAddToFlexbox(comp.props.children)) return true
+              }
+            }
+            return false
+          }
+
+          let found = false
+          for (const section of newLayout.sections || []) {
+            for (const row of getSectionRows(section)) {
+              for (const col of row.columns || []) {
+                if (findAndAddToFlexbox(col.components || [])) {
+                  found = true
+                  break
+                }
+              }
+              if (found) break
+            }
+            if (found) break
+          }
+
+          if (found) return newLayout
+        }
+
         // Case C: Dropping onto a Column or sorting inside a Column
         let targetCol: any = null
         let insertIdx = 0
@@ -1352,94 +1445,6 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
         debugLog(`   📊 ${key}:`, typeof props[key], props[key]?.substring?.(0, 50) || props[key])
       })
 
-      let updatedViaSelectedGridContext = false
-
-      setLayout((prevLayout) => {
-        const nextLayout = JSON.parse(JSON.stringify(prevLayout))
-        let updated = false
-
-        const updateInComponents = (components: any[]): boolean => {
-          for (const comp of components || []) {
-            if (!comp) continue
-
-            // 1. Direct component match
-            if (comp.id === componentId) {
-              comp.props = {
-                ...comp.props,
-                ...props,
-              }
-              updated = true
-              updatedViaSelectedGridContext = true
-              return true
-            }
-
-            // 2. Search inside Grid cells (NewGrid, grid, etc.)
-            const normalizedType = String(comp.type || '').trim().toLowerCase()
-            if ((normalizedType === 'newgrid' || normalizedType === 'grid') && Array.isArray(comp.props?.cells)) {
-              for (let r = 0; r < comp.props.cells.length; r++) {
-                for (let c = 0; c < (comp.props.cells[r]?.length || 0); c++) {
-                  const cell = comp.props.cells[r][c]
-                  if (cell?.component?.id === componentId) {
-                    cell.component = {
-                      ...cell.component,
-                      props: {
-                        ...cell.component.props,
-                        ...props,
-                      },
-                    }
-                    comp.props = { ...comp.props, cells: [...comp.props.cells] }
-                    updated = true
-                    updatedViaSelectedGridContext = true
-                    return true
-                  }
-                }
-              }
-            }
-
-            // 3. Search in nested components
-            if (Array.isArray(comp?.props?.components) && updateInComponents(comp.props.components)) {
-              return true
-            }
-
-            // 4. Search in swiper slides
-            if (Array.isArray(comp?.props?.slides)) {
-              for (const slide of comp.props.slides) {
-                if (Array.isArray(slide?.components) && updateInComponents(slide.components)) {
-                  return true
-                }
-              }
-            }
-          }
-
-          return false
-        }
-
-        for (const section of nextLayout.sections || []) {
-          for (const row of getSectionRows(section)) {
-            for (const column of row.columns || []) {
-              if (updateInComponents(column.components || [])) {
-                updated = true
-                break
-              }
-            }
-            if (updated) break
-          }
-          if (updated) break
-        }
-
-        if (!updated && Array.isArray(nextLayout.components)) {
-          if (updateInComponents(nextLayout.components)) {
-            updated = true
-          }
-        }
-
-        if (!updated) {
-          return prevLayout
-        }
-
-        return nextLayout
-      })
-
       // Sync selectedComponent state so property panel stays accurate
       setSelectedComponent((prev) => {
         if (!prev || prev.compId !== componentId) return prev
@@ -1455,11 +1460,11 @@ const PageEditor: React.FC<PageEditorProps> = ({ initialLayout, onSave, onCancel
         }
       })
 
-      // 🎯 CRITICAL: Update the layout via the layout actions as well
+      // 🎯 Single layout update + debounced save handled by layout actions (deduplicated)
       debugLog('🔄 Calling layoutActionsHandleComponentUpdate...')
       layoutActionsHandleComponentUpdate(componentId, props)
     },
-    [layoutActionsHandleComponentUpdate, selectedComponent, setLayout],
+    [layoutActionsHandleComponentUpdate, selectedComponent],
   )
 
   const handleComponentDuplicate = useCallback(

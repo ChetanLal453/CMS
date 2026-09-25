@@ -1,3 +1,4 @@
+import { defaultAdvancedHeadingProps } from './defaults'
 import { normalizeAdvancedHeading } from './normalize'
 import type { AdvancedHeadingAlignment, AdvancedHeadingInput, AdvancedHeadingLevel, AdvancedHeadingViewModel } from './types'
 
@@ -47,61 +48,84 @@ function injectHighlight(text: string, highlightText: string, highlightColor: st
 
 export function createAdvancedHeadingViewModel(input: AdvancedHeadingInput): AdvancedHeadingViewModel {
   const heading = normalizeAdvancedHeading(input)
-  const preset = heading.style.usePresetStyles ? PRESET_STYLES[heading.level] : undefined
-  const resolvedTag = heading.aria.htmlTag === 'auto' ? heading.aria.semanticLevel || heading.level : heading.aria.htmlTag
-  const effectiveColor = heading.style.color || preset?.color || 'var(--canvas-text, #111111)'
-  const effectiveFontSize = heading.style.fontSize || preset?.fontSize || getLevelFontSize(heading.level, 'desktop')
-  const effectiveFontWeight = heading.style.fontWeight || preset?.fontWeight || '700'
-  const effectiveLineHeight = heading.style.lineHeight || preset?.lineHeight || '1.2'
-  const html = injectHighlight(heading.text, heading.highlight.text, heading.highlight.color)
-  const plainText = stripTags(heading.text).trim()
+  const resolvedLevel = heading.content?.level ?? heading.level ?? defaultAdvancedHeadingProps.level
+  const usePreset = heading.style?.usePresetStyles ?? heading.usePresetStyles ?? defaultAdvancedHeadingProps.style.usePresetStyles
+  const preset = usePreset ? PRESET_STYLES[resolvedLevel] : undefined
+  const resolvedTag =
+    (heading.style?.htmlTag ?? heading.aria?.htmlTag) === 'auto'
+      ? heading.aria?.semanticLevel || resolvedLevel
+      : (heading.style?.htmlTag ?? heading.aria?.htmlTag ?? resolvedLevel)
+  const effectiveColor = heading.style?.color ?? heading.color ?? preset?.color ?? defaultAdvancedHeadingProps.style.color
+  const effectiveFontSize = heading.style?.fontSize ?? heading.fontSize ?? preset?.fontSize ?? getLevelFontSize(resolvedLevel, 'desktop')
+  const effectiveFontWeight = heading.style?.fontWeight ?? heading.fontWeight ?? preset?.fontWeight ?? '700'
+  const effectiveLineHeight = heading.style?.lineHeight ?? heading.lineHeight ?? preset?.lineHeight ?? '1.2'
+  const text = heading.content?.text ?? heading.text ?? defaultAdvancedHeadingProps.text
+  const highlightText = heading.content?.highlightText ?? heading.highlight?.text ?? defaultAdvancedHeadingProps.highlight.text
+  const highlightColor = heading.content?.highlightColor ?? heading.highlight?.color ?? defaultAdvancedHeadingProps.highlight.color
+  const html = injectHighlight(text, highlightText, highlightColor)
+  const plainText = stripTags(text).trim()
   const seoWarnings: string[] = []
 
-  if (heading.seo.enabled) {
+  const seoEnabled = heading.content?.seoEnabled ?? heading.seo?.enabled ?? defaultAdvancedHeadingProps.seo.enabled
+  const seoMaxLength = heading.content?.seoMaxLength ?? heading.seo?.maxLength ?? defaultAdvancedHeadingProps.seo.maxLength
+
+  if (seoEnabled) {
     if (!plainText) {
       seoWarnings.push('Heading text is empty.')
     }
-    if (plainText.length > heading.seo.maxLength) {
-      seoWarnings.push(`Heading exceeds recommended SEO length of ${heading.seo.maxLength} characters.`)
+    if (plainText.length > seoMaxLength) {
+      seoWarnings.push(`Heading exceeds recommended SEO length of ${seoMaxLength} characters.`)
     }
   }
 
   return {
-    visible: heading.aria.visible,
-    text: heading.text,
+    visible: heading.style?.visible ?? heading.aria?.visible ?? defaultAdvancedHeadingProps.aria.visible,
+    text,
     plainText,
     html,
     tag: resolvedTag,
-    className: heading.aria.className,
-    customId: heading.aria.customId,
-    dataTracking: heading.aria.dataTracking,
-    ariaLevel: heading.aria.ariaLevel,
-    ariaLabel: heading.aria.ariaLabel,
-    role: heading.aria.role,
+    className: heading.style?.className ?? heading.aria?.className ?? defaultAdvancedHeadingProps.aria.className,
+    customId: heading.style?.customId ?? heading.aria?.customId ?? defaultAdvancedHeadingProps.aria.customId,
+    dataTracking: heading.style?.dataTracking ?? heading.aria?.dataTracking ?? defaultAdvancedHeadingProps.aria.dataTracking,
+    ariaLevel: heading.style?.ariaLevel ?? heading.aria?.ariaLevel ?? defaultAdvancedHeadingProps.aria.ariaLevel,
+    ariaLabel: heading.style?.ariaLabel ?? heading.aria?.ariaLabel ?? defaultAdvancedHeadingProps.aria.ariaLabel,
+    role: heading.style?.role ?? heading.aria?.role ?? defaultAdvancedHeadingProps.aria.role,
     style: {
-      fontFamily: heading.style.fontFamily,
+      fontFamily: heading.style?.fontFamily ?? defaultAdvancedHeadingProps.style.fontFamily,
       fontSize: effectiveFontSize,
       fontWeight: effectiveFontWeight,
       lineHeight: effectiveLineHeight,
-      letterSpacing: heading.style.letterSpacing,
-      textTransform: heading.style.textTransform,
-      textDecoration: heading.style.textDecoration,
-      fontStyle: heading.style.fontStyle,
+      letterSpacing: heading.style?.letterSpacing ?? defaultAdvancedHeadingProps.style.letterSpacing,
+      textTransform: heading.style?.textTransform ?? defaultAdvancedHeadingProps.style.textTransform,
+      textDecoration: heading.style?.textDecoration ?? defaultAdvancedHeadingProps.style.textDecoration,
+      fontStyle: heading.style?.fontStyle ?? defaultAdvancedHeadingProps.style.fontStyle,
       color: effectiveColor,
-      hoverColor: heading.style.hoverColor,
-      textAlign: heading.style.alignment,
-      maxWidth: heading.style.maxWidth,
-      margin: heading.style.margin,
-      padding: heading.style.padding,
+      hoverColor: heading.style?.hoverColor ?? defaultAdvancedHeadingProps.style.hoverColor,
+      textAlign: heading.style?.alignment ?? heading.alignment ?? defaultAdvancedHeadingProps.style.alignment,
+      maxWidth: heading.style?.maxWidth ?? defaultAdvancedHeadingProps.style.maxWidth,
+      margin: heading.style?.margin ?? defaultAdvancedHeadingProps.style.margin,
+      padding: heading.style?.padding ?? defaultAdvancedHeadingProps.style.padding,
       display: 'block',
       width: '100%',
       transition: 'all 0.2s ease',
     },
     responsive: {
-      mobileFontSize: heading.style.fontSizeMobile || getLevelFontSize(heading.level, 'mobile'),
-      tabletFontSize: heading.style.fontSizeTablet || getLevelFontSize(heading.level, 'tablet'),
-      mobileAlign: (heading.style.textAlignMobile || heading.style.alignment || 'left') as AdvancedHeadingAlignment,
-      tabletAlign: (heading.style.textAlignTablet || heading.style.alignment || 'left') as AdvancedHeadingAlignment,
+      mobileFontSize:
+        heading.responsive?.fontSizeMobile ||
+        heading.style?.fontSizeMobile ||
+        getLevelFontSize(resolvedLevel, 'mobile'),
+      tabletFontSize:
+        heading.responsive?.fontSizeTablet ||
+        heading.style?.fontSizeTablet ||
+        getLevelFontSize(resolvedLevel, 'tablet'),
+      mobileAlign: (heading.responsive?.textAlignMobile ||
+        heading.style?.textAlignMobile ||
+        heading.style?.alignment ||
+        defaultAdvancedHeadingProps.style.textAlignMobile) as AdvancedHeadingAlignment,
+      tabletAlign: (heading.responsive?.textAlignTablet ||
+        heading.style?.textAlignTablet ||
+        heading.style?.alignment ||
+        defaultAdvancedHeadingProps.style.textAlignTablet) as AdvancedHeadingAlignment,
     },
     seoWarnings,
   }

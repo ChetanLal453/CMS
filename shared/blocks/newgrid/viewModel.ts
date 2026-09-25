@@ -82,8 +82,8 @@ export function createNewGridViewModel(input: NewGridInput = {}): NewGridViewMod
     gridTestFromComponent: normalized.style.gridTestFromComponent,
     dataAttributesObject: parseDataAttributes(normalized.style.dataAttributes),
     visible: normalized.behavior.visible,
-    cells: normalized.cells,
-    components: normalized.components,
+    cells: normalized.content?.cells ?? normalized.cells,
+    components: normalized.content?.components ?? normalized.components,
     containerStyle,
     pageLayoutStyle,
     editorCellStyle: {

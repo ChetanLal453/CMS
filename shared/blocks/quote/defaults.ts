@@ -1,6 +1,7 @@
 import type { QuoteProps } from './types'
 
 export const defaultQuoteProps: QuoteProps = {
+  version: 1,
   text: '"This is a quote or testimonial text."',
   author: 'Author Name',
   align: 'center',

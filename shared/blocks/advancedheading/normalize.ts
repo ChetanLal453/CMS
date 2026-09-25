@@ -8,11 +8,30 @@ import type {
   AdvancedHeadingLevel,
   AdvancedHeadingTextDecoration,
   AdvancedHeadingTextTransform,
+  CanonicalAdvancedHeadingContent,
+  CanonicalAdvancedHeadingResponsive,
+  CanonicalAdvancedHeadingStyle,
   LegacyAdvancedHeadingProps,
 } from './types'
 import { deepMerge, isPlainObject, asString, asBoolean, asNumber } from '../../utils/merge'
 import type { DeepPartial } from '../../utils/merge'
 
+function asStringOrUndefined(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined
+  const str = String(value).trim()
+  return str.length > 0 ? str : undefined
+}
+
+function asBooleanOrUndefined(value: unknown): boolean | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  return Boolean(value)
+}
+
+function asNumberOrUndefined(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  const num = Number(value)
+  return Number.isNaN(num) ? undefined : num
+}
 
 function asLevel(value: unknown, fallback: AdvancedHeadingLevel): AdvancedHeadingLevel {
   const normalized = String(value ?? '').trim().toLowerCase()
@@ -254,6 +273,92 @@ export function normalizeAdvancedHeading(input: AdvancedHeadingInput = {}): Adva
   normalized.aria.className = asString(normalized.aria.className, defaultAdvancedHeadingProps.aria.className)
   normalized.aria.dataTracking = asString(normalized.aria.dataTracking, defaultAdvancedHeadingProps.aria.dataTracking)
   normalized.aria.componentId = asString(normalized.aria.componentId, defaultAdvancedHeadingProps.aria.componentId)
+
+  const contentInput = (input as any).content && typeof (input as any).content === 'object' ? (input as any).content : {}
+  const styleInput = (input as any).style && typeof (input as any).style === 'object' ? (input as any).style : {}
+  const responsiveInput = (input as any).responsive && typeof (input as any).responsive === 'object' ? (input as any).responsive : {}
+
+  const rawText = contentInput.text ?? (input as any).text
+  const rawLevel = contentInput.level ?? (input as any).level
+  const rawHighlightText = contentInput.highlightText ?? (input as any).highlightText ?? (input as any).highlight?.text
+  const rawHighlightColor = contentInput.highlightColor ?? (input as any).highlightColor ?? (input as any).highlight?.color
+  const rawSeoEnabled = contentInput.seoEnabled ?? (input as any).enableSeoChecks ?? (input as any).seo?.enabled
+  const rawSeoMaxLength = contentInput.seoMaxLength ?? (input as any).seoMaxLength ?? (input as any).seo?.maxLength
+
+  const content: CanonicalAdvancedHeadingContent = {}
+  if (asStringOrUndefined(rawText) !== undefined) content.text = asStringOrUndefined(rawText)
+  if (rawLevel !== undefined) content.level = asLevel(rawLevel, 'h2')
+  if (asStringOrUndefined(rawHighlightText) !== undefined) content.highlightText = asStringOrUndefined(rawHighlightText)
+  if (asStringOrUndefined(rawHighlightColor) !== undefined) content.highlightColor = asStringOrUndefined(rawHighlightColor)
+  if (asBooleanOrUndefined(rawSeoEnabled) !== undefined) content.seoEnabled = asBooleanOrUndefined(rawSeoEnabled)
+  if (asNumberOrUndefined(rawSeoMaxLength) !== undefined) content.seoMaxLength = asNumberOrUndefined(rawSeoMaxLength)
+
+  const rawUsePreset = styleInput.usePresetStyles ?? (input as any).usePresetStyles
+  const rawFontFamily = styleInput.fontFamily ?? (input as any).fontFamily
+  const rawFontSize = styleInput.fontSize ?? (input as any).fontSize
+  const rawFontWeight = styleInput.fontWeight ?? (input as any).fontWeight
+  const rawLineHeight = styleInput.lineHeight ?? (input as any).lineHeight
+  const rawLetterSpacing = styleInput.letterSpacing ?? (input as any).letterSpacing
+  const rawTextTransform = styleInput.textTransform ?? (input as any).textTransform
+  const rawTextDecoration = styleInput.textDecoration ?? (input as any).textDecoration
+  const rawFontStyle = styleInput.fontStyle ?? (input as any).fontStyle
+  const rawColor = styleInput.color ?? (input as any).color ?? (input as any).fontColor
+  const rawHoverColor = styleInput.hoverColor ?? (input as any).hoverColor
+  const rawAlignment = styleInput.alignment ?? (input as any).alignment ?? (input as any).textAlign
+  const rawMaxWidth = styleInput.maxWidth ?? (input as any).maxWidth
+  const rawMargin = styleInput.margin ?? (input as any).margin
+  const rawPadding = styleInput.padding ?? (input as any).padding
+  const rawClassName = styleInput.className ?? (input as any).className ?? (input as any).aria?.className
+  const rawCustomId = styleInput.customId ?? (input as any).customId ?? (input as any).aria?.customId
+  const rawHtmlTag = styleInput.htmlTag ?? (input as any).htmlTag ?? (input as any).aria?.htmlTag
+  const rawAriaLevel = styleInput.ariaLevel ?? (input as any).ariaLevel ?? (input as any).aria?.ariaLevel
+  const rawAriaLabel = styleInput.ariaLabel ?? (input as any).ariaLabel ?? (input as any).aria?.ariaLabel
+  const rawRole = styleInput.role ?? (input as any).role ?? (input as any).aria?.role
+  const rawVisible = styleInput.visible ?? (input as any).visible ?? (input as any).aria?.visible
+
+  const style: CanonicalAdvancedHeadingStyle = {}
+  if (asBooleanOrUndefined(rawUsePreset) !== undefined) style.usePresetStyles = asBooleanOrUndefined(rawUsePreset)
+  if (asStringOrUndefined(rawFontFamily) !== undefined) style.fontFamily = asStringOrUndefined(rawFontFamily)
+  if (asStringOrUndefined(rawFontSize) !== undefined) style.fontSize = asStringOrUndefined(rawFontSize)
+  if (asStringOrUndefined(rawFontWeight) !== undefined) style.fontWeight = asStringOrUndefined(rawFontWeight)
+  if (asStringOrUndefined(rawLineHeight) !== undefined) style.lineHeight = asStringOrUndefined(rawLineHeight)
+  if (asStringOrUndefined(rawLetterSpacing) !== undefined) style.letterSpacing = asStringOrUndefined(rawLetterSpacing)
+  if (asStringOrUndefined(rawTextTransform) !== undefined) style.textTransform = asTextTransform(rawTextTransform, 'none')
+  if (asStringOrUndefined(rawTextDecoration) !== undefined) style.textDecoration = asTextDecoration(rawTextDecoration, 'none')
+  if (asStringOrUndefined(rawFontStyle) !== undefined) style.fontStyle = asFontStyle(rawFontStyle, 'normal')
+  if (asStringOrUndefined(rawColor) !== undefined) style.color = asStringOrUndefined(rawColor)
+  if (asStringOrUndefined(rawHoverColor) !== undefined) style.hoverColor = asStringOrUndefined(rawHoverColor)
+  if (asStringOrUndefined(rawAlignment) !== undefined) style.alignment = asAlignment(rawAlignment, 'left')
+  if (asStringOrUndefined(rawMaxWidth) !== undefined) style.maxWidth = asStringOrUndefined(rawMaxWidth)
+  if (asStringOrUndefined(rawMargin) !== undefined) style.margin = asStringOrUndefined(rawMargin)
+  if (asStringOrUndefined(rawPadding) !== undefined) style.padding = asStringOrUndefined(rawPadding)
+  if (asStringOrUndefined(rawClassName) !== undefined) style.className = asStringOrUndefined(rawClassName)
+  if (asStringOrUndefined(rawCustomId) !== undefined) style.customId = asStringOrUndefined(rawCustomId)
+  if (asStringOrUndefined(rawHtmlTag) !== undefined) style.htmlTag = asHtmlTag(rawHtmlTag, 'auto')
+  if (asNumberOrUndefined(rawAriaLevel) !== undefined) style.ariaLevel = asNumberOrUndefined(rawAriaLevel)
+  if (asStringOrUndefined(rawAriaLabel) !== undefined) style.ariaLabel = asStringOrUndefined(rawAriaLabel)
+  if (asStringOrUndefined(rawRole) !== undefined) style.role = asStringOrUndefined(rawRole)
+  if (asBooleanOrUndefined(rawVisible) !== undefined) style.visible = asBooleanOrUndefined(rawVisible)
+
+  const rawFontSizeMobile = responsiveInput.fontSizeMobile ?? styleInput.fontSizeMobile ?? (input as any).fontSizeMobile
+  const rawFontSizeTablet = responsiveInput.fontSizeTablet ?? styleInput.fontSizeTablet ?? (input as any).fontSizeTablet
+  const rawTextAlignMobile = responsiveInput.textAlignMobile ?? styleInput.textAlignMobile ?? (input as any).textAlignMobile
+  const rawTextAlignTablet = responsiveInput.textAlignTablet ?? styleInput.textAlignTablet ?? (input as any).textAlignTablet
+
+  const responsive: CanonicalAdvancedHeadingResponsive = {
+    ...(asStringOrUndefined(rawFontSizeMobile) !== undefined ? { fontSizeMobile: asStringOrUndefined(rawFontSizeMobile) } : {}),
+    ...(asStringOrUndefined(rawFontSizeTablet) !== undefined ? { fontSizeTablet: asStringOrUndefined(rawFontSizeTablet) } : {}),
+    ...(asStringOrUndefined(rawTextAlignMobile) !== undefined ? { textAlignMobile: asAlignment(rawTextAlignMobile, 'center') } : {}),
+    ...(asStringOrUndefined(rawTextAlignTablet) !== undefined ? { textAlignTablet: asAlignment(rawTextAlignTablet, 'left') } : {}),
+    desktop: responsiveInput.desktop && typeof responsiveInput.desktop === 'object' ? responsiveInput.desktop : {},
+    tablet: responsiveInput.tablet && typeof responsiveInput.tablet === 'object' ? responsiveInput.tablet : {},
+    mobile: responsiveInput.mobile && typeof responsiveInput.mobile === 'object' ? responsiveInput.mobile : {},
+  }
+
+  normalized.version = 1
+  normalized.content = content
+  normalized.style = style as any
+  normalized.responsive = responsive
 
   return normalized
 }

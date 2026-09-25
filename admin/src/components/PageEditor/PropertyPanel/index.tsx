@@ -16,6 +16,15 @@ import { normalizeNewGrid } from '../../../../../shared/blocks/newgrid/normalize
 import { normalizeTabs } from '../../../../../shared/blocks/tabs/normalize'
 import { normalizeButton } from '../../../../../shared/blocks/button/normalize'
 import { normalizeImage } from '../../../../../shared/blocks/image/normalize'
+import { normalizeContainer } from '../../../../../shared/blocks/container/normalize'
+import { normalizeSpacer } from '../../../../../shared/blocks/spacer/normalize'
+import { normalizeIcon } from '../../../../../shared/blocks/icon/normalize'
+import { normalizeDivider } from '../../../../../shared/blocks/divider/normalize'
+import { normalizeQuote } from '../../../../../shared/blocks/quote/normalize'
+import { normalizeVideo } from '../../../../../shared/blocks/video/normalize'
+import { normalizeFilter } from '../../../../../shared/blocks/filter/normalize'
+import { normalizeSwiperContainer } from '../../../../../shared/blocks/swipercontainer/normalize'
+import { normalizeFlexbox } from '../../../../../shared/blocks/flexbox/normalize'
 import { getBlockDefaults, normalizeBlockProps, resolveBlockType } from '../../../../../shared/blocks/registry'
 import { THEME_PRESETS } from '../../../../../shared/theme'
 
@@ -57,97 +66,101 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
 
   if (normalizedType === 'advancedparagraph' || normalizedType === 'paragraph') {
     const paragraph = normalizeAdvancedParagraph(props)
+    const allowedFormatsArray =
+      paragraph.content?.allowedFormats ??
+      paragraph.aria?.allowedFormats ??
+      ['bold', 'italic', 'underline', 'color']
     return {
-      text: paragraph.content.text,
-      enableRichText: paragraph.aria.enableRichText,
-      allowedFormats: paragraph.aria.allowedFormats.join(', '),
-      fontSize: paragraph.style.fontSize,
-      fontWeight: paragraph.style.fontWeight,
-      fontFamily: paragraph.style.fontFamily,
-      lineHeight: paragraph.style.lineHeight,
-      letterSpacing: paragraph.style.letterSpacing,
-      textTransform: paragraph.style.textTransform,
-      textDecoration: paragraph.style.textDecoration,
-      fontStyle: paragraph.style.fontStyle,
-      textColor: paragraph.style.color,
-      backgroundColor: paragraph.style.backgroundColor,
-      border: paragraph.style.border,
-      borderRadius: paragraph.style.borderRadius,
-      borderColor: paragraph.style.borderColor,
-      textShadow: paragraph.style.textShadow,
-      boxShadow: paragraph.style.boxShadow,
-      opacity: paragraph.style.opacity,
-      textAlign: paragraph.layout.alignment,
-      alignment: paragraph.layout.alignment,
-      margin: paragraph.style.margin,
-      padding: paragraph.style.padding,
-      width: paragraph.style.width,
-      maxWidth: paragraph.style.maxWidth,
-      minHeight: paragraph.style.minHeight,
-      display: paragraph.style.display,
-      fontSizeMobile: paragraph.style.fontSizeMobile,
-      fontSizeTablet: paragraph.style.fontSizeTablet,
-      textAlignMobile: paragraph.style.textAlignMobile,
-      textAlignTablet: paragraph.style.textAlignTablet,
-      lineHeightMobile: paragraph.style.lineHeightMobile,
-      hoverEffect: paragraph.interaction.hover.effect,
-      hoverTextColor: paragraph.interaction.hover.color,
-      hoverBackgroundColor: paragraph.interaction.hover.backgroundColor,
-      transition: paragraph.style.transition,
-      ariaLabel: paragraph.aria.ariaLabel,
-      role: paragraph.aria.role,
-      tabIndex: paragraph.aria.tabIndex,
-      className: paragraph.aria.className,
-      customId: paragraph.aria.customId,
-      selectable: paragraph.aria.selectable,
-      editable: paragraph.aria.editable,
-      truncate: paragraph.aria.truncate,
-      maxLines: paragraph.aria.maxLines,
-      visible: paragraph.aria.visible,
-      componentId: paragraph.aria.componentId,
+      text: paragraph.content?.text ?? paragraph.text ?? '',
+      enableRichText: paragraph.content?.enableRichText ?? paragraph.aria?.enableRichText ?? true,
+      allowedFormats: Array.isArray(allowedFormatsArray) ? allowedFormatsArray.join(', ') : String(allowedFormatsArray || ''),
+      fontSize: paragraph.style?.fontSize ?? paragraph.fontSize ?? '',
+      fontWeight: paragraph.style?.fontWeight ?? paragraph.fontWeight ?? '',
+      fontFamily: paragraph.style?.fontFamily ?? paragraph.fontFamily ?? '',
+      lineHeight: paragraph.style?.lineHeight ?? paragraph.lineHeight ?? '',
+      letterSpacing: paragraph.style?.letterSpacing ?? paragraph.letterSpacing ?? '',
+      textTransform: paragraph.style?.textTransform ?? paragraph.textTransform ?? 'none',
+      textDecoration: paragraph.style?.textDecoration ?? paragraph.textDecoration ?? 'none',
+      fontStyle: paragraph.style?.fontStyle ?? paragraph.fontStyle ?? 'normal',
+      textColor: paragraph.style?.color ?? paragraph.textColor ?? paragraph.color ?? '',
+      backgroundColor: paragraph.style?.backgroundColor ?? paragraph.backgroundColor ?? '',
+      border: paragraph.style?.border ?? paragraph.border ?? '',
+      borderRadius: paragraph.style?.borderRadius ?? paragraph.borderRadius ?? '',
+      borderColor: paragraph.style?.borderColor ?? paragraph.borderColor ?? '',
+      textShadow: paragraph.style?.textShadow ?? paragraph.textShadow ?? '',
+      boxShadow: paragraph.style?.boxShadow ?? paragraph.boxShadow ?? '',
+      opacity: paragraph.style?.opacity ?? paragraph.opacity ?? 1,
+      textAlign: paragraph.style?.alignment ?? paragraph.layout?.alignment ?? paragraph.alignment ?? 'left',
+      alignment: paragraph.style?.alignment ?? paragraph.layout?.alignment ?? paragraph.alignment ?? 'left',
+      margin: paragraph.style?.margin ?? paragraph.margin ?? '',
+      padding: paragraph.style?.padding ?? paragraph.padding ?? '',
+      width: paragraph.style?.width ?? paragraph.width ?? '',
+      maxWidth: paragraph.style?.maxWidth ?? paragraph.maxWidth ?? '',
+      minHeight: paragraph.style?.minHeight ?? paragraph.minHeight ?? '',
+      display: paragraph.style?.display ?? paragraph.display ?? 'block',
+      fontSizeMobile: paragraph.responsive?.fontSizeMobile ?? paragraph.style?.fontSizeMobile ?? paragraph.fontSizeMobile ?? '',
+      fontSizeTablet: paragraph.responsive?.fontSizeTablet ?? paragraph.style?.fontSizeTablet ?? paragraph.fontSizeTablet ?? '',
+      textAlignMobile: paragraph.responsive?.textAlignMobile ?? paragraph.style?.textAlignMobile ?? paragraph.textAlignMobile ?? 'left',
+      textAlignTablet: paragraph.responsive?.textAlignTablet ?? paragraph.style?.textAlignTablet ?? paragraph.textAlignTablet ?? 'left',
+      lineHeightMobile: paragraph.responsive?.lineHeightMobile ?? paragraph.style?.lineHeightMobile ?? paragraph.lineHeightMobile ?? '',
+      hoverEffect: paragraph.style?.hoverEffect ?? paragraph.interaction?.hover?.effect ?? paragraph.hoverEffect ?? 'none',
+      hoverTextColor: paragraph.style?.hoverColor ?? paragraph.interaction?.hover?.color ?? paragraph.hoverTextColor ?? '',
+      hoverBackgroundColor: paragraph.style?.hoverBackgroundColor ?? paragraph.interaction?.hover?.backgroundColor ?? paragraph.hoverBackgroundColor ?? '',
+      transition: paragraph.style?.transition ?? paragraph.transition ?? '',
+      ariaLabel: paragraph.style?.ariaLabel ?? paragraph.aria?.ariaLabel ?? paragraph.ariaLabel ?? '',
+      role: paragraph.style?.role ?? paragraph.aria?.role ?? paragraph.role ?? '',
+      tabIndex: paragraph.style?.tabIndex ?? paragraph.aria?.tabIndex ?? paragraph.tabIndex ?? 0,
+      className: paragraph.style?.className ?? paragraph.aria?.className ?? paragraph.className ?? '',
+      customId: paragraph.style?.customId ?? paragraph.aria?.customId ?? paragraph.customId ?? '',
+      selectable: paragraph.style?.selectable ?? paragraph.aria?.selectable ?? paragraph.selectable ?? true,
+      editable: paragraph.style?.editable ?? paragraph.aria?.editable ?? paragraph.editable ?? true,
+      truncate: paragraph.style?.truncate ?? paragraph.aria?.truncate ?? paragraph.truncate ?? false,
+      maxLines: paragraph.style?.maxLines ?? paragraph.aria?.maxLines ?? paragraph.maxLines ?? 0,
+      visible: paragraph.style?.visible ?? paragraph.aria?.visible ?? paragraph.visible ?? true,
+      componentId: paragraph.aria?.componentId ?? paragraph.componentId ?? '',
     }
   }
 
   if (normalizedType === 'advancedheading') {
     const heading = normalizeAdvancedHeading(props)
     return {
-      text: heading.text,
-      level: heading.level,
-      usePresetStyles: heading.style.usePresetStyles,
-      fontFamily: heading.style.fontFamily,
-      fontSize: heading.style.fontSize,
-      fontSizeMobile: heading.style.fontSizeMobile,
-      fontSizeTablet: heading.style.fontSizeTablet,
-      fontWeight: heading.style.fontWeight,
-      lineHeight: heading.style.lineHeight,
-      letterSpacing: heading.style.letterSpacing,
-      textTransform: heading.style.textTransform,
-      textDecoration: heading.style.textDecoration,
-      fontStyle: heading.style.fontStyle,
-      color: heading.style.color,
-      hoverColor: heading.style.hoverColor,
-      alignment: heading.style.alignment,
-      textAlign: heading.style.alignment,
-      textAlignMobile: heading.style.textAlignMobile,
-      textAlignTablet: heading.style.textAlignTablet,
-      maxWidth: heading.style.maxWidth,
-      margin: heading.style.margin,
-      padding: heading.style.padding,
-      highlightText: heading.highlight.text,
-      highlightColor: heading.highlight.color,
-      enableSeoChecks: heading.seo.enabled,
-      seoMaxLength: heading.seo.maxLength,
-      semanticLevel: heading.aria.semanticLevel,
-      htmlTag: heading.aria.htmlTag,
-      ariaLevel: heading.aria.ariaLevel,
-      ariaLabel: heading.aria.ariaLabel,
-      role: heading.aria.role,
-      autoId: heading.aria.autoId,
-      customId: heading.aria.customId,
-      className: heading.aria.className,
-      dataTracking: heading.aria.dataTracking,
-      visible: heading.aria.visible,
-      componentId: heading.aria.componentId,
+      text: heading.content?.text ?? heading.text ?? '',
+      level: heading.content?.level ?? heading.level ?? 'h2',
+      usePresetStyles: heading.style?.usePresetStyles ?? heading.usePresetStyles ?? true,
+      fontFamily: heading.style?.fontFamily ?? heading.fontFamily ?? '',
+      fontSize: heading.style?.fontSize ?? heading.fontSize ?? '',
+      fontSizeMobile: heading.responsive?.fontSizeMobile ?? heading.style?.fontSizeMobile ?? heading.fontSizeMobile ?? '',
+      fontSizeTablet: heading.responsive?.fontSizeTablet ?? heading.style?.fontSizeTablet ?? heading.fontSizeTablet ?? '',
+      fontWeight: heading.style?.fontWeight ?? heading.fontWeight ?? '',
+      lineHeight: heading.style?.lineHeight ?? heading.lineHeight ?? '',
+      letterSpacing: heading.style?.letterSpacing ?? heading.letterSpacing ?? '',
+      textTransform: heading.style?.textTransform ?? heading.textTransform ?? 'none',
+      textDecoration: heading.style?.textDecoration ?? heading.textDecoration ?? 'none',
+      fontStyle: heading.style?.fontStyle ?? heading.fontStyle ?? 'normal',
+      color: heading.style?.color ?? heading.color ?? '',
+      hoverColor: heading.style?.hoverColor ?? heading.hoverColor ?? '',
+      alignment: heading.style?.alignment ?? heading.alignment ?? heading.textAlign ?? 'left',
+      textAlign: heading.style?.alignment ?? heading.alignment ?? heading.textAlign ?? 'left',
+      textAlignMobile: heading.responsive?.textAlignMobile ?? heading.style?.textAlignMobile ?? heading.textAlignMobile ?? 'center',
+      textAlignTablet: heading.responsive?.textAlignTablet ?? heading.style?.textAlignTablet ?? heading.textAlignTablet ?? 'left',
+      maxWidth: heading.style?.maxWidth ?? heading.maxWidth ?? '',
+      margin: heading.style?.margin ?? heading.margin ?? '',
+      padding: heading.style?.padding ?? heading.padding ?? '',
+      highlightText: heading.content?.highlightText ?? heading.highlight?.text ?? heading.highlightText ?? '',
+      highlightColor: heading.content?.highlightColor ?? heading.highlight?.color ?? heading.highlightColor ?? '',
+      enableSeoChecks: heading.content?.seoEnabled ?? heading.seo?.enabled ?? heading.enableSeoChecks ?? true,
+      seoMaxLength: heading.content?.seoMaxLength ?? heading.seo?.maxLength ?? heading.seoMaxLength ?? 60,
+      semanticLevel: heading.style?.htmlTag ?? heading.aria?.semanticLevel ?? heading.semanticLevel ?? heading.level ?? 'h2',
+      htmlTag: heading.style?.htmlTag ?? heading.aria?.htmlTag ?? heading.htmlTag ?? 'auto',
+      ariaLevel: heading.style?.ariaLevel ?? heading.aria?.ariaLevel ?? heading.ariaLevel ?? 2,
+      ariaLabel: heading.style?.ariaLabel ?? heading.aria?.ariaLabel ?? heading.ariaLabel ?? '',
+      role: heading.style?.role ?? heading.aria?.role ?? heading.role ?? '',
+      autoId: heading.aria?.autoId ?? heading.autoId ?? true,
+      customId: heading.style?.customId ?? heading.aria?.customId ?? heading.customId ?? '',
+      className: heading.style?.className ?? heading.aria?.className ?? heading.className ?? '',
+      dataTracking: heading.style?.dataTracking ?? heading.aria?.dataTracking ?? heading.dataTracking ?? '',
+      visible: heading.style?.visible ?? heading.aria?.visible ?? heading.visible ?? true,
+      componentId: heading.aria?.componentId ?? heading.componentId ?? '',
     }
   }
 
@@ -165,8 +178,8 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
   if (normalizedType === 'advancedlist' || normalizedType === 'list') {
     const list = normalizeAdvancedList(props)
     return {
-      items: list.items,
-      listType: list.listType,
+      items: list.content?.items ?? list.items,
+      listType: list.content?.listType ?? list.listType,
       columns: list.style.columns,
       itemSpacing: list.style.itemSpacing,
       gap: list.style.gap,
@@ -206,7 +219,7 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
   if (normalizedType === 'advancedaccordion' || normalizedType === 'accordion') {
     const accordion = normalizeAdvancedAccordion(props)
     return {
-      items: accordion.items,
+      items: accordion.content?.items ?? accordion.items,
       behavior: accordion.interaction.behavior,
       allowAllClosed: accordion.interaction.allowAllClosed,
       itemSpacing: accordion.style.itemSpacing,
@@ -261,16 +274,16 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
       className: grid.className,
       id: grid.id,
       dataAttributes: grid.dataAttributes,
-      cells: grid.cells,
-      components: grid.components,
+      cells: grid.content?.cells ?? grid.cells,
+      components: grid.content?.components ?? grid.components,
     }
   }
 
   if (normalizedType === 'tabs') {
     const tabs = normalizeTabs(props)
     return {
-      tabs: tabs.tabs,
-      activeTab: tabs.activeTab,
+      tabs: tabs.content?.tabs ?? tabs.tabs,
+      activeTab: tabs.content?.activeTab ?? tabs.activeTab,
       ariaLabel: tabs.aria.ariaLabel,
       className: tabs.aria.className,
       customId: tabs.aria.customId,
@@ -417,6 +430,276 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
     }
   }
 
+  if (normalizedType === 'container') {
+    const cont = normalizeContainer(props)
+    return {
+      maxWidth: cont.style?.maxWidth ?? cont.maxWidth ?? '',
+      width: cont.style?.width ?? cont.width ?? '',
+      minHeight: cont.style?.minHeight ?? cont.minHeight ?? '',
+      padding: cont.style?.padding ?? cont.padding ?? '',
+      margin: cont.style?.margin ?? cont.margin ?? '',
+      backgroundColor: cont.style?.backgroundColor ?? cont.backgroundColor ?? '',
+      borderRadius: cont.style?.borderRadius ?? cont.borderRadius ?? '',
+      border: cont.style?.border ?? cont.border ?? '',
+      borderColor: cont.style?.borderColor ?? cont.borderColor ?? '',
+      shadow: cont.style?.shadow ?? cont.shadow ?? '',
+      alignment: cont.style?.alignment ?? cont.alignment ?? 'center',
+      textAlign: cont.style?.textAlign ?? cont.textAlign ?? 'center',
+      className: cont.style?.className ?? cont.className ?? '',
+      content: (typeof cont.content === 'object' ? cont.content?.content : cont.content) ?? '',
+    }
+  }
+
+  if (normalizedType === 'spacer') {
+    const sp = normalizeSpacer(props)
+    return {
+      height: sp.style?.height ?? sp.height ?? '32px',
+      mobileHeight: sp.responsive?.mobile?.height ?? sp.mobileHeight ?? '',
+      tabletHeight: sp.responsive?.tablet?.height ?? sp.tabletHeight ?? '',
+      desktopHeight: sp.responsive?.desktop?.height ?? sp.desktopHeight ?? '',
+      visibility: sp.visibility ?? true,
+      backgroundColor: sp.style?.backgroundColor ?? sp.backgroundColor ?? '',
+      showInEditor: sp.style?.showInEditor ?? sp.showInEditor ?? true,
+      className: sp.style?.className ?? sp.className ?? '',
+    }
+  }
+
+  if (normalizedType === 'icon') {
+    const ic = normalizeIcon(props)
+    return {
+      name: ic.content?.name ?? ic.name ?? 'star',
+      icon: ic.content?.name ?? ic.name ?? 'star',
+      size: ic.style?.size ?? ic.size ?? '24px',
+      color: ic.style?.color ?? ic.color ?? '#000000',
+      className: ic.style?.className ?? ic.className ?? '',
+    }
+  }
+
+  if (normalizedType === 'divider') {
+    const div = normalizeDivider(props)
+    return {
+      thickness: div.style?.thickness ?? div.thickness ?? '1px',
+      color: div.style?.color ?? div.color ?? '#cccccc',
+      width: div.style?.width ?? div.width ?? '100%',
+      margin: div.style?.margin ?? div.margin ?? '20px 0',
+      className: div.style?.className ?? div.className ?? '',
+    }
+  }
+
+  if (normalizedType === 'quote') {
+    const q = normalizeQuote(props)
+    return {
+      text: (typeof q.content === 'object' ? q.content?.text : q.content) ?? q.text ?? '"This is a quote or testimonial text."',
+      author: (typeof q.content === 'object' ? q.content?.author : undefined) ?? q.author ?? 'Author Name',
+      align: q.style?.align ?? q.align ?? 'center',
+      alignment: q.style?.alignment ?? q.alignment ?? 'center',
+      textAlign: q.style?.textAlign ?? q.textAlign ?? 'center',
+      margin: q.style?.margin ?? q.margin ?? '20px 0',
+      color: q.style?.color ?? q.color ?? '#374151',
+      fontSize: q.style?.fontSize ?? q.fontSize ?? '18px',
+      lineHeight: q.style?.lineHeight ?? q.lineHeight ?? '1.7',
+      className: q.style?.className ?? q.className ?? '',
+    }
+  }
+
+  if (normalizedType === 'video') {
+    const v = normalizeVideo(props)
+    return {
+      src: v.content?.src ?? v.src ?? '',
+      sourceType: v.content?.sourceType ?? v.sourceType ?? 'auto',
+      title: v.content?.title ?? v.title ?? 'Video',
+      autoplay: v.content?.autoplay ?? v.autoplay ?? false,
+      muted: v.content?.muted ?? v.muted ?? false,
+      controls: v.content?.controls ?? v.controls ?? true,
+      loop: v.content?.loop ?? v.loop ?? false,
+      width: v.style?.width ?? v.width ?? '100%',
+      maxWidth: v.style?.maxWidth ?? v.maxWidth ?? '100%',
+      aspectRatio: v.style?.aspectRatio ?? v.aspectRatio ?? '16 / 9',
+      margin: v.style?.margin ?? v.margin ?? '0 auto',
+      borderRadius: v.style?.borderRadius ?? v.borderRadius ?? 10,
+      borderColor: v.style?.borderColor ?? v.borderColor ?? '#ffffff',
+      borderOpacity: v.style?.borderOpacity ?? v.borderOpacity ?? 13,
+      accentColor: v.style?.accentColor ?? v.accentColor ?? '#7c6dfa',
+      showOverlay: v.style?.showOverlay ?? v.showOverlay ?? true,
+      overlayStrength: v.style?.overlayStrength ?? v.overlayStrength ?? 10,
+      showPreviewChrome: v.style?.showPreviewChrome ?? v.showPreviewChrome ?? true,
+      previewProgress: v.style?.previewProgress ?? v.previewProgress ?? 35,
+      previewTime: v.style?.previewTime ?? v.previewTime ?? '1:24 / 4:05',
+      objectFit: v.style?.objectFit ?? v.objectFit ?? 'cover',
+      className: v.style?.className ?? v.className ?? '',
+    }
+  }
+
+  if (normalizedType === 'filter') {
+    const f = normalizeFilter(props)
+    return {
+      filterType: f.content?.filterType ?? f.filterType,
+      filterKey: f.content?.filterKey ?? f.filterKey,
+      bindTo: f.content?.bindTo ?? f.bindTo,
+      label: f.content?.label ?? f.label,
+      helpText: f.content?.helpText ?? f.helpText,
+      placeholder: f.content?.placeholder ?? f.placeholder,
+      defaultValue: f.content?.defaultValue ?? f.defaultValue,
+      defaultChecked: f.content?.defaultChecked ?? f.defaultChecked,
+      value: f.content?.value ?? f.value,
+      sourceType: f.content?.sourceType ?? f.sourceType,
+      presetKey: f.content?.presetKey ?? f.presetKey,
+      options: f.content?.options ?? f.options,
+      apiEndpoint: f.content?.apiEndpoint ?? f.apiEndpoint,
+      apiMethod: f.content?.apiMethod ?? f.apiMethod,
+      apiLabelField: f.content?.apiLabelField ?? f.apiLabelField,
+      apiValueField: f.content?.apiValueField ?? f.apiValueField,
+      min: f.content?.min ?? f.min,
+      max: f.content?.max ?? f.max,
+      step: f.content?.step ?? f.step,
+      rangeMode: f.content?.rangeMode ?? f.rangeMode,
+      prefix: f.content?.prefix ?? f.prefix,
+      suffix: f.content?.suffix ?? f.suffix,
+      defaultSort: f.content?.defaultSort ?? f.defaultSort,
+      sortField: f.content?.sortField ?? f.sortField,
+      sortDirection: f.content?.sortDirection ?? f.sortDirection,
+      onLabel: f.content?.onLabel ?? f.onLabel,
+      offLabel: f.content?.offLabel ?? f.offLabel,
+      selectAllLabel: f.content?.selectAllLabel ?? f.selectAllLabel,
+      applyButtonLabel: f.content?.applyButtonLabel ?? f.applyButtonLabel,
+      sectionTitle: f.content?.sectionTitle ?? f.sectionTitle,
+      dependsOn: f.content?.dependsOn ?? f.dependsOn,
+      visibleWhen: f.content?.visibleWhen ?? f.visibleWhen,
+      disabledWhen: f.content?.disabledWhen ?? f.disabledWhen,
+      storageKey: f.content?.storageKey ?? f.storageKey,
+      queryParam: f.content?.queryParam ?? f.queryParam,
+      emitEventName: f.content?.emitEventName ?? f.emitEventName,
+      variant: f.style?.variant ?? f.variant,
+      size: f.style?.size ?? f.size,
+      density: f.style?.density ?? f.density,
+      fullWidth: f.style?.fullWidth ?? f.fullWidth,
+      labelPosition: f.style?.labelPosition ?? f.labelPosition,
+      orientation: f.style?.orientation ?? f.orientation,
+      mobileVariant: f.style?.mobileVariant ?? f.mobileVariant,
+      desktopVariant: f.style?.desktopVariant ?? f.desktopVariant,
+      columns: f.style?.columns ?? f.columns,
+      inline: f.style?.inline ?? f.inline,
+      radioStyle: f.style?.radioStyle ?? f.radioStyle,
+      toggleColor: f.style?.toggleColor ?? f.toggleColor,
+      chipStyle: f.style?.chipStyle ?? f.chipStyle,
+      chipVariant: f.style?.chipVariant ?? f.chipVariant,
+      showLabel: f.style?.showLabel ?? f.showLabel,
+      showClearButton: f.style?.showClearButton ?? f.showClearButton,
+      showStateLabel: f.style?.showStateLabel ?? f.showStateLabel,
+      showSelectedCount: f.style?.showSelectedCount ?? f.showSelectedCount,
+      showTooltip: f.style?.showTooltip ?? f.showTooltip,
+      showTicks: f.style?.showTicks ?? f.showTicks,
+      showMinMaxLabels: f.style?.showMinMaxLabels ?? f.showMinMaxLabels,
+      showDivider: f.style?.showDivider ?? f.showDivider,
+      sticky: f.style?.sticky ?? f.sticky,
+      collapsedByDefault: f.style?.collapsedByDefault ?? f.collapsedByDefault,
+      disabled: f.style?.disabled ?? f.disabled,
+      required: f.style?.required ?? f.required,
+      clearable: f.style?.clearable ?? f.clearable,
+      searchable: f.style?.searchable ?? f.searchable,
+      closeMenuOnSelect: f.style?.closeMenuOnSelect ?? f.closeMenuOnSelect,
+      maxSelections: f.style?.maxSelections ?? f.maxSelections,
+      selectAllEnabled: f.style?.selectAllEnabled ?? f.selectAllEnabled,
+      allowMultiple: f.style?.allowMultiple ?? f.allowMultiple,
+      removable: f.style?.removable ?? f.removable,
+      debounceMs: f.style?.debounceMs ?? f.debounceMs,
+      autoFocus: f.style?.autoFocus ?? f.autoFocus,
+      persistState: f.style?.persistState ?? f.persistState,
+      syncWithUrl: f.style?.syncWithUrl ?? f.syncWithUrl,
+      autoApply: f.style?.autoApply ?? f.autoApply,
+      resetOnChange: f.style?.resetOnChange ?? f.resetOnChange,
+      reloadOptionsOnDependencyChange: f.style?.reloadOptionsOnDependencyChange ?? f.reloadOptionsOnDependencyChange,
+      className: f.style?.className ?? f.className,
+      wrapperClassName: f.style?.wrapperClassName ?? f.wrapperClassName,
+      ariaLabel: f.style?.ariaLabel ?? f.ariaLabel,
+      ariaDescription: f.style?.ariaDescription ?? f.ariaDescription,
+      tabIndex: f.style?.tabIndex ?? f.tabIndex,
+    }
+  }
+
+  if (normalizedType === 'swipercontainer') {
+    const swiper = normalizeSwiperContainer(props)
+    return {
+      slides: swiper.content?.slides ?? swiper.slides ?? [],
+      autoplay: swiper.content?.autoplay ?? swiper.autoplay ?? true,
+      autoplayDelay: swiper.content?.autoplayDelay ?? swiper.autoplayDelay ?? 3000,
+      loop: swiper.content?.loop ?? swiper.loop ?? false,
+      speed: swiper.content?.speed ?? swiper.speed ?? 300,
+      direction: swiper.content?.direction ?? swiper.direction ?? 'horizontal',
+      draggable: swiper.content?.draggable ?? swiper.draggable ?? true,
+      grabCursor: swiper.content?.grabCursor ?? swiper.grabCursor ?? true,
+      freeMode: swiper.content?.freeMode ?? swiper.freeMode ?? false,
+      mousewheel: swiper.content?.mousewheel ?? swiper.mousewheel ?? false,
+      keyboard: swiper.content?.keyboard ?? swiper.keyboard ?? false,
+      navigation: swiper.content?.navigation ?? swiper.navigation ?? true,
+      pagination: swiper.content?.pagination ?? swiper.pagination ?? true,
+      scrollbar: swiper.content?.scrollbar ?? swiper.scrollbar ?? false,
+      scrollbarDraggable: swiper.content?.scrollbarDraggable ?? swiper.scrollbarDraggable ?? true,
+      parallax: swiper.content?.parallax ?? swiper.parallax ?? false,
+      parallaxBackground: swiper.content?.parallaxBackground ?? swiper.parallaxBackground ?? '',
+
+      slidesPerView: swiper.style?.slidesPerView ?? swiper.slidesPerView ?? 1,
+      slidesPerGroup: swiper.style?.slidesPerGroup ?? swiper.slidesPerGroup ?? 1,
+      spaceBetween: swiper.style?.spaceBetween ?? swiper.spaceBetween ?? 30,
+      centeredSlides: swiper.style?.centeredSlides ?? swiper.centeredSlides ?? false,
+      height: swiper.style?.height ?? swiper.height ?? 'auto',
+      width: swiper.style?.width ?? swiper.width ?? '100%',
+      slideWidth: swiper.style?.slideWidth ?? swiper.slideWidth ?? '',
+      slideMinHeight: swiper.style?.slideMinHeight ?? swiper.slideMinHeight ?? '',
+      backgroundColor: swiper.style?.backgroundColor ?? swiper.backgroundColor ?? '',
+      padding: swiper.style?.padding ?? swiper.padding ?? '',
+      borderRadius: swiper.style?.borderRadius ?? swiper.borderRadius ?? '',
+      arrowStyle: swiper.style?.arrowStyle ?? swiper.arrowStyle ?? 'rounded',
+      arrowPosition: swiper.style?.arrowPosition ?? swiper.arrowPosition ?? 'sides',
+      paginationType: swiper.style?.paginationType ?? swiper.paginationType ?? 'bullets',
+      paginationDynamic: swiper.style?.paginationDynamic ?? swiper.paginationDynamic ?? false,
+      paginationClickable: swiper.style?.paginationClickable ?? swiper.paginationClickable ?? true,
+      effect: swiper.style?.effect ?? swiper.effect ?? 'slide',
+      effectFadeCrossFade: swiper.style?.effectFadeCrossFade ?? swiper.effectFadeCrossFade ?? false,
+      effectCubeShadow: swiper.style?.effectCubeShadow ?? swiper.effectCubeShadow ?? true,
+      effectCubeSlideShadows: swiper.style?.effectCubeSlideShadows ?? swiper.effectCubeSlideShadows ?? true,
+      effectCoverflowRotate: swiper.style?.effectCoverflowRotate ?? swiper.effectCoverflowRotate ?? 50,
+      effectCoverflowDepth: swiper.style?.effectCoverflowDepth ?? swiper.effectCoverflowDepth ?? 100,
+      effectCoverflowStretch: swiper.style?.effectCoverflowStretch ?? swiper.effectCoverflowStretch ?? 0,
+      effectCoverflowModifier: swiper.style?.effectCoverflowModifier ?? swiper.effectCoverflowModifier ?? 1,
+      effectFlipSlideShadows: swiper.style?.effectFlipSlideShadows ?? swiper.effectFlipSlideShadows ?? true,
+      effectCardsPerSlideOffset: swiper.style?.effectCardsPerSlideOffset ?? swiper.effectCardsPerSlideOffset ?? 8,
+      effectCardsRotate: swiper.style?.effectCardsRotate ?? swiper.effectCardsRotate ?? true,
+      hoverEffects: swiper.style?.hoverEffects ?? swiper.hoverEffects ?? false,
+      hoverEffectType: swiper.style?.hoverEffectType ?? swiper.hoverEffectType ?? 'lift',
+      hoverIntensity: swiper.style?.hoverIntensity ?? swiper.hoverIntensity ?? 5,
+      className: swiper.style?.className ?? swiper.className ?? '',
+    }
+  }
+
+  if (normalizedType === 'flexbox') {
+    const flex = normalizeFlexbox(props)
+    return {
+      children: flex.content?.children ?? flex.children ?? [],
+      preset: flex.content?.preset ?? flex.preset ?? 'custom',
+      direction: flex.style?.direction ?? flex.direction ?? 'row',
+      justifyContent: flex.style?.justifyContent ?? flex.justifyContent ?? 'flex-start',
+      alignItems: flex.style?.alignItems ?? flex.alignItems ?? 'stretch',
+      alignContent: flex.style?.alignContent ?? flex.alignContent ?? 'stretch',
+      wrap: flex.style?.wrap ?? flex.wrap ?? 'nowrap',
+      gap: flex.style?.gap ?? flex.gap ?? '16px',
+      rowGap: flex.style?.rowGap ?? flex.rowGap ?? '16px',
+      columnGap: flex.style?.columnGap ?? flex.columnGap ?? '16px',
+      padding: flex.style?.padding ?? flex.padding ?? '16px',
+      minHeight: flex.style?.minHeight ?? flex.minHeight ?? 'auto',
+      backgroundColor: flex.style?.backgroundColor ?? flex.backgroundColor ?? '#ffffff',
+      borderRadius: flex.style?.borderRadius ?? flex.borderRadius ?? '0px',
+      border: flex.style?.border ?? flex.border ?? 'none',
+      shadow: flex.style?.shadow ?? flex.shadow ?? 'none',
+      width: flex.style?.width ?? flex.width ?? '100%',
+      maxWidth: flex.style?.maxWidth ?? flex.maxWidth ?? 'none',
+      className: flex.style?.className ?? flex.className ?? '',
+      stackOnMobile: flex.responsive?.stackOnMobile ?? flex.stackOnMobile ?? true,
+      directionMobile: flex.responsive?.directionMobile ?? flex.directionMobile ?? 'column',
+      mobileGap: flex.responsive?.mobileGap ?? flex.mobileGap ?? '12px',
+    }
+  }
+
   const resolvedBlockKey = resolveBlockType(type)
   if (resolvedBlockKey) {
     const defaults = getBlockDefaults(resolvedBlockKey)
@@ -431,61 +714,171 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
   const normalizedType = String(type || '').trim().toLowerCase()
 
   if (normalizedType === 'advancedparagraph' || normalizedType === 'paragraph') {
-    return stripEditorMeta(normalizeAdvancedParagraph(props) as Record<string, any>)
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalNumber = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      const num = Number(v)
+      return Number.isNaN(num) ? undefined : num
+    }
+
+    const contentInput = props.content && typeof props.content === 'object' ? props.content : {}
+    const styleInput = props.style && typeof props.style === 'object' ? props.style : {}
+    const layoutInput = props.layout && typeof props.layout === 'object' ? props.layout : {}
+    const responsiveInput = props.responsive && typeof props.responsive === 'object' ? props.responsive : {}
+    const interactionInput = props.interaction && typeof props.interaction === 'object' ? props.interaction : {}
+    const hoverInput = interactionInput.hover && typeof interactionInput.hover === 'object' ? interactionInput.hover : {}
+    const ariaInput = props.aria && typeof props.aria === 'object' ? props.aria : {}
+
+    const text = toOptionalString(contentInput.text ?? props.text ?? props.content ?? props.html)
+    const enableRichText = contentInput.enableRichText ?? ariaInput.enableRichText ?? props.enableRichText
+    const rawAllowedFormats = contentInput.allowedFormats ?? ariaInput.allowedFormats ?? props.allowedFormats
+    const allowedFormats = Array.isArray(rawAllowedFormats)
+      ? rawAllowedFormats
+      : typeof rawAllowedFormats === 'string' && rawAllowedFormats.trim().length > 0
+        ? rawAllowedFormats.split(',').map((s: string) => s.trim()).filter(Boolean)
+        : undefined
+
+    const normalized = normalizeAdvancedParagraph({
+      version: 1,
+      content: {
+        text,
+        enableRichText: enableRichText !== undefined ? Boolean(enableRichText) : undefined,
+        allowedFormats,
+      },
+      style: {
+        color: toOptionalString(styleInput.color ?? props.color ?? props.textColor ?? props.fontColor),
+        fontSize: toOptionalString(styleInput.fontSize ?? props.fontSize),
+        fontWeight: toOptionalString(styleInput.fontWeight ?? props.fontWeight),
+        fontFamily: toOptionalString(styleInput.fontFamily ?? props.fontFamily),
+        lineHeight: toOptionalString(styleInput.lineHeight ?? props.lineHeight),
+        letterSpacing: toOptionalString(styleInput.letterSpacing ?? props.letterSpacing),
+        maxWidth: toOptionalString(styleInput.maxWidth ?? props.maxWidth),
+        backgroundColor: toOptionalString(styleInput.backgroundColor ?? props.backgroundColor),
+        margin: toOptionalString(styleInput.margin ?? props.margin),
+        padding: toOptionalString(styleInput.padding ?? props.padding),
+        width: toOptionalString(styleInput.width ?? props.width),
+        minHeight: toOptionalString(styleInput.minHeight ?? props.minHeight),
+        display: styleInput.display ?? props.display,
+        border: toOptionalString(styleInput.border ?? props.border),
+        borderRadius: toOptionalString(styleInput.borderRadius ?? props.borderRadius),
+        borderColor: toOptionalString(styleInput.borderColor ?? props.borderColor),
+        textShadow: toOptionalString(styleInput.textShadow ?? props.textShadow),
+        boxShadow: toOptionalString(styleInput.boxShadow ?? props.boxShadow),
+        opacity: toOptionalNumber(styleInput.opacity ?? props.opacity),
+        textTransform: styleInput.textTransform ?? props.textTransform,
+        textDecoration: styleInput.textDecoration ?? props.textDecoration,
+        fontStyle: styleInput.fontStyle ?? props.fontStyle,
+        transition: toOptionalString(styleInput.transition ?? props.transition),
+        alignment: styleInput.alignment ?? layoutInput.alignment ?? props.alignment ?? props.textAlign ?? props.align,
+        hoverEffect: styleInput.hoverEffect ?? hoverInput.effect ?? props.hoverEffect,
+        hoverColor: toOptionalString(styleInput.hoverColor ?? hoverInput.color ?? props.hoverColor ?? props.hoverTextColor),
+        hoverBackgroundColor: toOptionalString(styleInput.hoverBackgroundColor ?? hoverInput.backgroundColor ?? props.hoverBackgroundColor),
+        className: toOptionalString(styleInput.className ?? ariaInput.className ?? props.className),
+        customId: toOptionalString(styleInput.customId ?? ariaInput.customId ?? props.customId),
+        selectable: styleInput.selectable ?? ariaInput.selectable ?? props.selectable,
+        editable: styleInput.editable ?? ariaInput.editable ?? props.editable,
+        truncate: styleInput.truncate ?? ariaInput.truncate ?? props.truncate,
+        maxLines: toOptionalNumber(styleInput.maxLines ?? ariaInput.maxLines ?? props.maxLines),
+        visible: styleInput.visible ?? ariaInput.visible ?? props.visible,
+        ariaLabel: toOptionalString(styleInput.ariaLabel ?? ariaInput.ariaLabel ?? props.ariaLabel),
+        role: toOptionalString(styleInput.role ?? ariaInput.role ?? props.role),
+        tabIndex: toOptionalNumber(styleInput.tabIndex ?? ariaInput.tabIndex ?? props.tabIndex),
+      },
+      responsive: {
+        fontSizeMobile: toOptionalString(responsiveInput.fontSizeMobile ?? styleInput.fontSizeMobile ?? props.fontSizeMobile),
+        fontSizeTablet: toOptionalString(responsiveInput.fontSizeTablet ?? styleInput.fontSizeTablet ?? props.fontSizeTablet),
+        textAlignMobile: responsiveInput.textAlignMobile ?? styleInput.textAlignMobile ?? props.textAlignMobile,
+        textAlignTablet: responsiveInput.textAlignTablet ?? styleInput.textAlignTablet ?? props.textAlignTablet,
+        lineHeightMobile: toOptionalString(responsiveInput.lineHeightMobile ?? styleInput.lineHeightMobile ?? props.lineHeightMobile),
+        desktop: responsiveInput.desktop || {},
+        tablet: responsiveInput.tablet || {},
+        mobile: responsiveInput.mobile || {},
+      },
+    })
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
   }
 
   if (normalizedType === 'advancedheading') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalNumber = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      const num = Number(v)
+      return Number.isNaN(num) ? undefined : num
+    }
+
+    const contentInput = props.content && typeof props.content === 'object' ? props.content : {}
+    const styleInput = props.style && typeof props.style === 'object' ? props.style : {}
+    const responsiveInput = props.responsive && typeof props.responsive === 'object' ? props.responsive : {}
+    const highlightInput = props.highlight && typeof props.highlight === 'object' ? props.highlight : {}
+    const seoInput = props.seo && typeof props.seo === 'object' ? props.seo : {}
+    const ariaInput = props.aria && typeof props.aria === 'object' ? props.aria : {}
+
+    const text = toOptionalString(contentInput.text ?? props.text)
+    const level = contentInput.level ?? props.level
+    const highlightText = toOptionalString(contentInput.highlightText ?? highlightInput.text ?? props.highlightText)
+    const highlightColor = toOptionalString(contentInput.highlightColor ?? highlightInput.color ?? props.highlightColor)
+    const seoEnabled = contentInput.seoEnabled ?? seoInput.enabled ?? props.enableSeoChecks
+    const seoMaxLength = toOptionalNumber(contentInput.seoMaxLength ?? seoInput.maxLength ?? props.seoMaxLength)
+
     const normalized = normalizeAdvancedHeading({
-      text: props.text,
-      level: props.level,
-      alignment: props.alignment,
-      textAlign: props.alignment,
-      textAlignMobile: props.textAlignMobile,
-      textAlignTablet: props.textAlignTablet,
+      version: 1,
+      content: {
+        text,
+        level,
+        highlightText,
+        highlightColor,
+        seoEnabled: seoEnabled !== undefined ? Boolean(seoEnabled) : undefined,
+        seoMaxLength,
+      },
       style: {
-        usePresetStyles: props.usePresetStyles,
-        fontFamily: props.fontFamily,
-        fontSize: props.fontSize,
-        fontSizeMobile: props.fontSizeMobile,
-        fontSizeTablet: props.fontSizeTablet,
-        fontWeight: props.fontWeight,
-        lineHeight: props.lineHeight,
-        letterSpacing: props.letterSpacing,
-        textTransform: props.textTransform,
-        textDecoration: props.textDecoration,
-        fontStyle: props.fontStyle,
-        color: props.color,
-        hoverColor: props.hoverColor,
-        alignment: props.alignment,
-        textAlignMobile: props.textAlignMobile,
-        textAlignTablet: props.textAlignTablet,
-        maxWidth: props.maxWidth,
-        margin: props.margin,
-        padding: props.padding,
+        usePresetStyles: styleInput.usePresetStyles ?? props.usePresetStyles,
+        fontFamily: toOptionalString(styleInput.fontFamily ?? props.fontFamily),
+        fontSize: toOptionalString(styleInput.fontSize ?? props.fontSize),
+        fontWeight: toOptionalString(styleInput.fontWeight ?? props.fontWeight),
+        lineHeight: toOptionalString(styleInput.lineHeight ?? props.lineHeight),
+        letterSpacing: toOptionalString(styleInput.letterSpacing ?? props.letterSpacing),
+        textTransform: styleInput.textTransform ?? props.textTransform,
+        textDecoration: styleInput.textDecoration ?? props.textDecoration,
+        fontStyle: styleInput.fontStyle ?? props.fontStyle,
+        color: toOptionalString(styleInput.color ?? props.color),
+        hoverColor: toOptionalString(styleInput.hoverColor ?? props.hoverColor),
+        alignment: styleInput.alignment ?? props.alignment ?? props.textAlign,
+        maxWidth: toOptionalString(styleInput.maxWidth ?? props.maxWidth),
+        margin: toOptionalString(styleInput.margin ?? props.margin),
+        padding: toOptionalString(styleInput.padding ?? props.padding),
+        className: toOptionalString(styleInput.className ?? ariaInput.className ?? props.className),
+        customId: toOptionalString(styleInput.customId ?? ariaInput.customId ?? props.customId),
+        htmlTag: styleInput.htmlTag ?? ariaInput.htmlTag ?? props.htmlTag,
+        ariaLevel: toOptionalNumber(styleInput.ariaLevel ?? ariaInput.ariaLevel ?? props.ariaLevel),
+        ariaLabel: toOptionalString(styleInput.ariaLabel ?? ariaInput.ariaLabel ?? props.ariaLabel),
+        role: toOptionalString(styleInput.role ?? ariaInput.role ?? props.role),
+        visible: styleInput.visible ?? ariaInput.visible ?? props.visible,
       },
-      highlight: {
-        text: props.highlightText,
-        color: props.highlightColor,
-      },
-      seo: {
-        enabled: props.enableSeoChecks,
-        maxLength: props.seoMaxLength,
-      },
-      aria: {
-        visible: props.visible,
-        semanticLevel: props.semanticLevel || props.level,
-        htmlTag: props.htmlTag,
-        ariaLevel: props.ariaLevel,
-        ariaLabel: props.ariaLabel,
-        role: props.role,
-        autoId: props.autoId,
-        customId: props.customId,
-        className: props.className,
-        dataTracking: props.dataTracking,
-        componentId: props.componentId,
+      responsive: {
+        fontSizeMobile: toOptionalString(responsiveInput.fontSizeMobile ?? styleInput.fontSizeMobile ?? props.fontSizeMobile),
+        fontSizeTablet: toOptionalString(responsiveInput.fontSizeTablet ?? styleInput.fontSizeTablet ?? props.fontSizeTablet),
+        textAlignMobile: responsiveInput.textAlignMobile ?? styleInput.textAlignMobile ?? props.textAlignMobile,
+        textAlignTablet: responsiveInput.textAlignTablet ?? styleInput.textAlignTablet ?? props.textAlignTablet,
+        desktop: responsiveInput.desktop || {},
+        tablet: responsiveInput.tablet || {},
+        mobile: responsiveInput.mobile || {},
       },
     })
-    return stripEditorMeta(normalized as Record<string, any>)
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
   }
 
   if (normalizedType === 'advancedcard' || normalizedType === 'advancedcardcomponent' || normalizedType === 'card') {
@@ -493,6 +886,7 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
     return {
       ...props,
       ...stripEditorMeta(normalized as Record<string, any>),
+      version: 1,
       textAlignment: props.textAlignment ?? normalized.layout?.textAlignment,
       titleAlignment: props.titleAlignment ?? props.textAlignment ?? normalized.layout?.titleAlignment,
       subtitleAlign: props.subtitleAlign ?? props.textAlignment ?? normalized.layout?.subtitleAlignment,
@@ -520,84 +914,287 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
   }
 
   if (normalizedType === 'advancedlist' || normalizedType === 'list') {
-    return stripEditorMeta(
-      normalizeAdvancedList({
-        items: props.items,
-        listType: props.listType,
-        columns: props.columns,
-        itemSpacing: props.itemSpacing,
-        gap: props.gap,
-        padding: props.padding,
-        margin: props.margin,
-        alignment: props.alignment,
-        displayStyle: props.displayStyle,
-        defaultIcon: props.defaultIcon,
-        iconSize: props.iconSize,
-        iconPosition: props.iconPosition,
-        autoNumbering: props.autoNumbering,
-        titleFontSize: props.titleFontSize,
-        titleFontWeight: props.titleFontWeight,
-        descriptionFontSize: props.descriptionFontSize,
-        fontFamily: props.fontFamily,
-        lineHeight: props.lineHeight,
-        titleColor: props.titleColor,
-        descriptionColor: props.descriptionColor,
-        iconColor: props.iconColor,
-        backgroundColor: props.backgroundColor,
-        border: props.border,
-        borderRadius: props.borderRadius,
-        itemBackground: props.itemBackground,
-        itemPadding: props.itemPadding,
-        boxShadow: props.boxShadow,
-        boxHoverShadow: props.boxHoverShadow,
-        boxBorderWidth: props.boxBorderWidth,
-        boxBorderColor: props.boxBorderColor,
-        fullBoxShadow: props.fullBoxShadow,
-        fullBoxPadding: props.fullBoxPadding,
-        fullBoxBackground: props.fullBoxBackground,
-        fullBoxBorder: props.fullBoxBorder,
-        fullBoxBorderRadius: props.fullBoxBorderRadius,
-      }) as Record<string, any>,
-    )
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalBoolean = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      return Boolean(v)
+    }
+
+    const contentInput = props.content && typeof props.content === 'object' ? props.content : {}
+    const styleInput = props.style && typeof props.style === 'object' ? props.style : {}
+    const responsiveInput = props.responsive && typeof props.responsive === 'object' ? props.responsive : {}
+
+    const items = contentInput.items ?? props.items
+    const listType = contentInput.listType ?? props.listType
+
+    const style: Record<string, any> = {}
+    if (styleInput.columns !== undefined || props.columns !== undefined) {
+      const col = Number(styleInput.columns ?? props.columns)
+      if (col === 1 || col === 2 || col === 3 || col === 4) style.columns = col
+    }
+    if (toOptionalString(styleInput.itemSpacing ?? props.itemSpacing) !== undefined) style.itemSpacing = toOptionalString(styleInput.itemSpacing ?? props.itemSpacing)
+    if (toOptionalString(styleInput.gap ?? props.gap) !== undefined) style.gap = toOptionalString(styleInput.gap ?? props.gap)
+    if (toOptionalString(styleInput.padding ?? props.padding) !== undefined) style.padding = toOptionalString(styleInput.padding ?? props.padding)
+    if (toOptionalString(styleInput.margin ?? props.margin) !== undefined) style.margin = toOptionalString(styleInput.margin ?? props.margin)
+    if (styleInput.alignment ?? props.alignment !== undefined) style.alignment = styleInput.alignment ?? props.alignment
+    if (styleInput.displayStyle ?? props.displayStyle !== undefined) style.displayStyle = styleInput.displayStyle ?? props.displayStyle
+    if (toOptionalString(styleInput.defaultIcon ?? props.defaultIcon) !== undefined) style.defaultIcon = toOptionalString(styleInput.defaultIcon ?? props.defaultIcon)
+    if (toOptionalString(styleInput.iconSize ?? props.iconSize) !== undefined) style.iconSize = toOptionalString(styleInput.iconSize ?? props.iconSize)
+    if (styleInput.iconPosition ?? props.iconPosition !== undefined) style.iconPosition = styleInput.iconPosition ?? props.iconPosition
+    if (toOptionalBoolean(styleInput.autoNumbering ?? props.autoNumbering) !== undefined) style.autoNumbering = toOptionalBoolean(styleInput.autoNumbering ?? props.autoNumbering)
+    if (toOptionalString(styleInput.titleFontSize ?? props.titleFontSize) !== undefined) style.titleFontSize = toOptionalString(styleInput.titleFontSize ?? props.titleFontSize)
+    if (toOptionalString(styleInput.titleFontWeight ?? props.titleFontWeight) !== undefined) style.titleFontWeight = toOptionalString(styleInput.titleFontWeight ?? props.titleFontWeight)
+    if (toOptionalString(styleInput.descriptionFontSize ?? props.descriptionFontSize) !== undefined) style.descriptionFontSize = toOptionalString(styleInput.descriptionFontSize ?? props.descriptionFontSize)
+    if (toOptionalString(styleInput.fontFamily ?? props.fontFamily) !== undefined) style.fontFamily = toOptionalString(styleInput.fontFamily ?? props.fontFamily)
+    if (toOptionalString(styleInput.lineHeight ?? props.lineHeight) !== undefined) style.lineHeight = toOptionalString(styleInput.lineHeight ?? props.lineHeight)
+    if (toOptionalString(styleInput.titleColor ?? props.titleColor) !== undefined) style.titleColor = toOptionalString(styleInput.titleColor ?? props.titleColor)
+    if (toOptionalString(styleInput.descriptionColor ?? props.descriptionColor) !== undefined) style.descriptionColor = toOptionalString(styleInput.descriptionColor ?? props.descriptionColor)
+    if (toOptionalString(styleInput.iconColor ?? props.iconColor) !== undefined) style.iconColor = toOptionalString(styleInput.iconColor ?? props.iconColor)
+    if (toOptionalString(styleInput.backgroundColor ?? props.backgroundColor) !== undefined) style.backgroundColor = toOptionalString(styleInput.backgroundColor ?? props.backgroundColor)
+    if (toOptionalString(styleInput.border ?? props.border) !== undefined) style.border = toOptionalString(styleInput.border ?? props.border)
+    if (toOptionalString(styleInput.borderRadius ?? props.borderRadius) !== undefined) style.borderRadius = toOptionalString(styleInput.borderRadius ?? props.borderRadius)
+    if (toOptionalString(styleInput.itemBackground ?? props.itemBackground) !== undefined) style.itemBackground = toOptionalString(styleInput.itemBackground ?? props.itemBackground)
+    if (toOptionalString(styleInput.itemPadding ?? props.itemPadding) !== undefined) style.itemPadding = toOptionalString(styleInput.itemPadding ?? props.itemPadding)
+    if (toOptionalString(styleInput.boxShadow ?? props.boxShadow) !== undefined) style.boxShadow = toOptionalString(styleInput.boxShadow ?? props.boxShadow)
+    if (toOptionalString(styleInput.boxHoverShadow ?? props.boxHoverShadow) !== undefined) style.boxHoverShadow = toOptionalString(styleInput.boxHoverShadow ?? props.boxHoverShadow)
+    if (toOptionalString(styleInput.boxBorderWidth ?? props.boxBorderWidth) !== undefined) style.boxBorderWidth = toOptionalString(styleInput.boxBorderWidth ?? props.boxBorderWidth)
+    if (toOptionalString(styleInput.boxBorderColor ?? props.boxBorderColor) !== undefined) style.boxBorderColor = toOptionalString(styleInput.boxBorderColor ?? props.boxBorderColor)
+    if (toOptionalString(styleInput.fullBoxShadow ?? props.fullBoxShadow) !== undefined) style.fullBoxShadow = toOptionalString(styleInput.fullBoxShadow ?? props.fullBoxShadow)
+    if (toOptionalString(styleInput.fullBoxPadding ?? props.fullBoxPadding) !== undefined) style.fullBoxPadding = toOptionalString(styleInput.fullBoxPadding ?? props.fullBoxPadding)
+    if (toOptionalString(styleInput.fullBoxBackground ?? props.fullBoxBackground) !== undefined) style.fullBoxBackground = toOptionalString(styleInput.fullBoxBackground ?? props.fullBoxBackground)
+    if (toOptionalString(styleInput.fullBoxBorder ?? props.fullBoxBorder) !== undefined) style.fullBoxBorder = toOptionalString(styleInput.fullBoxBorder ?? props.fullBoxBorder)
+    if (toOptionalString(styleInput.fullBoxBorderRadius ?? props.fullBoxBorderRadius) !== undefined) style.fullBoxBorderRadius = toOptionalString(styleInput.fullBoxBorderRadius ?? props.fullBoxBorderRadius)
+
+    return stripEditorMeta({
+      type: 'advancedlist',
+      version: 1,
+      content: {
+        ...(items !== undefined ? { items } : {}),
+        ...(listType !== undefined ? { listType } : {}),
+      },
+      style,
+      responsive: {
+        desktop: responsiveInput.desktop || {},
+        tablet: responsiveInput.tablet || {},
+        mobile: responsiveInput.mobile || {},
+      },
+      items,
+      listType,
+    })
   }
 
   if (normalizedType === 'advancedaccordion' || normalizedType === 'accordion') {
-    return stripEditorMeta(
-      normalizeAdvancedAccordion({
-        items: props.items,
-        behavior: props.behavior,
-        allowAllClosed: props.allowAllClosed,
-        itemSpacing: props.itemSpacing,
-        padding: props.padding,
-        margin: props.margin,
-        titleFontSize: props.titleFontSize,
-        titleFontWeight: props.titleFontWeight,
-        contentFontSize: props.contentFontSize,
-        fontFamily: props.fontFamily,
-        lineHeight: props.lineHeight,
-        titleColor: props.titleColor,
-        titleBackground: props.titleBackground,
-        contentColor: props.contentColor,
-        contentBackground: props.contentBackground,
-        border: props.border,
-        borderRadius: props.borderRadius,
-        activeTitleColor: props.activeTitleColor,
-        activeTitleBackground: props.activeTitleBackground,
-        iconPosition: props.iconPosition,
-        icon: props.icon,
-        activeIcon: props.activeIcon,
-        animation: props.animation,
-        animationDuration: props.animationDuration,
-      }) as Record<string, any>,
-     )
-   }
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalBoolean = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      return Boolean(v)
+    }
+    const toOptionalNumber = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      const num = Number(v)
+      return Number.isNaN(num) ? undefined : num
+    }
+
+    const contentInput = props.content && typeof props.content === 'object' ? props.content : {}
+    const styleInput = props.style && typeof props.style === 'object' ? props.style : {}
+    const interactionInput = props.interaction && typeof props.interaction === 'object' ? props.interaction : {}
+    const responsiveInput = props.responsive && typeof props.responsive === 'object' ? props.responsive : {}
+
+    const items = contentInput.items ?? props.items
+
+    const style: Record<string, any> = {}
+    if (toOptionalString(styleInput.itemSpacing ?? props.itemSpacing) !== undefined) style.itemSpacing = toOptionalString(styleInput.itemSpacing ?? props.itemSpacing)
+    if (toOptionalString(styleInput.padding ?? props.padding) !== undefined) style.padding = toOptionalString(styleInput.padding ?? props.padding)
+    if (toOptionalString(styleInput.margin ?? props.margin) !== undefined) style.margin = toOptionalString(styleInput.margin ?? props.margin)
+    if (toOptionalString(styleInput.titleFontSize ?? props.titleFontSize) !== undefined) style.titleFontSize = toOptionalString(styleInput.titleFontSize ?? props.titleFontSize)
+    if (toOptionalString(styleInput.titleFontWeight ?? props.titleFontWeight) !== undefined) style.titleFontWeight = toOptionalString(styleInput.titleFontWeight ?? props.titleFontWeight)
+    if (toOptionalString(styleInput.contentFontSize ?? props.contentFontSize) !== undefined) style.contentFontSize = toOptionalString(styleInput.contentFontSize ?? props.contentFontSize)
+    if (toOptionalString(styleInput.fontFamily ?? props.fontFamily) !== undefined) style.fontFamily = toOptionalString(styleInput.fontFamily ?? props.fontFamily)
+    if (toOptionalString(styleInput.lineHeight ?? props.lineHeight) !== undefined) style.lineHeight = toOptionalString(styleInput.lineHeight ?? props.lineHeight)
+    if (toOptionalString(styleInput.titleColor ?? props.titleColor) !== undefined) style.titleColor = toOptionalString(styleInput.titleColor ?? props.titleColor)
+    if (toOptionalString(styleInput.titleBackground ?? props.titleBackground) !== undefined) style.titleBackground = toOptionalString(styleInput.titleBackground ?? props.titleBackground)
+    if (toOptionalString(styleInput.contentColor ?? props.contentColor) !== undefined) style.contentColor = toOptionalString(styleInput.contentColor ?? props.contentColor)
+    if (toOptionalString(styleInput.contentBackground ?? props.contentBackground) !== undefined) style.contentBackground = toOptionalString(styleInput.contentBackground ?? props.contentBackground)
+    if (toOptionalString(styleInput.border ?? props.border) !== undefined) style.border = toOptionalString(styleInput.border ?? props.border)
+    if (toOptionalString(styleInput.borderRadius ?? props.borderRadius) !== undefined) style.borderRadius = toOptionalString(styleInput.borderRadius ?? props.borderRadius)
+    if (toOptionalString(styleInput.activeTitleColor ?? props.activeTitleColor) !== undefined) style.activeTitleColor = toOptionalString(styleInput.activeTitleColor ?? props.activeTitleColor)
+    if (toOptionalString(styleInput.activeTitleBackground ?? props.activeTitleBackground) !== undefined) style.activeTitleBackground = toOptionalString(styleInput.activeTitleBackground ?? props.activeTitleBackground)
+
+    const interaction: Record<string, any> = {}
+    if (interactionInput.behavior ?? props.behavior !== undefined) interaction.behavior = interactionInput.behavior ?? props.behavior
+    if (toOptionalBoolean(interactionInput.allowAllClosed ?? props.allowAllClosed) !== undefined) interaction.allowAllClosed = toOptionalBoolean(interactionInput.allowAllClosed ?? props.allowAllClosed)
+    if (interactionInput.iconPosition ?? props.iconPosition !== undefined) interaction.iconPosition = interactionInput.iconPosition ?? props.iconPosition
+    if (toOptionalString(interactionInput.icon ?? props.icon) !== undefined) interaction.icon = toOptionalString(interactionInput.icon ?? props.icon)
+    if (toOptionalString(interactionInput.activeIcon ?? props.activeIcon) !== undefined) interaction.activeIcon = toOptionalString(interactionInput.activeIcon ?? props.activeIcon)
+    if (interactionInput.animation ?? props.animation !== undefined) interaction.animation = interactionInput.animation ?? props.animation
+    if (toOptionalNumber(interactionInput.animationDuration ?? props.animationDuration) !== undefined) interaction.animationDuration = toOptionalNumber(interactionInput.animationDuration ?? props.animationDuration)
+
+    return stripEditorMeta({
+      type: 'advancedaccordion',
+      version: 1,
+      content: {
+        ...(items !== undefined ? { items } : {}),
+      },
+      style,
+      interaction,
+      responsive: {
+        desktop: responsiveInput.desktop || {},
+        tablet: responsiveInput.tablet || {},
+        mobile: responsiveInput.mobile || {},
+      },
+      items,
+    })
+  }
 
   if (normalizedType === 'newgrid' || normalizedType === 'grid') {
-    return stripEditorMeta(normalizeNewGrid(props) as Record<string, any>)
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalBoolean = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      return Boolean(v)
+    }
+    const toOptionalNumber = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      const num = Number(v)
+      return Number.isNaN(num) ? undefined : num
+    }
+
+    const contentInput = props.content && typeof props.content === 'object' ? props.content : {}
+    const layoutInput = props.layout && typeof props.layout === 'object' ? props.layout : {}
+    const responsiveInput = props.responsive && typeof props.responsive === 'object' ? props.responsive : {}
+    const styleInput = props.style && typeof props.style === 'object' ? props.style : {}
+    const behaviorInput = props.behavior && typeof props.behavior === 'object' ? props.behavior : {}
+
+    const components = contentInput.components ?? props.components
+    const cells = contentInput.cells ?? props.cells
+
+    const layout: Record<string, any> = {}
+    if (toOptionalNumber(layoutInput.columns ?? props.columns) !== undefined) layout.columns = toOptionalNumber(layoutInput.columns ?? props.columns)
+    if (toOptionalNumber(layoutInput.rows ?? props.rows) !== undefined) layout.rows = toOptionalNumber(layoutInput.rows ?? props.rows)
+    if (toOptionalNumber(layoutInput.gap ?? props.gap) !== undefined) layout.gap = toOptionalNumber(layoutInput.gap ?? props.gap)
+    if (toOptionalNumber(layoutInput.padding ?? props.padding) !== undefined) layout.padding = toOptionalNumber(layoutInput.padding ?? props.padding)
+    if (toOptionalNumber(layoutInput.margin ?? props.margin) !== undefined) layout.margin = toOptionalNumber(layoutInput.margin ?? props.margin)
+    if (layoutInput.justifyContent ?? props.justifyContent !== undefined) layout.justifyContent = layoutInput.justifyContent ?? props.justifyContent
+    if (layoutInput.alignItems ?? props.alignItems !== undefined) layout.alignItems = layoutInput.alignItems ?? props.alignItems
+    if (toOptionalString(layoutInput.gridTemplateColumns ?? props.gridTemplateColumns) !== undefined) layout.gridTemplateColumns = toOptionalString(layoutInput.gridTemplateColumns ?? props.gridTemplateColumns)
+    if (toOptionalString(layoutInput.gridAutoRows ?? props.gridAutoRows) !== undefined) layout.gridAutoRows = toOptionalString(layoutInput.gridAutoRows ?? props.gridAutoRows)
+    if (toOptionalString(layoutInput.minHeight ?? props.minHeight) !== undefined) layout.minHeight = toOptionalString(layoutInput.minHeight ?? props.minHeight)
+
+    const responsive: Record<string, any> = {
+      ...(toOptionalNumber(responsiveInput.mobileColumns ?? props.mobileColumns) !== undefined ? { mobileColumns: toOptionalNumber(responsiveInput.mobileColumns ?? props.mobileColumns) } : {}),
+      ...(toOptionalNumber(responsiveInput.tabletColumns ?? props.tabletColumns) !== undefined ? { tabletColumns: toOptionalNumber(responsiveInput.tabletColumns ?? props.tabletColumns) } : {}),
+      ...(toOptionalNumber(responsiveInput.desktopColumns ?? props.desktopColumns) !== undefined ? { desktopColumns: toOptionalNumber(responsiveInput.desktopColumns ?? props.desktopColumns) } : {}),
+      ...(toOptionalBoolean(responsiveInput.hideOnMobile ?? props.hideOnMobile) !== undefined ? { hideOnMobile: toOptionalBoolean(responsiveInput.hideOnMobile ?? props.hideOnMobile) } : {}),
+      ...(toOptionalBoolean(responsiveInput.hideOnTablet ?? props.hideOnTablet) !== undefined ? { hideOnTablet: toOptionalBoolean(responsiveInput.hideOnTablet ?? props.hideOnTablet) } : {}),
+      desktop: responsiveInput.desktop || {},
+      tablet: responsiveInput.tablet || {},
+      mobile: responsiveInput.mobile || {},
+    }
+
+    const style: Record<string, any> = {}
+    if (toOptionalString(styleInput.backgroundColor ?? props.backgroundColor) !== undefined) style.backgroundColor = toOptionalString(styleInput.backgroundColor ?? props.backgroundColor)
+    if (toOptionalString(styleInput.border ?? props.border) !== undefined) style.border = toOptionalString(styleInput.border ?? props.border)
+    if (toOptionalNumber(styleInput.borderRadius ?? props.borderRadius) !== undefined) style.borderRadius = toOptionalNumber(styleInput.borderRadius ?? props.borderRadius)
+    if (toOptionalString(styleInput.gridLineColor ?? props.gridLineColor) !== undefined) style.gridLineColor = toOptionalString(styleInput.gridLineColor ?? props.gridLineColor)
+    if (toOptionalString(styleInput.customCSS ?? props.customCSS) !== undefined) style.customCSS = toOptionalString(styleInput.customCSS ?? props.customCSS)
+    if (toOptionalString(styleInput.className ?? props.className) !== undefined) style.className = toOptionalString(styleInput.className ?? props.className)
+    if (toOptionalString(styleInput.id ?? props.id) !== undefined) style.id = toOptionalString(styleInput.id ?? props.id)
+    if (toOptionalString(styleInput.dataAttributes ?? props.dataAttributes) !== undefined) style.dataAttributes = toOptionalString(styleInput.dataAttributes ?? props.dataAttributes)
+
+    const behavior: Record<string, any> = {}
+    if (toOptionalBoolean(behaviorInput.draggable ?? props.draggable) !== undefined) behavior.draggable = toOptionalBoolean(behaviorInput.draggable ?? props.draggable)
+    if (toOptionalBoolean(behaviorInput.resizable ?? props.resizable) !== undefined) behavior.resizable = toOptionalBoolean(behaviorInput.resizable ?? props.resizable)
+    if (toOptionalBoolean(behaviorInput.showGridLines ?? props.showGridLines) !== undefined) behavior.showGridLines = toOptionalBoolean(behaviorInput.showGridLines ?? props.showGridLines)
+    if (toOptionalBoolean(behaviorInput.snapToGrid ?? props.snapToGrid) !== undefined) behavior.snapToGrid = toOptionalBoolean(behaviorInput.snapToGrid ?? props.snapToGrid)
+    if (toOptionalBoolean(behaviorInput.visible ?? props.visible) !== undefined) behavior.visible = toOptionalBoolean(behaviorInput.visible ?? props.visible)
+
+    return stripEditorMeta({
+      type: 'newgrid',
+      version: 1,
+      content: {
+        ...(components !== undefined ? { components } : {}),
+        ...(cells !== undefined ? { cells } : {}),
+      },
+      layout,
+      responsive,
+      style,
+      behavior,
+      components,
+      cells,
+      columns: layout.columns,
+      rows: layout.rows,
+      gap: layout.gap,
+      padding: layout.padding,
+      margin: layout.margin,
+    })
   }
 
   if (normalizedType === 'tabs') {
-    return stripEditorMeta(normalizeTabs(props) as Record<string, any>)
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalNumber = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      const num = Number(v)
+      return Number.isNaN(num) ? undefined : num
+    }
+
+    const contentInput = props.content && typeof props.content === 'object' ? props.content : {}
+    const styleInput = props.style && typeof props.style === 'object' ? props.style : {}
+    const ariaInput = props.aria && typeof props.aria === 'object' ? props.aria : {}
+    const responsiveInput = props.responsive && typeof props.responsive === 'object' ? props.responsive : {}
+
+    const tabs = contentInput.tabs ?? props.tabs
+    const activeTab = contentInput.activeTab ?? props.activeTab
+
+    const style: Record<string, any> = {}
+    if (toOptionalString(styleInput.width ?? props.width) !== undefined) style.width = toOptionalString(styleInput.width ?? props.width)
+    if (toOptionalString(styleInput.tabGap ?? props.tabGap) !== undefined) style.tabGap = toOptionalString(styleInput.tabGap ?? props.tabGap)
+    if (toOptionalString(styleInput.tabPadding ?? props.tabPadding) !== undefined) style.tabPadding = toOptionalString(styleInput.tabPadding ?? props.tabPadding)
+    if (toOptionalString(styleInput.contentPadding ?? props.contentPadding) !== undefined) style.contentPadding = toOptionalString(styleInput.contentPadding ?? props.contentPadding)
+    if (toOptionalString(styleInput.borderColor ?? props.borderColor) !== undefined) style.borderColor = toOptionalString(styleInput.borderColor ?? props.borderColor)
+    if (toOptionalString(styleInput.activeBorderColor ?? props.activeBorderColor) !== undefined) style.activeBorderColor = toOptionalString(styleInput.activeBorderColor ?? props.activeBorderColor)
+    if (toOptionalString(styleInput.activeTextColor ?? props.activeTextColor) !== undefined) style.activeTextColor = toOptionalString(styleInput.activeTextColor ?? props.activeTextColor)
+    if (toOptionalString(styleInput.inactiveTextColor ?? props.inactiveTextColor) !== undefined) style.inactiveTextColor = toOptionalString(styleInput.inactiveTextColor ?? props.inactiveTextColor)
+    if (toOptionalString(styleInput.activeFontWeight ?? props.activeFontWeight) !== undefined) style.activeFontWeight = toOptionalString(styleInput.activeFontWeight ?? props.activeFontWeight)
+    if (toOptionalString(styleInput.inactiveFontWeight ?? props.inactiveFontWeight) !== undefined) style.inactiveFontWeight = toOptionalString(styleInput.inactiveFontWeight ?? props.inactiveFontWeight)
+
+    const aria: Record<string, any> = {}
+    if (toOptionalString(ariaInput.label ?? props.label) !== undefined) aria.label = toOptionalString(ariaInput.label ?? props.label)
+    if (toOptionalString(ariaInput.ariaLabel ?? props.ariaLabel ?? props.label) !== undefined) aria.ariaLabel = toOptionalString(ariaInput.ariaLabel ?? props.ariaLabel ?? props.label)
+    if (toOptionalString(ariaInput.className ?? props.className) !== undefined) aria.className = toOptionalString(ariaInput.className ?? props.className)
+    if (toOptionalString(ariaInput.customId ?? props.customId) !== undefined) aria.customId = toOptionalString(ariaInput.customId ?? props.customId)
+
+    return stripEditorMeta({
+      type: 'tabs',
+      version: 1,
+      content: {
+        ...(tabs !== undefined ? { tabs } : {}),
+        ...(activeTab !== undefined ? { activeTab: toOptionalNumber(activeTab) } : {}),
+      },
+      style,
+      aria,
+      responsive: {
+        desktop: responsiveInput.desktop || {},
+        tablet: responsiveInput.tablet || {},
+        mobile: responsiveInput.mobile || {},
+      },
+      tabs,
+      activeTab: toOptionalNumber(activeTab) ?? 0,
+    })
   }
 
   if (normalizedType === 'button') {
@@ -760,6 +1357,443 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
     })
   }
 
+  if (normalizedType === 'container') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+
+    const normalized = normalizeContainer({
+      content: { content: toOptionalString(props.content) },
+      style: {
+        maxWidth: toOptionalString(props.maxWidth),
+        width: toOptionalString(props.width),
+        minHeight: toOptionalString(props.minHeight),
+        padding: toOptionalString(props.padding),
+        margin: toOptionalString(props.margin),
+        backgroundColor: toOptionalString(props.backgroundColor),
+        borderRadius: toOptionalString(props.borderRadius),
+        border: toOptionalString(props.border),
+        borderColor: toOptionalString(props.borderColor),
+        shadow: toOptionalString(props.shadow ?? props.boxShadow),
+        alignment: toOptionalString(props.alignment ?? props.textAlign),
+        textAlign: toOptionalString(props.textAlign ?? props.alignment),
+        className: toOptionalString(props.className),
+      },
+      responsive: props.responsive || {},
+    })
+
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
+  }
+
+  if (normalizedType === 'spacer') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+
+    const normalized = normalizeSpacer({
+      style: {
+        height: toOptionalString(props.height),
+        backgroundColor: toOptionalString(props.backgroundColor),
+        showInEditor: props.showInEditor !== undefined ? Boolean(props.showInEditor) : undefined,
+        className: toOptionalString(props.className),
+      },
+      responsive: {
+        desktop: { height: toOptionalString(props.desktopHeight) },
+        tablet: { height: toOptionalString(props.tabletHeight) },
+        mobile: { height: toOptionalString(props.mobileHeight) },
+      },
+      visibility: props.visibility !== undefined ? Boolean(props.visibility) : undefined,
+    })
+
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
+  }
+
+  if (normalizedType === 'icon') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+
+    const normalized = normalizeIcon({
+      content: {
+        name: toOptionalString(props.name ?? props.icon),
+      },
+      style: {
+        size: toOptionalString(props.size),
+        color: toOptionalString(props.color),
+        className: toOptionalString(props.className),
+      },
+      responsive: props.responsive || {},
+    })
+
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
+  }
+
+  if (normalizedType === 'divider') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+
+    const normalized = normalizeDivider({
+      style: {
+        thickness: toOptionalString(props.thickness),
+        color: toOptionalString(props.color),
+        width: toOptionalString(props.width),
+        margin: toOptionalString(props.margin),
+        className: toOptionalString(props.className),
+      },
+      responsive: props.responsive || {},
+    })
+
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
+  }
+
+  if (normalizedType === 'quote') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+
+    const normalized = normalizeQuote({
+      content: {
+        text: toOptionalString(props.text ?? props.content),
+        author: toOptionalString(props.author ?? props.caption),
+      },
+      style: {
+        align: toOptionalString(props.align ?? props.alignment ?? props.textAlign),
+        margin: toOptionalString(props.margin),
+        color: toOptionalString(props.color),
+        fontSize: toOptionalString(props.fontSize),
+        lineHeight: toOptionalString(props.lineHeight),
+        className: toOptionalString(props.className),
+      },
+      responsive: props.responsive || {},
+    })
+
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
+  }
+
+  if (normalizedType === 'video') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalBoolean = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      return Boolean(v)
+    }
+    const toOptionalNumber = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      const num = Number(v)
+      return Number.isNaN(num) ? undefined : num
+    }
+
+    const normalized = normalizeVideo({
+      content: {
+        src: toOptionalString(props.src),
+        sourceType: toOptionalString(props.sourceType),
+        title: toOptionalString(props.title),
+        autoplay: toOptionalBoolean(props.autoplay),
+        muted: toOptionalBoolean(props.muted),
+        controls: toOptionalBoolean(props.controls),
+        loop: toOptionalBoolean(props.loop),
+      },
+      style: {
+        width: toOptionalString(props.width),
+        maxWidth: toOptionalString(props.maxWidth),
+        aspectRatio: toOptionalString(props.aspectRatio),
+        margin: toOptionalString(props.margin),
+        borderRadius: toOptionalNumber(props.borderRadius),
+        borderColor: toOptionalString(props.borderColor),
+        borderOpacity: toOptionalNumber(props.borderOpacity),
+        accentColor: toOptionalString(props.accentColor),
+        showOverlay: toOptionalBoolean(props.showOverlay),
+        overlayStrength: toOptionalNumber(props.overlayStrength),
+        showPreviewChrome: toOptionalBoolean(props.showPreviewChrome),
+        previewProgress: toOptionalNumber(props.previewProgress),
+        previewTime: toOptionalString(props.previewTime),
+        objectFit: toOptionalString(props.objectFit),
+        className: toOptionalString(props.className),
+      },
+      responsive: props.responsive || {},
+    })
+
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
+  }
+
+  if (normalizedType === 'filter') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalBoolean = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      return Boolean(v)
+    }
+    const toOptionalNumber = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      const num = Number(v)
+      return Number.isNaN(num) ? undefined : num
+    }
+
+    const normalized = normalizeFilter({
+      content: {
+        filterType: toOptionalString(props.filterType),
+        filterKey: toOptionalString(props.filterKey),
+        bindTo: toOptionalString(props.bindTo),
+        label: toOptionalString(props.label),
+        helpText: toOptionalString(props.helpText),
+        placeholder: toOptionalString(props.placeholder),
+        defaultValue: props.defaultValue,
+        defaultChecked: toOptionalBoolean(props.defaultChecked),
+        value: props.value,
+        sourceType: toOptionalString(props.sourceType),
+        presetKey: toOptionalString(props.presetKey),
+        options: props.options,
+        apiEndpoint: toOptionalString(props.apiEndpoint),
+        apiMethod: toOptionalString(props.apiMethod),
+        apiLabelField: toOptionalString(props.apiLabelField),
+        apiValueField: toOptionalString(props.apiValueField),
+        min: toOptionalNumber(props.min),
+        max: toOptionalNumber(props.max),
+        step: toOptionalNumber(props.step),
+        rangeMode: toOptionalString(props.rangeMode),
+        prefix: toOptionalString(props.prefix),
+        suffix: toOptionalString(props.suffix),
+        defaultSort: toOptionalString(props.defaultSort),
+        sortField: toOptionalString(props.sortField),
+        sortDirection: toOptionalString(props.sortDirection),
+        onLabel: toOptionalString(props.onLabel),
+        offLabel: toOptionalString(props.offLabel),
+        selectAllLabel: toOptionalString(props.selectAllLabel),
+        applyButtonLabel: toOptionalString(props.applyButtonLabel),
+        sectionTitle: toOptionalString(props.sectionTitle),
+        dependsOn: props.dependsOn,
+        visibleWhen: props.visibleWhen,
+        disabledWhen: props.disabledWhen,
+        storageKey: toOptionalString(props.storageKey),
+        queryParam: toOptionalString(props.queryParam),
+        emitEventName: toOptionalString(props.emitEventName),
+      },
+      style: {
+        variant: toOptionalString(props.variant),
+        size: toOptionalString(props.size),
+        density: toOptionalString(props.density),
+        fullWidth: toOptionalBoolean(props.fullWidth),
+        labelPosition: toOptionalString(props.labelPosition),
+        orientation: toOptionalString(props.orientation),
+        mobileVariant: toOptionalString(props.mobileVariant),
+        desktopVariant: toOptionalString(props.desktopVariant),
+        columns: toOptionalNumber(props.columns),
+        inline: toOptionalBoolean(props.inline),
+        radioStyle: toOptionalString(props.radioStyle),
+        toggleColor: toOptionalString(props.toggleColor),
+        chipStyle: toOptionalString(props.chipStyle),
+        chipVariant: toOptionalString(props.chipVariant),
+        showLabel: toOptionalBoolean(props.showLabel),
+        showClearButton: toOptionalBoolean(props.showClearButton),
+        showStateLabel: toOptionalBoolean(props.showStateLabel),
+        showSelectedCount: toOptionalBoolean(props.showSelectedCount),
+        showTooltip: toOptionalBoolean(props.showTooltip),
+        showTicks: toOptionalBoolean(props.showTicks),
+        showMinMaxLabels: toOptionalBoolean(props.showMinMaxLabels),
+        showDivider: toOptionalBoolean(props.showDivider),
+        sticky: toOptionalBoolean(props.sticky),
+        collapsedByDefault: toOptionalBoolean(props.collapsedByDefault),
+        disabled: toOptionalBoolean(props.disabled),
+        required: toOptionalBoolean(props.required),
+        clearable: toOptionalBoolean(props.clearable),
+        searchable: toOptionalBoolean(props.searchable),
+        closeMenuOnSelect: toOptionalBoolean(props.closeMenuOnSelect),
+        maxSelections: toOptionalNumber(props.maxSelections),
+        selectAllEnabled: toOptionalBoolean(props.selectAllEnabled),
+        allowMultiple: toOptionalBoolean(props.allowMultiple),
+        removable: toOptionalBoolean(props.removable),
+        debounceMs: toOptionalNumber(props.debounceMs),
+        autoFocus: toOptionalBoolean(props.autoFocus),
+        persistState: toOptionalBoolean(props.persistState),
+        syncWithUrl: toOptionalBoolean(props.syncWithUrl),
+        autoApply: toOptionalBoolean(props.autoApply),
+        resetOnChange: toOptionalBoolean(props.resetOnChange),
+        reloadOptionsOnDependencyChange: toOptionalBoolean(props.reloadOptionsOnDependencyChange),
+        className: toOptionalString(props.className),
+        wrapperClassName: toOptionalString(props.wrapperClassName),
+        ariaLabel: toOptionalString(props.ariaLabel),
+        ariaDescription: toOptionalString(props.ariaDescription),
+        tabIndex: toOptionalNumber(props.tabIndex),
+      },
+      responsive: props.responsive || {},
+    })
+
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
+  }
+
+  if (normalizedType === 'swipercontainer') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalBoolean = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      return Boolean(v)
+    }
+    const toOptionalNumber = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      const num = Number(v)
+      return Number.isNaN(num) ? undefined : num
+    }
+
+    const normalized = normalizeSwiperContainer({
+      content: {
+        slides: Array.isArray(props.slides)
+          ? props.slides
+          : Array.isArray(props.content?.slides)
+            ? props.content.slides
+            : undefined,
+        autoplay: toOptionalBoolean(props.autoplay),
+        autoplayDelay: toOptionalNumber(props.autoplayDelay),
+        loop: toOptionalBoolean(props.loop),
+        speed: toOptionalNumber(props.speed),
+        direction: toOptionalString(props.direction) as any,
+        draggable: toOptionalBoolean(props.draggable),
+        grabCursor: toOptionalBoolean(props.grabCursor),
+        freeMode: toOptionalBoolean(props.freeMode),
+        mousewheel: toOptionalBoolean(props.mousewheel),
+        keyboard: toOptionalBoolean(props.keyboard),
+        navigation: toOptionalBoolean(props.navigation),
+        pagination: toOptionalBoolean(props.pagination),
+        scrollbar: toOptionalBoolean(props.scrollbar),
+        scrollbarDraggable: toOptionalBoolean(props.scrollbarDraggable),
+        parallax: toOptionalBoolean(props.parallax),
+        parallaxBackground: toOptionalString(props.parallaxBackground),
+      },
+      style: {
+        slidesPerView: props.slidesPerView === 'auto' ? 'auto' : toOptionalNumber(props.slidesPerView),
+        slidesPerGroup: toOptionalNumber(props.slidesPerGroup),
+        spaceBetween: toOptionalNumber(props.spaceBetween),
+        centeredSlides: toOptionalBoolean(props.centeredSlides),
+        height: toOptionalString(props.height),
+        width: toOptionalString(props.width),
+        slideWidth: toOptionalString(props.slideWidth),
+        slideMinHeight: toOptionalString(props.slideMinHeight),
+        backgroundColor: toOptionalString(props.backgroundColor),
+        padding: toOptionalString(props.padding),
+        borderRadius: toOptionalString(props.borderRadius),
+        arrowStyle: toOptionalString(props.arrowStyle) as any,
+        arrowPosition: toOptionalString(props.arrowPosition) as any,
+        paginationType: toOptionalString(props.paginationType) as any,
+        paginationDynamic: toOptionalBoolean(props.paginationDynamic),
+        paginationClickable: toOptionalBoolean(props.paginationClickable),
+        effect: toOptionalString(props.effect) as any,
+        effectFadeCrossFade: toOptionalBoolean(props.effectFadeCrossFade),
+        effectCubeShadow: toOptionalBoolean(props.effectCubeShadow),
+        effectCubeSlideShadows: toOptionalBoolean(props.effectCubeSlideShadows),
+        effectCoverflowRotate: toOptionalNumber(props.effectCoverflowRotate),
+        effectCoverflowDepth: toOptionalNumber(props.effectCoverflowDepth),
+        effectCoverflowStretch: toOptionalNumber(props.effectCoverflowStretch),
+        effectCoverflowModifier: toOptionalNumber(props.effectCoverflowModifier),
+        effectFlipSlideShadows: toOptionalBoolean(props.effectFlipSlideShadows),
+        effectCardsPerSlideOffset: toOptionalNumber(props.effectCardsPerSlideOffset),
+        effectCardsRotate: toOptionalBoolean(props.effectCardsRotate),
+        hoverEffects: toOptionalBoolean(props.hoverEffects),
+        hoverEffectType: toOptionalString(props.hoverEffectType) as any,
+        hoverIntensity: toOptionalNumber(props.hoverIntensity),
+        className: toOptionalString(props.className),
+      },
+      responsive: props.responsive || {},
+    })
+
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
+  }
+
+  if (normalizedType === 'flexbox') {
+    const toOptionalString = (v: any) => {
+      if (v === undefined || v === null) return undefined
+      const str = String(v).trim()
+      return str.length > 0 ? str : undefined
+    }
+    const toOptionalBoolean = (v: any) => {
+      if (v === undefined || v === null || v === '') return undefined
+      return Boolean(v)
+    }
+
+    const normalized = normalizeFlexbox({
+      content: {
+        children: Array.isArray(props.children)
+          ? props.children
+          : Array.isArray(props.content?.children)
+            ? props.content.children
+            : undefined,
+        preset: toOptionalString(props.preset),
+      },
+      style: {
+        direction: toOptionalString(props.direction),
+        justifyContent: toOptionalString(props.justifyContent),
+        alignItems: toOptionalString(props.alignItems),
+        alignContent: toOptionalString(props.alignContent),
+        wrap: toOptionalString(props.wrap),
+        gap: toOptionalString(props.gap),
+        rowGap: toOptionalString(props.rowGap),
+        columnGap: toOptionalString(props.columnGap),
+        padding: toOptionalString(props.padding),
+        minHeight: toOptionalString(props.minHeight),
+        backgroundColor: toOptionalString(props.backgroundColor),
+        borderRadius: toOptionalString(props.borderRadius),
+        border: toOptionalString(props.border),
+        shadow: toOptionalString(props.shadow),
+        width: toOptionalString(props.width),
+        maxWidth: toOptionalString(props.maxWidth),
+        className: toOptionalString(props.className),
+      },
+      responsive: {
+        stackOnMobile: toOptionalBoolean(props.stackOnMobile),
+        directionMobile: toOptionalString(props.directionMobile),
+        mobileGap: toOptionalString(props.mobileGap),
+        ...(props.responsive || {}),
+      },
+    })
+
+    return stripEditorMeta({
+      ...normalized,
+      version: 1,
+    })
+  }
+
   const resolvedBlockKey = resolveBlockType(type)
   if (resolvedBlockKey) {
     return stripEditorMeta(normalizeBlockProps(resolvedBlockKey, props) as Record<string, any>)
@@ -798,6 +1832,13 @@ const findComponentInLayout = (layout: PageLayout, componentId: string): LayoutC
           const result = search(nested)
           if (result) return result
         }
+      }
+    }
+
+    if (Array.isArray(component.props?.children)) {
+      for (const child of component.props.children) {
+        const result = search(child)
+        if (result) return result
       }
     }
 
@@ -988,6 +2029,33 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({
         }
       }
       const compType = String(resolvedComponent?.type || '').toLowerCase()
+      if (compType === 'flexbox') {
+        if (propName === 'preset') {
+          if (value === 'navbar') {
+            nextEditorProps.direction = 'row'
+            nextEditorProps.justifyContent = 'space-between'
+            nextEditorProps.alignItems = 'center'
+            nextEditorProps.wrap = 'wrap'
+          } else if (value === 'center-hero') {
+            nextEditorProps.direction = 'column'
+            nextEditorProps.justifyContent = 'center'
+            nextEditorProps.alignItems = 'center'
+          } else if (value === 'button-group') {
+            nextEditorProps.direction = 'row'
+            nextEditorProps.justifyContent = 'flex-start'
+            nextEditorProps.alignItems = 'center'
+            nextEditorProps.gap = '12px'
+            nextEditorProps.wrap = 'wrap'
+          } else if (value === 'feature-row') {
+            nextEditorProps.direction = 'row'
+            nextEditorProps.justifyContent = 'flex-start'
+            nextEditorProps.alignItems = 'center'
+            nextEditorProps.gap = '16px'
+          }
+        } else if (['direction', 'justifyContent', 'alignItems', 'alignContent', 'wrap'].includes(propName)) {
+          nextEditorProps.preset = 'custom'
+        }
+      }
       const isCard = compType === 'advancedcard' || compType === 'advancedcardcomponent' || compType === 'card'
       if (isCard) {
         if (propName === 'textAlignment') {

@@ -1,8 +1,21 @@
 import type { TabsBlock } from './types'
 
 export const defaultTabsProps: TabsBlock = {
+  version: 1,
   type: 'tabs',
   schemaVersion: 1,
+  content: {
+    tabs: [
+      { id: 'tab-1', title: 'Tab 1', content: 'Content for tab 1', description: '', components: [], visible: true, disabled: false },
+      { id: 'tab-2', title: 'Tab 2', content: 'Content for tab 2', description: '', components: [], visible: true, disabled: false },
+    ],
+    activeTab: 0,
+  },
+  responsive: {
+    desktop: {},
+    tablet: {},
+    mobile: {},
+  },
   tabs: [
     { id: 'tab-1', title: 'Tab 1', content: 'Content for tab 1', description: '', components: [], visible: true, disabled: false },
     { id: 'tab-2', title: 'Tab 2', content: 'Content for tab 2', description: '', components: [], visible: true, disabled: false },

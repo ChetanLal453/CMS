@@ -3,9 +3,10 @@ import type { AdvancedAccordionInput, AdvancedAccordionViewModel } from './types
 
 export function createAdvancedAccordionViewModel(input: AdvancedAccordionInput = {}): AdvancedAccordionViewModel {
   const accordion = normalizeAdvancedAccordion(input)
+  const sourceItems = accordion.content?.items ?? accordion.items
 
   return {
-    items: accordion.items.filter((item) => item.visible !== false),
+    items: sourceItems.filter((item) => item.visible !== false),
     behavior: accordion.interaction.behavior,
     allowAllClosed: accordion.interaction.allowAllClosed,
     iconPosition: accordion.interaction.iconPosition,

@@ -22,7 +22,61 @@ export interface AdvancedListItem {
   order: number
 }
 
-export interface AdvancedListStyleGroup {
+export interface CanonicalAdvancedListContent {
+  items?: AdvancedListItem[]
+  listType?: AdvancedListKind
+}
+
+export interface CanonicalAdvancedListStyle {
+  columns?: AdvancedListColumns
+  itemSpacing?: string
+  gap?: string
+  padding?: string
+  margin?: string
+  alignment?: AdvancedListAlignment
+  displayStyle?: AdvancedListDisplayStyle
+  defaultIcon?: string
+  iconSize?: string
+  iconPosition?: AdvancedListIconPosition
+  autoNumbering?: boolean
+  titleFontSize?: string
+  titleFontWeight?: string
+  descriptionFontSize?: string
+  fontFamily?: string
+  lineHeight?: string
+  titleColor?: string
+  descriptionColor?: string
+  iconColor?: string
+  backgroundColor?: string
+  border?: string
+  borderRadius?: string
+  itemBackground?: string
+  itemPadding?: string
+  boxShadow?: string
+  boxHoverShadow?: string
+  boxBorderWidth?: string
+  boxBorderColor?: string
+  fullBoxShadow?: string
+  fullBoxPadding?: string
+  fullBoxBackground?: string
+  fullBoxBorder?: string
+  fullBoxBorderRadius?: string
+}
+
+export interface CanonicalAdvancedListResponsive {
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: Record<string, any>
+}
+
+export interface CanonicalAdvancedListProps {
+  version?: number
+  content?: CanonicalAdvancedListContent
+  style?: CanonicalAdvancedListStyle
+  responsive?: CanonicalAdvancedListResponsive
+}
+
+export interface AdvancedListStyleGroup extends CanonicalAdvancedListStyle {
   columns: AdvancedListColumns
   itemSpacing: string
   gap: string
@@ -58,15 +112,17 @@ export interface AdvancedListStyleGroup {
   fullBoxBorderRadius: string
 }
 
-export interface AdvancedList {
+export interface AdvancedList extends CanonicalAdvancedListProps {
   type: AdvancedListType
   schemaVersion: 1
   items: AdvancedListItem[]
   listType: AdvancedListKind
   style: AdvancedListStyleGroup
+  [key: string]: any
 }
 
 export interface LegacyAdvancedListProps {
+  content?: CanonicalAdvancedListContent
   items?: Array<Partial<AdvancedListItem>>
   listType?: AdvancedListKind
   columns?: AdvancedListColumns

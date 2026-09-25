@@ -6,15 +6,80 @@ export type AdvancedParagraphFontStyle = 'normal' | 'italic' | 'oblique'
 import type { DeepPartial } from '../../utils/merge'
 export type { DeepPartial }
 
-export interface AdvancedParagraphContentGroup {
+export interface CanonicalAdvancedParagraphContent {
+  text?: string
+  enableRichText?: boolean
+  allowedFormats?: string[]
+}
+
+export interface CanonicalAdvancedParagraphStyle {
+  color?: string
+  fontSize?: string
+  fontWeight?: string
+  fontFamily?: string
+  lineHeight?: string
+  letterSpacing?: string
+  maxWidth?: string
+  backgroundColor?: string
+  margin?: string
+  padding?: string
+  width?: string
+  minHeight?: string
+  display?: 'block' | 'inline' | 'inline-block' | 'none'
+  border?: string
+  borderRadius?: string
+  borderColor?: string
+  textShadow?: string
+  boxShadow?: string
+  opacity?: number
+  textTransform?: AdvancedParagraphTextTransform
+  textDecoration?: AdvancedParagraphTextDecoration
+  fontStyle?: AdvancedParagraphFontStyle
+  transition?: string
+  alignment?: AdvancedParagraphAlignment
+  hoverEffect?: 'none' | 'underline' | 'color-change' | 'background-change'
+  hoverColor?: string
+  hoverBackgroundColor?: string
+  className?: string
+  customId?: string
+  selectable?: boolean
+  editable?: boolean
+  truncate?: boolean
+  maxLines?: number
+  visible?: boolean
+  ariaLabel?: string
+  role?: string
+  tabIndex?: number
+}
+
+export interface CanonicalAdvancedParagraphResponsive {
+  fontSizeMobile?: string
+  fontSizeTablet?: string
+  textAlignMobile?: AdvancedParagraphAlignment
+  textAlignTablet?: AdvancedParagraphAlignment
+  lineHeightMobile?: string
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: Record<string, any>
+}
+
+export interface CanonicalAdvancedParagraphProps {
+  version?: number
+  content?: CanonicalAdvancedParagraphContent
+  style?: CanonicalAdvancedParagraphStyle
+  responsive?: CanonicalAdvancedParagraphResponsive
+}
+
+export interface AdvancedParagraphContentGroup extends CanonicalAdvancedParagraphContent {
   text: string
+  content?: string
 }
 
 export interface AdvancedParagraphLayoutGroup {
   alignment: AdvancedParagraphAlignment
 }
 
-export interface AdvancedParagraphStyleGroup {
+export interface AdvancedParagraphStyleGroup extends CanonicalAdvancedParagraphStyle {
   color: string
   fontSize: string
   fontWeight: string
@@ -73,7 +138,7 @@ export interface AdvancedParagraphMeta {
   migratedFrom?: 'legacy-flat' | 'legacy-structured' | 'structured'
 }
 
-export interface AdvancedParagraph {
+export interface AdvancedParagraph extends CanonicalAdvancedParagraphProps {
   type: AdvancedParagraphType
   schemaVersion: 1
   content: AdvancedParagraphContentGroup
@@ -82,11 +147,12 @@ export interface AdvancedParagraph {
   interaction: AdvancedParagraphInteractionGroup
   aria: AdvancedParagraphAriaGroup
   meta: AdvancedParagraphMeta
+  [key: string]: any
 }
 
 export interface LegacyAdvancedParagraphProps {
   text?: string
-  content?: string
+  content?: string | AdvancedParagraphContentGroup | CanonicalAdvancedParagraphContent
   html?: string
   textAlign?: AdvancedParagraphAlignment
   align?: AdvancedParagraphAlignment

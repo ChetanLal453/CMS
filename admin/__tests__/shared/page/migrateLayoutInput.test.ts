@@ -363,7 +363,14 @@ describe('migrateLayoutInput', () => {
                       id: 'block-1',
                       type: 'advancedparagraph',
                       props: {
-                        text: 'Canonical paragraph',
+                        version: 1,
+                        content: {
+                          text: 'Canonical paragraph',
+                        },
+                        style: {
+                          color: '#111111',
+                        },
+                        responsive: {},
                       },
                     },
                   ],

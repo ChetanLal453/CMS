@@ -13,7 +13,57 @@ export interface AdvancedAccordionItem {
   visible: boolean
 }
 
-export interface AdvancedAccordionStyleGroup {
+export interface CanonicalAdvancedAccordionContent {
+  items?: AdvancedAccordionItem[]
+}
+
+export interface CanonicalAdvancedAccordionStyle {
+  itemSpacing?: string
+  padding?: string
+  margin?: string
+  titleFontSize?: string
+  titleFontWeight?: string
+  contentFontSize?: string
+  fontFamily?: string
+  lineHeight?: string
+  titleColor?: string
+  titleBackground?: string
+  contentColor?: string
+  contentBackground?: string
+  border?: string
+  borderRadius?: string
+  activeTitleColor?: string
+  activeTitleBackground?: string
+  [key: string]: any
+}
+
+export interface CanonicalAdvancedAccordionInteraction {
+  behavior?: AdvancedAccordionBehavior
+  allowAllClosed?: boolean
+  iconPosition?: AdvancedAccordionIconPosition
+  icon?: string
+  activeIcon?: string
+  animation?: AdvancedAccordionAnimation
+  animationDuration?: number
+  [key: string]: any
+}
+
+export interface CanonicalAdvancedAccordionResponsive {
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: Record<string, any>
+  [key: string]: any
+}
+
+export interface CanonicalAdvancedAccordionProps {
+  version?: number
+  content?: CanonicalAdvancedAccordionContent
+  style?: CanonicalAdvancedAccordionStyle
+  interaction?: CanonicalAdvancedAccordionInteraction
+  responsive?: CanonicalAdvancedAccordionResponsive
+}
+
+export interface AdvancedAccordionStyleGroup extends CanonicalAdvancedAccordionStyle {
   itemSpacing: string
   padding: string
   margin: string
@@ -32,7 +82,7 @@ export interface AdvancedAccordionStyleGroup {
   activeTitleBackground: string
 }
 
-export interface AdvancedAccordionInteractionGroup {
+export interface AdvancedAccordionInteractionGroup extends CanonicalAdvancedAccordionInteraction {
   behavior: AdvancedAccordionBehavior
   allowAllClosed: boolean
   iconPosition: AdvancedAccordionIconPosition
@@ -42,12 +92,15 @@ export interface AdvancedAccordionInteractionGroup {
   animationDuration: number
 }
 
-export interface AdvancedAccordion {
+export interface AdvancedAccordion extends CanonicalAdvancedAccordionProps {
   type: AdvancedAccordionType
   schemaVersion: 1
+  version?: number
   items: AdvancedAccordionItem[]
   style: AdvancedAccordionStyleGroup
   interaction: AdvancedAccordionInteractionGroup
+  responsive?: CanonicalAdvancedAccordionResponsive
+  [key: string]: any
 }
 
 export interface LegacyAdvancedAccordionProps {

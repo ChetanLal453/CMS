@@ -108,7 +108,9 @@ function getResolvedItemStyle(baseStyle: ReturnType<typeof getBaseItemStyle>, li
 
 export function createAdvancedListViewModel(input: AdvancedListInput = {}): AdvancedListViewModel {
   const list = normalizeAdvancedList(input)
-  const items = [...list.items]
+  const sourceItems = list.content?.items ?? list.items
+  const resolvedListType = list.content?.listType ?? list.listType
+  const items = [...sourceItems]
     .filter((item) => item.visible !== false)
     .sort((a, b) => a.order - b.order)
     .map((item, index) => {
@@ -153,13 +155,13 @@ export function createAdvancedListViewModel(input: AdvancedListInput = {}): Adva
         },
       }
 
-      resolved.resolvedIconText = resolveIconText(resolved, list.listType, list.style.defaultIcon, list.style.autoNumbering)
+      resolved.resolvedIconText = resolveIconText(resolved, resolvedListType, list.style.defaultIcon, list.style.autoNumbering)
       return resolved
     })
 
   return {
     items,
-    listType: list.listType,
+    listType: resolvedListType,
     style: list.style,
     containerStyle:
       list.style.displayStyle === 'full-box'

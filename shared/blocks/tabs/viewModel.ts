@@ -3,14 +3,16 @@ import type { TabsInput, TabsViewModel } from './types'
 
 export function createTabsViewModel(input: TabsInput = {}): TabsViewModel {
   const tabsBlock = normalizeTabs(input)
+  const sourceTabs = tabsBlock.content?.tabs ?? tabsBlock.tabs
+  const sourceActive = tabsBlock.content?.activeTab ?? tabsBlock.activeTab
   const safeActiveIndex =
-    tabsBlock.tabs.length > 0
-      ? Math.max(0, Math.min(tabsBlock.activeTab, tabsBlock.tabs.length - 1))
+    sourceTabs.length > 0
+      ? Math.max(0, Math.min(sourceActive, sourceTabs.length - 1))
       : 0
-  const activeTab = tabsBlock.tabs.length > 0 ? tabsBlock.tabs[safeActiveIndex] : null
+  const activeTab = sourceTabs.length > 0 ? sourceTabs[safeActiveIndex] : null
 
   return {
-    tabs: tabsBlock.tabs,
+    tabs: sourceTabs,
     activeIndex: safeActiveIndex,
     activeTab,
     className: tabsBlock.aria.className,

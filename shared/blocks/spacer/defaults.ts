@@ -1,6 +1,7 @@
 import type { SpacerProps } from './types'
 
 export const defaultSpacerProps: SpacerProps = {
+  version: 1,
   height: '32px',
   mobileHeight: '24px',
   tabletHeight: '28px',

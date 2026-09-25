@@ -69,8 +69,9 @@ const debugLog = (...args: unknown[]) => {
 
 const getDropPriority = (id: string): number => {
   if (id.startsWith('component:empty:grid:')) return 0
-  if (id.startsWith('swiper-')) return 1
-  if (id.startsWith('component:carousel-')) return 2
+  if (id.startsWith('flexbox-')) return 1        // ← Flexbox drop zone (nested, high priority)
+  if (id.startsWith('swiper-')) return 2
+  if (id.startsWith('component:carousel-')) return 3
   if (id.startsWith('column:')) return 10
   if (id === 'page-sections') return 20
   return 15
@@ -146,7 +147,8 @@ export const DragDropProvider: React.FC<DragDropProviderProps> = ({ children, on
     const isNestedTarget =
       overId.startsWith('component:empty:grid:') ||
       overId.startsWith('swiper-') ||
-      overId.startsWith('component:carousel-')
+      overId.startsWith('component:carousel-') ||
+      overId.startsWith('flexbox-')
 
     setIsDraggingOverNested(isNestedTarget)
   }, [])

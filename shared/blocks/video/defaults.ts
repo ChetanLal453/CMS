@@ -3,6 +3,7 @@ import type { VideoProps } from './types'
 export const VIDEO_DEFAULT_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 
 export const defaultVideoProps: VideoProps = {
+  version: 1,
   src: VIDEO_DEFAULT_URL,
   sourceType: 'auto',
   autoplay: false,

@@ -9,7 +9,69 @@ export interface NewGridCell {
   component: any | null
 }
 
-export interface NewGridLayoutGroup {
+export interface CanonicalNewGridContent {
+  components?: Array<any | null>
+  cells?: NewGridCell[][]
+  [key: string]: any
+}
+
+export interface CanonicalNewGridLayout {
+  columns?: number
+  rows?: number
+  gap?: number
+  padding?: number
+  margin?: number
+  justifyContent?: NewGridJustifyContent
+  alignItems?: NewGridAlignItems
+  gridTemplateColumns?: string
+  gridAutoRows?: string
+  minHeight?: string
+  [key: string]: any
+}
+
+export interface CanonicalNewGridResponsive {
+  mobileColumns?: number
+  tabletColumns?: number
+  desktopColumns?: number
+  hideOnMobile?: boolean
+  hideOnTablet?: boolean
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: Record<string, any>
+  [key: string]: any
+}
+
+export interface CanonicalNewGridStyle {
+  backgroundColor?: string
+  border?: string
+  borderRadius?: number
+  gridLineColor?: string
+  customCSS?: string
+  className?: string
+  id?: string
+  dataAttributes?: string
+  [key: string]: any
+}
+
+export interface CanonicalNewGridBehavior {
+  draggable?: boolean
+  resizable?: boolean
+  showGridLines?: boolean
+  snapToGrid?: boolean
+  visible?: boolean
+  [key: string]: any
+}
+
+export interface CanonicalNewGridProps {
+  version?: number
+  content?: CanonicalNewGridContent
+  layout?: CanonicalNewGridLayout
+  responsive?: CanonicalNewGridResponsive
+  style?: CanonicalNewGridStyle
+  behavior?: CanonicalNewGridBehavior
+}
+
+export interface NewGridLayoutGroup extends CanonicalNewGridLayout {
   columns: number
   rows: number
   gap: number
@@ -22,7 +84,7 @@ export interface NewGridLayoutGroup {
   minHeight: string
 }
 
-export interface NewGridResponsiveGroup {
+export interface NewGridResponsiveGroup extends CanonicalNewGridResponsive {
   mobileColumns: number
   tabletColumns: number
   desktopColumns: number
@@ -30,7 +92,7 @@ export interface NewGridResponsiveGroup {
   hideOnTablet: boolean
 }
 
-export interface NewGridStyleGroup {
+export interface NewGridStyleGroup extends CanonicalNewGridStyle {
   backgroundColor: string
   border: string
   borderRadius: number
@@ -42,7 +104,7 @@ export interface NewGridStyleGroup {
   gridTestFromComponent: string
 }
 
-export interface NewGridBehaviorGroup {
+export interface NewGridBehaviorGroup extends CanonicalNewGridBehavior {
   draggable: boolean
   resizable: boolean
   showGridLines: boolean
@@ -50,9 +112,11 @@ export interface NewGridBehaviorGroup {
   visible: boolean
 }
 
-export interface NewGrid {
+export interface NewGrid extends CanonicalNewGridProps {
   type: NewGridType
   schemaVersion: 1
+  version?: number
+  content?: CanonicalNewGridContent
   columns?: number
   rows?: number
   gap?: number

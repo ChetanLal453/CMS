@@ -310,26 +310,47 @@ export function normalizeAdvancedCard(input: AdvancedCardInput = {}): AdvancedCa
       structuredInput.content = {}
     }
     const content = structuredInput.content as Record<string, any>
+    if (typeof content.title === 'string') {
+      content.title = { text: content.title, visible: true }
+    }
+    if (typeof content.subtitle === 'string') {
+      content.subtitle = { text: content.subtitle, visible: true }
+    }
+    if (typeof content.description === 'string') {
+      content.description = { text: content.description, visible: true }
+    }
+    if (typeof content.image === 'string') {
+      content.image = { src: content.image, alt: 'Card Image', visible: true }
+    }
+    if (typeof content.icon === 'string') {
+      content.icon = { name: content.icon, visible: true }
+    }
+    if (typeof content.badge === 'string') {
+      content.badge = { text: content.badge, visible: true }
+    }
+    if (typeof content.button === 'string') {
+      content.button = { label: content.button, href: '#', icon: '', visible: true }
+    }
     if (raw.title !== undefined) {
-      content.title = { ...(content.title || {}), text: String(raw.title) }
+      content.title = { ...(isPlainObject(content.title) ? content.title : {}), text: String(raw.title) }
     }
     if (raw.subtitle !== undefined) {
-      content.subtitle = { ...(content.subtitle || {}), text: String(raw.subtitle) }
+      content.subtitle = { ...(isPlainObject(content.subtitle) ? content.subtitle : {}), text: String(raw.subtitle) }
     }
     if (raw.description !== undefined) {
-      content.description = { ...(content.description || {}), text: String(raw.description) }
+      content.description = { ...(isPlainObject(content.description) ? content.description : {}), text: String(raw.description) }
     }
     if (raw.buttonText !== undefined) {
-      content.button = { ...(content.button || {}), label: String(raw.buttonText) }
+      content.button = { ...(isPlainObject(content.button) ? content.button : {}), label: String(raw.buttonText) }
     }
     if (raw.buttonLink !== undefined) {
-      content.button = { ...(content.button || {}), href: String(raw.buttonLink) }
+      content.button = { ...(isPlainObject(content.button) ? content.button : {}), href: String(raw.buttonLink) }
     }
     if (raw.image !== undefined) {
-      content.image = { ...(content.image || {}), src: String(raw.image) }
+      content.image = { ...(isPlainObject(content.image) ? content.image : {}), src: String(raw.image) }
     }
     if (raw.icon !== undefined) {
-      content.icon = { ...(content.icon || {}), name: String(raw.icon) }
+      content.icon = { ...(isPlainObject(content.icon) ? content.icon : {}), name: String(raw.icon) }
     }
   } else {
     structuredInput = mapLegacyAdvancedCard(input as LegacyAdvancedCardProps)
@@ -350,6 +371,7 @@ export function normalizeAdvancedCard(input: AdvancedCardInput = {}): AdvancedCa
       type: 'advancedCard',
       variant,
       schemaVersion: 2,
+      version: 1,
       meta: {
         migratedFrom: structuredInput.meta?.migratedFrom || (hasStructuredSections(input) ? 'structured' : 'legacy-flat'),
       },
@@ -487,6 +509,7 @@ export function sanitizeAdvancedCardForStorage(input: AdvancedCardInput = {}): R
 
   cleanedObject.type = 'advancedCard'
   cleanedObject.schemaVersion = 2
+  cleanedObject.version = 1
 
   if (!cleanedObject.variant) {
     cleanedObject.variant = variant

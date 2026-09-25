@@ -95,7 +95,74 @@ export interface SwiperRenderConfig {
   swiperConfig: Record<string, any>
 }
 
-export interface SwiperContainerProps {
+export interface CanonicalSwiperContainerContent {
+  slides?: SwiperSlideItem[]
+  autoplay?: boolean
+  autoplayDelay?: number
+  loop?: boolean
+  speed?: number
+  direction?: SwiperDirection
+  draggable?: boolean
+  grabCursor?: boolean
+  freeMode?: boolean
+  mousewheel?: boolean
+  keyboard?: boolean
+  navigation?: boolean
+  pagination?: boolean
+  scrollbar?: boolean
+  scrollbarDraggable?: boolean
+  parallax?: boolean
+  parallaxBackground?: string
+}
+
+export interface CanonicalSwiperContainerStyle {
+  slidesPerView?: number | 'auto'
+  slidesPerGroup?: number
+  spaceBetween?: number
+  centeredSlides?: boolean
+  height?: string
+  width?: string
+  slideWidth?: string
+  slideMinHeight?: string
+  backgroundColor?: string
+  padding?: string
+  borderRadius?: string
+  arrowStyle?: SwiperArrowStyle
+  arrowPosition?: SwiperArrowPosition
+  paginationType?: SwiperPaginationType
+  paginationDynamic?: boolean
+  paginationClickable?: boolean
+  effect?: SwiperEffect
+  effectFadeCrossFade?: boolean
+  effectCubeShadow?: boolean
+  effectCubeSlideShadows?: boolean
+  effectCoverflowRotate?: number
+  effectCoverflowDepth?: number
+  effectCoverflowStretch?: number
+  effectCoverflowModifier?: number
+  effectFlipSlideShadows?: boolean
+  effectCardsPerSlideOffset?: number
+  effectCardsRotate?: boolean
+  hoverEffects?: boolean
+  hoverEffectType?: SwiperHoverEffectType
+  hoverIntensity?: number
+  className?: string
+}
+
+export interface CanonicalSwiperContainerResponsive {
+  desktop?: Record<string, any>
+  tablet?: Record<string, any>
+  mobile?: Record<string, any>
+}
+
+export interface CanonicalSwiperContainerProps {
+  version?: number
+  content?: CanonicalSwiperContainerContent
+  style?: CanonicalSwiperContainerStyle
+  responsive?: CanonicalSwiperContainerResponsive
+}
+
+export type SwiperContainerProps = CanonicalSwiperContainerProps & {
   slidesPerView: number | 'auto'
   slidesPerGroup: number
   spaceBetween: number

@@ -18,6 +18,7 @@ import AdvancedHeadingPreviewRenderer from '../components/PageEditor/components/
 import AdvancedList from '../components/PageEditor/components/AdvancedList'
 import AdvancedParagraphPreviewRenderer from '../components/PageEditor/components/AdvancedParagraphPreviewRenderer'
 import FilterComponent from '../components/PageEditor/components/Filter'
+import FlexboxAdminRenderer from '../components/PageEditor/components/FlexboxAdminRenderer'
 import ImageAdminRenderer from '../components/PageEditor/components/ImageAdminRenderer'
 import NewGridAdminComponent from '../components/PageEditor/components/NewGrid'
 import SwiperContainerAdminComponent from '../components/PageEditor/components/SwiperContainer'
@@ -35,6 +36,7 @@ registerAdminComponents({
   advancedaccordion: (props) => React.createElement(AdvancedAccordion, props),
   advancedlist: (props) => React.createElement(AdvancedList, props),
   filter: (props) => React.createElement(FilterComponent, props),
+  flexbox: (props) => React.createElement(FlexboxAdminRenderer, props),
   image: (props) => React.createElement(ImageAdminRenderer, props),
   swipercontainer: (props) => React.createElement(SwiperContainerAdminComponent, props),
   newgrid: (props) => React.createElement(NewGridAdminComponent, props),

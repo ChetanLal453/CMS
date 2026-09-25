@@ -1,10 +1,19 @@
 import type { AdvancedHeading } from './types'
 
 export const defaultAdvancedHeadingProps: AdvancedHeading = {
+  version: 1,
   type: 'advancedheading',
   schemaVersion: 1,
   text: 'Advanced Heading',
   level: 'h2',
+  content: {
+    text: 'Advanced Heading',
+    level: 'h2',
+    highlightText: '',
+    highlightColor: 'var(--canvas-accent2, #a594ff)',
+    seoEnabled: true,
+    seoMaxLength: 60,
+  },
   style: {
     usePresetStyles: true,
     fontFamily: "'DM Sans', system-ui, sans-serif",
@@ -25,6 +34,15 @@ export const defaultAdvancedHeadingProps: AdvancedHeading = {
     maxWidth: '100%',
     margin: '0 0 16px 0',
     padding: '0',
+  },
+  responsive: {
+    fontSizeMobile: '',
+    fontSizeTablet: '',
+    textAlignMobile: 'center',
+    textAlignTablet: 'left',
+    desktop: {},
+    tablet: {},
+    mobile: {},
   },
   highlight: {
     text: '',
