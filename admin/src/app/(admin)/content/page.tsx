@@ -96,6 +96,7 @@ export default function ContentPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
+  const [currentRevisionId, setCurrentRevisionId] = useState<number | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   // Collections state
@@ -141,7 +142,11 @@ export default function ContentPage() {
       if (!res.ok) {
         throw new Error(json.error || 'Failed to load page layout')
       }
-      setPageLayout(json.layout || { sections: [] })
+      const rawLayout = json.page?.layout || json.layout || { sections: [] }
+      setPageLayout(rawLayout)
+      if (json.revision?.id || json.page?.current_revision_id) {
+        setCurrentRevisionId(json.revision?.id ?? json.page?.current_revision_id ?? null)
+      }
       setHasChanges(false)
     } catch (err: any) {
       showToast(err.message || 'Error loading page layout')
@@ -214,17 +219,16 @@ export default function ContentPage() {
             const props = comp.props || {}
             const cContent = props.content || {}
 
-            // Extract content for known editable blocks
             const extractedContent: EditableComponent['content'] = {
-              title: cContent.title ?? props.title ?? '',
-              text: cContent.text ?? props.text ?? '',
+              title: cContent.title ?? props.title ?? props.heading ?? '',
+              text: cContent.text ?? props.text ?? props.subheading ?? props.description ?? props.body ?? '',
               highlightText: cContent.highlightText ?? props.highlightText ?? '',
-              link: cContent.link ?? props.link ?? '',
-              src: cContent.src ?? props.src ?? cContent.image ?? props.image ?? '',
+              link: cContent.link ?? props.link ?? props.url ?? props.href ?? '',
+              src: cContent.src ?? props.src ?? cContent.image ?? props.image ?? props.imageUrl ?? '',
               alt: cContent.alt ?? props.alt ?? '',
-              badge: cContent.badge ?? props.badge ?? '',
-              buttonText: cContent.buttonText ?? props.buttonText ?? '',
-              buttonLink: cContent.buttonLink ?? props.buttonLink ?? '',
+              badge: cContent.badge ?? props.badge ?? props.tag ?? '',
+              buttonText: cContent.buttonText ?? props.buttonText ?? props.label ?? props.btnText ?? '',
+              buttonLink: cContent.buttonLink ?? props.buttonLink ?? props.url ?? props.link ?? '',
               items: Array.isArray(cContent.items) ? cContent.items : Array.isArray(props.items) ? props.items : undefined,
             }
 
@@ -240,6 +244,38 @@ export default function ContentPage() {
           })
         })
       })
+
+      // Fallback: check section.blocks or section.components if rows yielded no components
+      if (components.length === 0) {
+        const blocks = Array.isArray(section.blocks) ? section.blocks : Array.isArray(section.components) ? section.components : []
+        blocks.forEach((comp: any, bIdx: number) => {
+          if (!comp || !comp.type) return
+          const type = String(comp.type).toLowerCase()
+          const props = comp.props || {}
+          const cContent = props.content || {}
+          const extractedContent: EditableComponent['content'] = {
+            title: cContent.title ?? props.title ?? props.heading ?? '',
+            text: cContent.text ?? props.text ?? props.subheading ?? props.description ?? props.body ?? '',
+            highlightText: cContent.highlightText ?? props.highlightText ?? '',
+            link: cContent.link ?? props.link ?? props.url ?? props.href ?? '',
+            src: cContent.src ?? props.src ?? cContent.image ?? props.image ?? props.imageUrl ?? '',
+            alt: cContent.alt ?? props.alt ?? '',
+            badge: cContent.badge ?? props.badge ?? props.tag ?? '',
+            buttonText: cContent.buttonText ?? props.buttonText ?? props.label ?? props.btnText ?? '',
+            buttonLink: cContent.buttonLink ?? props.buttonLink ?? props.url ?? props.link ?? '',
+            items: Array.isArray(cContent.items) ? cContent.items : Array.isArray(props.items) ? props.items : undefined,
+          }
+          components.push({
+            id: comp.id || `comp-${sIdx}-block-${bIdx}`,
+            type,
+            sectionId: section.id || `sec-${sIdx}`,
+            sectionIndex: sIdx,
+            compIndex: bIdx,
+            location: { sectionIndex: sIdx, rowIndex: -1, colIndex: -1, compIndex: bIdx },
+            content: extractedContent,
+          })
+        })
+      }
 
       const rawName = section.name || section.title || `Section ${sIdx + 1}`
       const cleanName = rawName.replace(/^0\d+\s*-\s*/, '')
@@ -266,6 +302,17 @@ export default function ContentPage() {
       const nextLayout = JSON.parse(JSON.stringify(prevLayout))
       const section = nextLayout.sections?.[location.sectionIndex]
       if (!section) return prevLayout
+
+      if (location.rowIndex === -1) {
+        const block = section.blocks?.[location.compIndex] || section.components?.[location.compIndex]
+        if (block) {
+          if (!block.props) block.props = {}
+          if (!block.props.content) block.props.content = {}
+          block.props.content[field] = value
+          block.props[field] = value
+        }
+        return nextLayout
+      }
 
       const rows = section.rows || section.container?.rows || []
       const col = rows?.[location.rowIndex]?.columns?.[location.colIndex]
@@ -294,11 +341,17 @@ export default function ContentPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ layout: pageLayout }),
+        body: JSON.stringify({
+          layout: pageLayout,
+          base_revision_id: currentRevisionId,
+        }),
       })
       const data = await res.json()
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to save draft')
+      }
+      if (data.revision?.id || data.page?.current_revision_id) {
+        setCurrentRevisionId(data.revision?.id ?? data.page?.current_revision_id ?? null)
       }
       setHasChanges(false)
       showToast('Draft content saved successfully!')
@@ -320,7 +373,10 @@ export default function ContentPage() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ layout: pageLayout }),
+          body: JSON.stringify({
+            layout: pageLayout,
+            base_revision_id: currentRevisionId,
+          }),
         })
       }
       // Trigger publish cutover
@@ -332,7 +388,9 @@ export default function ContentPage() {
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to publish page')
       }
-      setHasChanges(false)
+      if (data.revision?.id || data.published_revision?.id) {
+        setCurrentRevisionId(data.revision?.id ?? data.published_revision?.id ?? null)
+      }
       showToast('🎉 Published live to website!')
       await loadSiteData()
     } catch (err: any) {
