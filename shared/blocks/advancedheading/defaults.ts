@@ -34,6 +34,7 @@ export const defaultAdvancedHeadingProps: AdvancedHeading = {
     maxWidth: '100%',
     margin: '0 0 16px 0',
     padding: '0',
+    htmlTag: 'auto',
   },
   responsive: {
     fontSizeMobile: '',
