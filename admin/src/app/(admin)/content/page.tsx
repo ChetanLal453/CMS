@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { extractFieldValue, updateComponentFieldSafely } from '../../../../../shared/page/clientContentHelpers'
 
 type SitePage = {
   id: number
@@ -220,15 +221,15 @@ export default function ContentPage() {
             const cContent = props.content || {}
 
             const extractedContent: EditableComponent['content'] = {
-              title: cContent.title ?? props.title ?? props.heading ?? '',
-              text: cContent.text ?? props.text ?? props.subheading ?? props.description ?? props.body ?? '',
-              highlightText: cContent.highlightText ?? props.highlightText ?? '',
-              link: cContent.link ?? props.link ?? props.url ?? props.href ?? '',
-              src: cContent.src ?? props.src ?? cContent.image ?? props.image ?? props.imageUrl ?? '',
-              alt: cContent.alt ?? props.alt ?? '',
-              badge: cContent.badge ?? props.badge ?? props.tag ?? '',
-              buttonText: cContent.buttonText ?? props.buttonText ?? props.label ?? props.btnText ?? '',
-              buttonLink: cContent.buttonLink ?? props.buttonLink ?? props.url ?? props.link ?? '',
+              title: extractFieldValue(cContent.title ?? props.title ?? props.heading, 'text'),
+              text: extractFieldValue(cContent.text ?? props.text ?? props.subheading ?? props.description ?? props.body ?? cContent.description, 'text'),
+              highlightText: extractFieldValue(cContent.highlightText ?? props.highlightText, 'text'),
+              link: extractFieldValue(cContent.link ?? props.link ?? props.url ?? props.href ?? cContent.button?.href, 'href'),
+              src: extractFieldValue(cContent.src ?? props.src ?? cContent.image ?? props.image ?? props.imageUrl, 'src'),
+              alt: extractFieldValue(cContent.alt ?? props.alt ?? cContent.image?.alt, 'alt'),
+              badge: extractFieldValue(cContent.badge ?? props.badge ?? props.tag, 'text'),
+              buttonText: extractFieldValue(cContent.buttonText ?? props.buttonText ?? props.label ?? props.btnText ?? cContent.button?.label, 'label'),
+              buttonLink: extractFieldValue(cContent.buttonLink ?? props.buttonLink ?? props.url ?? props.link ?? cContent.button?.href, 'href'),
               items: Array.isArray(cContent.items) ? cContent.items : Array.isArray(props.items) ? props.items : undefined,
             }
 
@@ -254,15 +255,15 @@ export default function ContentPage() {
           const props = comp.props || {}
           const cContent = props.content || {}
           const extractedContent: EditableComponent['content'] = {
-            title: cContent.title ?? props.title ?? props.heading ?? '',
-            text: cContent.text ?? props.text ?? props.subheading ?? props.description ?? props.body ?? '',
-            highlightText: cContent.highlightText ?? props.highlightText ?? '',
-            link: cContent.link ?? props.link ?? props.url ?? props.href ?? '',
-            src: cContent.src ?? props.src ?? cContent.image ?? props.image ?? props.imageUrl ?? '',
-            alt: cContent.alt ?? props.alt ?? '',
-            badge: cContent.badge ?? props.badge ?? props.tag ?? '',
-            buttonText: cContent.buttonText ?? props.buttonText ?? props.label ?? props.btnText ?? '',
-            buttonLink: cContent.buttonLink ?? props.buttonLink ?? props.url ?? props.link ?? '',
+            title: extractFieldValue(cContent.title ?? props.title ?? props.heading, 'text'),
+            text: extractFieldValue(cContent.text ?? props.text ?? props.subheading ?? props.description ?? props.body ?? cContent.description, 'text'),
+            highlightText: extractFieldValue(cContent.highlightText ?? props.highlightText, 'text'),
+            link: extractFieldValue(cContent.link ?? props.link ?? props.url ?? props.href ?? cContent.button?.href, 'href'),
+            src: extractFieldValue(cContent.src ?? props.src ?? cContent.image ?? props.image ?? props.imageUrl, 'src'),
+            alt: extractFieldValue(cContent.alt ?? props.alt ?? cContent.image?.alt, 'alt'),
+            badge: extractFieldValue(cContent.badge ?? props.badge ?? props.tag, 'text'),
+            buttonText: extractFieldValue(cContent.buttonText ?? props.buttonText ?? props.label ?? props.btnText ?? cContent.button?.label, 'label'),
+            buttonLink: extractFieldValue(cContent.buttonLink ?? props.buttonLink ?? props.url ?? props.link ?? cContent.button?.href, 'href'),
             items: Array.isArray(cContent.items) ? cContent.items : Array.isArray(props.items) ? props.items : undefined,
           }
           components.push({
@@ -306,10 +307,7 @@ export default function ContentPage() {
       if (location.rowIndex === -1) {
         const block = section.blocks?.[location.compIndex] || section.components?.[location.compIndex]
         if (block) {
-          if (!block.props) block.props = {}
-          if (!block.props.content) block.props.content = {}
-          block.props.content[field] = value
-          block.props[field] = value
+          updateComponentFieldSafely(block, field, value)
         }
         return nextLayout
       }
@@ -319,13 +317,7 @@ export default function ContentPage() {
       const comp = col?.components?.[location.compIndex]
       if (!comp) return prevLayout
 
-      if (!comp.props) comp.props = {}
-      if (!comp.props.content) comp.props.content = {}
-
-      // Write to canonical content structure
-      comp.props.content[field] = value
-      // Write to top-level prop for backwards compatibility
-      comp.props[field] = value
+      updateComponentFieldSafely(comp, field, value)
 
       return nextLayout
     })

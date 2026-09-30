@@ -17,6 +17,7 @@ import AdvancedCardPreviewRenderer from '../components/PageEditor/components/Adv
 import AdvancedHeadingPreviewRenderer from '../components/PageEditor/components/AdvancedHeadingPreviewRenderer'
 import AdvancedList from '../components/PageEditor/components/AdvancedList'
 import AdvancedParagraphPreviewRenderer from '../components/PageEditor/components/AdvancedParagraphPreviewRenderer'
+import ContainerAdminRenderer from '../components/PageEditor/components/ContainerAdminRenderer'
 import FilterComponent from '../components/PageEditor/components/Filter'
 import FlexboxAdminRenderer from '../components/PageEditor/components/FlexboxAdminRenderer'
 import ImageAdminRenderer from '../components/PageEditor/components/ImageAdminRenderer'
@@ -30,6 +31,7 @@ type ComponentSchema = ComponentDefinition['schema']
 
 registerAdminComponents({
   ...simpleBlockRenderers,
+  container: (props) => React.createElement(ContainerAdminRenderer, props),
   advancedheading: (props) => React.createElement(AdvancedHeadingPreviewRenderer, props),
   advancedparagraph: (props) => React.createElement(AdvancedParagraphPreviewRenderer, props),
   advancedcard: (props) => React.createElement(AdvancedCardPreviewRenderer, props),

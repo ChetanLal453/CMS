@@ -6,4 +6,5 @@ export const defaultContainerProps: ContainerProps = {
   padding: '20px',
   margin: '0 auto',
   backgroundColor: 'transparent',
+  children: [],
 }

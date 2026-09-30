@@ -36,6 +36,7 @@ export const buttonContract = {
       text: { type: 'text', label: 'Button Text', default: 'Click Me', category: 'Content' },
       link: { type: 'text', label: 'Link URL', default: '#', category: 'Content' },
       openInNewTab: { type: 'toggle', label: 'Open in New Tab', default: false, category: 'Content' },
+      action: { type: 'action', label: 'Action / Link', default: null, category: 'Content' },
       loadingText: { type: 'text', label: 'Loading Text', default: defaultButtonProps.loadingText, category: 'Content' },
       variant: {
         type: 'select',
@@ -123,7 +124,7 @@ export const buttonContract = {
         options: ['none', 'sm', 'md', 'lg', 'xl'],
         category: 'Style',
       },
-      icon: { type: 'text', label: 'Icon', default: defaultButtonProps.icon, category: 'Icon' },
+      icon: { type: 'text', label: 'Icon (e.g. phone, calendar, wrench)', default: defaultButtonProps.icon, category: 'Content' },
       iconPosition: {
         type: 'select',
         label: 'Icon Position',
@@ -132,7 +133,7 @@ export const buttonContract = {
           { value: 'left', label: 'Left' },
           { value: 'right', label: 'Right' },
         ],
-        category: 'Icon',
+        category: 'Content',
       },
       iconSize: { type: 'text', label: 'Icon Size', default: defaultButtonProps.iconSize, category: 'Icon' },
       iconSpacing: { type: 'text', label: 'Icon Spacing', default: defaultButtonProps.iconSpacing, category: 'Icon' },

@@ -1,5 +1,6 @@
 export interface CanonicalContainerContent {
   content?: string
+  children?: any[]
 }
 
 export interface CanonicalContainerStyle {
@@ -17,6 +18,13 @@ export interface CanonicalContainerStyle {
   alignment?: string
   textAlign?: string
   className?: string
+  position?: 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky'
+  top?: string
+  right?: string
+  bottom?: string
+  left?: string
+  zIndex?: number | string
+  overflow?: string
 }
 
 export interface CanonicalContainerResponsive {
@@ -47,6 +55,18 @@ export type ContainerProps = Omit<CanonicalContainerProps, 'content'> & {
   alignment?: string
   textAlign?: string
   className?: string
+  position?: 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky'
+  top?: string
+  right?: string
+  bottom?: string
+  left?: string
+  zIndex?: number | string
+  overflow?: string
+  mobilePosition?: string
+  mobileTop?: string
+  mobileRight?: string
+  mobileBottom?: string
+  mobileLeft?: string
   content?: CanonicalContainerContent | string
   [key: string]: any
 }

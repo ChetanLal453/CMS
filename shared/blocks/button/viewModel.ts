@@ -1,5 +1,6 @@
 import { normalizeButton } from './normalize'
 import type { ButtonProps, ButtonShadow, ButtonSize, ButtonViewModel } from './types'
+import { resolveActionHref } from '../../page/actionHelpers'
 
 const SHADOW_MAP: Record<ButtonShadow, string> = {
   none: 'none',
@@ -101,10 +102,13 @@ export function createButtonViewModel(props: Record<string, any> = {}): ButtonVi
   const sizePreset = SIZE_MAP[normalized.size || 'medium']
   const variant = getVariantColors(normalized)
   const gradientBackground = buildGradientBackground(normalized)
-  const link = normalized.content?.link ?? normalized.link ?? ''
+  const rawLink = normalized.content?.link ?? normalized.link ?? ''
   const openInNewTab = Boolean(normalized.content?.openInNewTab ?? normalized.openInNewTab)
+  const resolvedAction = resolveActionHref(props.action ?? normalized.action ?? rawLink, openInNewTab)
+  const link = resolvedAction.href || rawLink
   const hasLink = Boolean(link.trim() && !normalized.disabled && !normalized.loading)
-  const target = openInNewTab ? '_blank' : '_self'
+  const target = resolvedAction.target || (openInNewTab ? '_blank' : '_self')
+  const rel = resolvedAction.rel || (openInNewTab ? 'noopener noreferrer' : undefined)
   const justifyContent = normalized.alignment === 'center' ? 'center' : normalized.alignment === 'right' ? 'flex-end' : 'flex-start'
   const hasCustomPadding = Boolean(
     normalized.paddingTop && (normalized.size === 'medium' || normalized.paddingTop !== '14px')
@@ -122,9 +126,10 @@ export function createButtonViewModel(props: Record<string, any> = {}): ButtonVi
     ...normalized,
     link,
     openInNewTab,
+    resolvedAction,
     hasLink,
     target,
-    rel: openInNewTab ? 'noopener noreferrer' : undefined,
+    rel,
     label: normalized.loading
       ? (normalized.content?.loadingText || normalized.loadingText || 'Loading...')
       : (normalized.content?.text || normalized.text || 'Click Me'),
@@ -143,7 +148,7 @@ export function createButtonViewModel(props: Record<string, any> = {}): ButtonVi
     containerStyle: {
       display: 'flex',
       justifyContent,
-      width: '100%',
+      width: normalized.fullWidth ? '100%' : (normalized.width && normalized.width !== '100%' ? normalized.width : undefined),
       margin: normalized.margin || `${normalized.marginTop} ${normalized.marginRight} ${normalized.marginBottom} ${normalized.marginLeft}`,
     },
     buttonStyle: {
@@ -179,6 +184,7 @@ export function createButtonViewModel(props: Record<string, any> = {}): ButtonVi
       animation: buildAnimation(normalized.animationType, normalized.animationDuration || '0.3s'),
       position: 'relative',
       overflow: 'hidden',
+      whiteSpace: 'nowrap',
     },
     hoverStyle: {
       transform:

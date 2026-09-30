@@ -9574,3 +9574,14 @@ body,
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
 }
+
+/* Allow flex items inside row flexbox to take natural / configured width instead of forcing 100% */
+[data-flexbox-id] .component-wrapper,
+[data-drop-zone*="flexbox"] .component-wrapper,
+.fx-row > .component-wrapper,
+div[style*="flex-direction: row"] > .component-wrapper,
+div[style*="flex-direction:row"] > .component-wrapper {
+  width: auto !important;
+  max-width: 100% !important;
+  display: inline-flex;
+}

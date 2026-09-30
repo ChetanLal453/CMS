@@ -530,7 +530,11 @@ function RenderSection({ sectionView }: { sectionView: PublicSectionView }) {
                 </h2>
               </div>
             ) : null}
-            {sectionView.content ? <div className="mb-4 text-center lead text-secondary">{sectionView.content}</div> : null}
+            {typeof sectionView.content === 'string' && sectionView.content ? (
+              <div className="mb-4 text-center lead text-secondary">{sectionView.content}</div>
+            ) : typeof sectionView.content === 'object' && typeof (sectionView.content as any)?.content === 'string' && (sectionView.content as any).content ? (
+              <div className="mb-4 text-center lead text-secondary">{(sectionView.content as any).content}</div>
+            ) : null}
             {sectionView.rows.map((row) => (
               <div key={row.id} className="d-flex flex-wrap" style={{ ...row.style, alignItems: getSectionRowAlignment(row.style) }}>
                 {row.columns.map((column) => (
@@ -553,9 +557,11 @@ function RenderSection({ sectionView }: { sectionView: PublicSectionView }) {
 export function PublicPage({
   bundle,
   pageView: providedPageView,
+  children,
 }: {
   bundle?: AdminPageBundle
   pageView?: PublicPageView
+  children?: React.ReactNode
 }) {
   const pageView = providedPageView ?? (bundle ? buildPublicPageView(bundle) : null)
 
@@ -567,7 +573,9 @@ export function PublicPage({
     <div className="min-vh-100 text-dark" style={pageView.shellStyle}>
       <PublicHeader view={pageView.header} />
       <PublicBanner view={pageView.banner} accent={pageView.theme.accent} />
-      {pageView.sections.length ? (
+      {children ? (
+        <main>{children}</main>
+      ) : pageView.sections.length ? (
         <main>
           {pageView.sections.map((sectionView) => (
             <RenderSection key={sectionView.id} sectionView={sectionView} />

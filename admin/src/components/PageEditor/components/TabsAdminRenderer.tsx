@@ -169,8 +169,10 @@ const TabsAdminRenderer: React.FC<TabsAdminRendererProps & Record<string, any>> 
               setEditingIndex(activeTab)
               setEditingField('content')
             }}>
-            {activeContent ? (
+            {typeof activeContent === 'string' && activeContent ? (
               <div className="whitespace-pre-wrap text-[12px] leading-[1.5] text-[#c8cce6]">{activeContent}</div>
+            ) : typeof activeContent === 'object' && typeof (activeContent as any)?.content === 'string' && (activeContent as any).content ? (
+              <div className="whitespace-pre-wrap text-[12px] leading-[1.5] text-[#c8cce6]">{(activeContent as any).content}</div>
             ) : (
               <div className="text-[10px] text-[#6b7299]">Drop components here</div>
             )}

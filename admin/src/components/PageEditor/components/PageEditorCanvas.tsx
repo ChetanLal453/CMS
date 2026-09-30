@@ -184,6 +184,11 @@ const ComponentRenderer: React.FC<{
       onSelect={() => onComponentSelect(component, context)}
       onUpdate={(newProps: Record<string, any>) => onComponentUpdate(component?.id, newProps)}
       onComponentSelect={onComponentSelect}
+      onComponentUpdate={onComponentUpdate}
+      deleteComponent={onComponentDelete}
+      onDelete={onComponentDelete}
+      layout={layout}
+      setLayout={setLayout}
       sectionId={context.sectionId}
       containerId={context.containerId}
       rowId={context.rowId}
@@ -690,8 +695,9 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
     (section: Section, index: number) => {
       if (!section) return null
 
-      const hasRows = section?.container?.rows?.length > 0
-      const isDynamicSection = Boolean(section?.type && section.type !== 'custom')
+      const rows = (section?.container?.rows?.length ? section.container.rows : (section as any)?.rows) || []
+      const hasRows = Array.isArray(rows) && rows.length > 0
+      const isDynamicSection = Boolean(section?.type && section.type !== 'custom' && section.type !== 'default' && !hasRows)
       const sectionSettings = (section?.settings || {}) as Record<string, any>
 
       const getColumnTemplate = (columns: any[]) => {
@@ -728,7 +734,11 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
           
           <div className="p-4">
             {/* ✅ SIMPLE CONTENT DISPLAY - NO TEXTAREA */}
-            {section?.content && <div className="mb-4 whitespace-pre-wrap">{section.content}</div>}
+            {typeof section?.content === 'string' && section.content ? (
+              <div className="mb-4 whitespace-pre-wrap">{section.content}</div>
+            ) : typeof section?.content === 'object' && typeof (section.content as any)?.content === 'string' && (section.content as any).content ? (
+              <div className="mb-4 whitespace-pre-wrap">{(section.content as any).content}</div>
+            ) : null}
 
             {isDynamicSection ? (
               <div>
@@ -743,7 +753,7 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
             ) : !hasRows ? (
               <ColumnSetup sectionId={section?.id} onSetSectionColumns={onSetSectionColumns} />
             ) : (
-              section?.container?.rows?.map((row) => (
+              rows.map((row) => (
                 <div
                   key={row?.id}
                   className="grid gap-4 mb-4"

@@ -9,6 +9,7 @@ import { asString } from '../../utils/merge'
 
 function asOptionalString(value: unknown): string | undefined {
   if (value === undefined || value === null) return undefined
+  if (typeof value === 'object') return undefined
   const str = String(value).trim()
   return str.length > 0 ? str : undefined
 }
@@ -18,7 +19,13 @@ export function normalizeContainer(props: Record<string, any> = {}): ContainerPr
   const styleInput = props.style && typeof props.style === 'object' ? props.style : {}
   const responsiveInput = props.responsive && typeof props.responsive === 'object' ? props.responsive : {}
 
-  const contentText = asOptionalString(contentInput.content ?? props.content)
+  const rawContent =
+    typeof contentInput.content === 'string'
+      ? contentInput.content
+      : typeof props.content === 'string'
+      ? props.content
+      : undefined
+  const contentText = asOptionalString(rawContent)
 
   const maxWidth = asOptionalString(styleInput.maxWidth ?? props.maxWidth)
   const width = asOptionalString(styleInput.width ?? props.width)
@@ -34,10 +41,34 @@ export function normalizeContainer(props: Record<string, any> = {}): ContainerPr
   const alignment = asOptionalString(styleInput.alignment ?? props.alignment ?? styleInput.textAlign ?? props.textAlign)
   const textAlign = asOptionalString(styleInput.textAlign ?? props.textAlign ?? styleInput.alignment ?? props.alignment)
   const className = asOptionalString(styleInput.className ?? props.className)
+  const position = asOptionalString(styleInput.position ?? props.position) as any
+  const top = asOptionalString(styleInput.top ?? props.top)
+  const right = asOptionalString(styleInput.right ?? props.right)
+  const bottom = asOptionalString(styleInput.bottom ?? props.bottom)
+  const left = asOptionalString(styleInput.left ?? props.left)
+  const zIndex = styleInput.zIndex ?? props.zIndex
+  const overflow = asOptionalString(styleInput.overflow ?? props.overflow)
+  const mobilePosition = asOptionalString(responsiveInput.mobile?.position ?? props.mobilePosition)
+  const mobileTop = asOptionalString(responsiveInput.mobile?.top ?? props.mobileTop)
+  const mobileRight = asOptionalString(responsiveInput.mobile?.right ?? props.mobileRight)
+  const mobileBottom = asOptionalString(responsiveInput.mobile?.bottom ?? props.mobileBottom)
+  const mobileLeft = asOptionalString(responsiveInput.mobile?.left ?? props.mobileLeft)
+
+  const rawChildren =
+    Array.isArray(props.children) && props.children.length > 0
+      ? props.children
+      : Array.isArray(contentInput.children) && contentInput.children.length > 0
+        ? contentInput.children
+        : Array.isArray(props.children)
+          ? props.children
+          : Array.isArray(contentInput.children)
+            ? contentInput.children
+            : []
 
   // Sparse content object
   const content: CanonicalContainerContent = {}
   if (contentText !== undefined) content.content = contentText
+  if (rawChildren !== undefined) content.children = rawChildren
 
   // Sparse style object — only explicitly defined properties are kept!
   const style: CanonicalContainerStyle = {}
@@ -55,6 +86,13 @@ export function normalizeContainer(props: Record<string, any> = {}): ContainerPr
   if (alignment !== undefined) style.alignment = alignment
   if (textAlign !== undefined) style.textAlign = textAlign
   if (className !== undefined) style.className = className
+  if (position !== undefined) style.position = position
+  if (top !== undefined) style.top = top
+  if (right !== undefined) style.right = right
+  if (bottom !== undefined) style.bottom = bottom
+  if (left !== undefined) style.left = left
+  if (zIndex !== undefined) style.zIndex = zIndex
+  if (overflow !== undefined) style.overflow = overflow
 
   const responsive: CanonicalContainerResponsive = {
     desktop: responsiveInput.desktop && typeof responsiveInput.desktop === 'object' ? responsiveInput.desktop : {},
@@ -69,6 +107,7 @@ export function normalizeContainer(props: Record<string, any> = {}): ContainerPr
     content,
     style,
     responsive,
+    children: rawChildren ?? defaultContainerProps.children,
     maxWidth,
     width,
     minHeight,
@@ -83,5 +122,17 @@ export function normalizeContainer(props: Record<string, any> = {}): ContainerPr
     alignment,
     textAlign,
     className,
+    position,
+    top,
+    right,
+    bottom,
+    left,
+    zIndex,
+    overflow,
+    mobilePosition,
+    mobileTop,
+    mobileRight,
+    mobileBottom,
+    mobileLeft,
   }
 }

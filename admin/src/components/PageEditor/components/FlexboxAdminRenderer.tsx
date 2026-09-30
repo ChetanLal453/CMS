@@ -6,6 +6,7 @@ import { LayoutComponent } from '@/types/page-editor'
 import { createFlexboxViewModel } from '../../../../../shared/blocks/flexbox/viewModel'
 import { DynamicComponent } from '../DynamicComponent'
 import { ComponentWrapper } from './ComponentWrapper'
+import { useDeviceMode } from '../context/DeviceModeContext'
 
 // ── Props ────────────────────────────────────────────────────────────────────
 interface FlexboxAdminRendererProps {
@@ -195,12 +196,27 @@ export default function FlexboxAdminRenderer(props: FlexboxAdminRendererProps) {
         'advancedlist',
         'spacer',
         'quote',
+        'container',
+        'flexbox',
+        'component',
       ],
     },
   })
 
+  const { deviceMode } = useDeviceMode()
+  const isMobile = deviceMode === 'mobile'
+
+  const effectiveDirection = (
+    isMobile && vm.stackOnMobile
+      ? (vm.directionMobile || 'column')
+      : (vm.direction || 'row')
+  ) as React.CSSProperties['flexDirection']
+
+  const effectiveGap = isMobile && vm.mobileGap ? vm.mobileGap : (vm.gap || '16px')
+  const effectiveWrap = vm.wrap && vm.wrap !== 'nowrap' ? vm.wrap : (isMobile ? 'wrap' : 'wrap')
+  const isCol = effectiveDirection === 'column' || effectiveDirection === 'column-reverse'
+
   const hasChildren = children.length > 0
-  const isCol = vm.direction === 'column' || vm.direction === 'column-reverse'
 
   // ── Child event handlers ───────────────────────────────────────────────────
   const handleSelectChild = useCallback(
@@ -299,7 +315,120 @@ export default function FlexboxAdminRenderer(props: FlexboxAdminRendererProps) {
     [flexboxId, setLayout],
   )
 
-  // ── Overall Card Shell Style (Matches NewGrid previewCardStyle) ────────────
+  if (hasChildren) {
+    const liveFlexStyle: React.CSSProperties = {
+      display: 'flex',
+      flexDirection: effectiveDirection,
+      justifyContent: (vm.justifyContent || 'flex-start') as React.CSSProperties['justifyContent'],
+      alignItems: (vm.alignItems || 'stretch') as React.CSSProperties['alignItems'],
+      alignContent: (vm.alignContent || 'stretch') as React.CSSProperties['alignContent'],
+      flexWrap: effectiveWrap as React.CSSProperties['flexWrap'],
+      gap: effectiveGap,
+      padding: vm.padding || '0px',
+      margin: vm.margin || undefined,
+      width: vm.width || '100%',
+      maxWidth: vm.maxWidth || undefined,
+      minHeight: vm.minHeight && vm.minHeight !== 'auto' ? vm.minHeight : undefined,
+      backgroundColor: vm.backgroundColor && vm.backgroundColor !== 'transparent' ? vm.backgroundColor : 'transparent',
+      borderRadius: vm.borderRadius || '0px',
+      border: vm.border && vm.border !== 'none' ? vm.border : undefined,
+      boxShadow: vm.boxShadow && vm.boxShadow !== 'none' ? vm.boxShadow : undefined,
+      boxSizing: 'border-box',
+      position: 'relative',
+      outline: isSelected ? '1.5px solid #7c6dfa' : isOver ? '2px dashed #7c6dfa' : undefined,
+    }
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={liveFlexStyle}
+        data-flexbox-id={flexboxId}
+        data-drop-zone={dropId}
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelect?.()
+        }}
+      >
+        {children.map((child, ci) => {
+          const isChildStretch =
+            isCol && (vm.alignItems === 'stretch' || !vm.alignItems)
+
+          return (
+            <div
+              key={child.id || `child-${ci}`}
+              style={{
+                width: isChildStretch ? '100%' : 'auto',
+                maxWidth: '100%',
+                minWidth: 0,
+                boxSizing: 'border-box',
+                position: 'relative',
+                alignSelf: vm.alignItems === 'stretch' ? 'stretch' : undefined,
+                flex: isCol ? undefined : '0 1 auto',
+                display: 'inline-flex',
+              }}
+            >
+              <ComponentWrapper
+                component={child}
+                onEdit={() => handleSelectChild(child, ci)}
+                onDelete={() => handleDeleteChild(child.id)}
+                onDuplicate={() => handleDuplicateChild(child)}
+                isGridLevel={false}
+                sectionId={sectionId}
+                containerId={containerId || flexboxId}
+                rowId={rowId}
+                colId={colId}
+                deleteComponent={deleteComponent}
+                onComponentSelect={onComponentSelect}
+              >
+                <DynamicComponent
+                  component={child}
+                  isSelected={false}
+                  onSelect={() => handleSelectChild(child, ci)}
+                  onUpdate={(newProps) => handleUpdateChild(child.id, newProps)}
+                  onComponentSelect={onComponentSelect}
+                  onComponentUpdate={handleUpdateChild}
+                  setSelectedComponent={setSelectedComponent}
+                  deleteComponent={deleteComponent}
+                  onDelete={() => handleDeleteChild(child.id)}
+                  layout={layout}
+                  setLayout={setLayout}
+                  sectionId={sectionId}
+                  containerId={containerId || flexboxId}
+                  rowId={rowId}
+                  colId={colId}
+                />
+              </ComponentWrapper>
+            </div>
+          )
+        })}
+
+        {/* Inline drop slot indicator when flex already has children */}
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '6px 14px',
+            borderRadius: '6px',
+            border: isOver ? '1.5px dashed #7c6dfa' : '1px dashed rgba(255, 255, 255, 0.15)',
+            backgroundColor: isOver ? 'rgba(124, 109, 250, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+            color: isOver ? '#a594ff' : '#737996',
+            fontSize: '11px',
+            fontFamily: "'DM Mono', monospace",
+            gap: '5px',
+            alignSelf: 'center',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span style={{ fontSize: '13px', fontWeight: 'bold' }}>+</span>
+          <span>Drop item here</span>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Overall Card Shell Style for empty Flexbox Drop Target ──────────────────
   const shellStyle: React.CSSProperties = {
     background: '#1a1d28',
     borderRadius: vm.borderRadius || '10px',
@@ -321,7 +450,6 @@ export default function FlexboxAdminRenderer(props: FlexboxAdminRendererProps) {
     boxSizing: 'border-box',
   }
 
-  // ── Flex Body Style (Where flex items are laid out according to Cheat Sheet) ──
   const flexBodyStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: (vm.direction || 'row') as React.CSSProperties['flexDirection'],
@@ -331,11 +459,7 @@ export default function FlexboxAdminRenderer(props: FlexboxAdminRendererProps) {
     flexWrap: (vm.wrap || 'nowrap') as React.CSSProperties['flexWrap'],
     gap: vm.gap || '16px',
     padding: vm.padding || '20px',
-    minHeight: hasChildren
-      ? vm.minHeight !== 'auto' && vm.minHeight
-        ? vm.minHeight
-        : '140px'
-      : '220px',
+    minHeight: '220px',
     backgroundColor:
       vm.backgroundColor && vm.backgroundColor !== 'transparent'
         ? vm.backgroundColor
@@ -357,7 +481,7 @@ export default function FlexboxAdminRenderer(props: FlexboxAdminRendererProps) {
         onSelect?.()
       }}
     >
-      {/* ── 1. Header (Exact Match to NewGrid Header) ────────────────────── */}
+      {/* ── 1. Header ────────────────────────────────────────────────────── */}
       <div
         style={{
           display: 'flex',
@@ -400,83 +524,29 @@ export default function FlexboxAdminRenderer(props: FlexboxAdminRendererProps) {
         </span>
       </div>
 
-      {/* ── 2. Flex Content Body (Real components OR Cheat-Sheet Drop Slots) ── */}
+      {/* ── 2. Flex Content Body (Empty Drop Slots) ──────────────────────── */}
       <div style={flexBodyStyle}>
-        {hasChildren ? (
-          children.map((child, ci) => {
-            const isChildStretch =
-              isCol && (vm.alignItems === 'stretch' || !vm.alignItems)
-
-            return (
-              <div
-                key={child.id || `child-${ci}`}
-                style={{
-                  width: isChildStretch ? '100%' : 'auto',
-                  maxWidth: '100%',
-                  minWidth: 0,
-                  boxSizing: 'border-box',
-                  position: 'relative',
-                  alignSelf: vm.alignItems === 'stretch' ? 'stretch' : undefined,
-                  flexShrink: 0,
-                }}
-              >
-                <ComponentWrapper
-                  component={child}
-                  onEdit={() => handleSelectChild(child, ci)}
-                  onDelete={() => handleDeleteChild(child.id)}
-                  onDuplicate={() => handleDuplicateChild(child)}
-                  isGridLevel={false}
-                  sectionId={sectionId}
-                  containerId={containerId || flexboxId}
-                  rowId={rowId}
-                  colId={colId}
-                  deleteComponent={deleteComponent}
-                  onComponentSelect={onComponentSelect}
-                >
-                  <DynamicComponent
-                    component={child}
-                    isSelected={false}
-                    onSelect={() => handleSelectChild(child, ci)}
-                    onUpdate={(newProps) => handleUpdateChild(child.id, newProps)}
-                    onComponentSelect={onComponentSelect}
-                    onComponentUpdate={handleUpdateChild}
-                    setSelectedComponent={setSelectedComponent}
-                    deleteComponent={deleteComponent}
-                    sectionId={sectionId}
-                    containerId={containerId || flexboxId}
-                    rowId={rowId}
-                    colId={colId}
-                  />
-                </ComponentWrapper>
-              </div>
-            )
-          })
-        ) : (
-          // ── Cheat-Sheet Live Drop Cards ──────────────────────────────────
-          <>
-            <DropSlotCard
-              itemIndex={1}
-              isOver={isOver}
-              direction={vm.direction || 'row'}
-              alignItems={vm.alignItems || 'stretch'}
-            />
-            <DropSlotCard
-              itemIndex={2}
-              isOver={isOver}
-              direction={vm.direction || 'row'}
-              alignItems={vm.alignItems || 'stretch'}
-            />
-            <DropSlotCard
-              itemIndex={3}
-              isOver={isOver}
-              direction={vm.direction || 'row'}
-              alignItems={vm.alignItems || 'stretch'}
-            />
-          </>
-        )}
+        <DropSlotCard
+          itemIndex={1}
+          isOver={isOver}
+          direction={vm.direction || 'row'}
+          alignItems={vm.alignItems || 'stretch'}
+        />
+        <DropSlotCard
+          itemIndex={2}
+          isOver={isOver}
+          direction={vm.direction || 'row'}
+          alignItems={vm.alignItems || 'stretch'}
+        />
+        <DropSlotCard
+          itemIndex={3}
+          isOver={isOver}
+          direction={vm.direction || 'row'}
+          alignItems={vm.alignItems || 'stretch'}
+        />
       </div>
 
-      {/* ── 3. Footer (Exact Match to NewGrid Footer) ────────────────────── */}
+      {/* ── 3. Footer ────────────────────────────────────────────────────── */}
       <div
         style={{
           padding: '10px 16px 12px',
@@ -497,7 +567,7 @@ export default function FlexboxAdminRenderer(props: FlexboxAdminRendererProps) {
               "'DM Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
           }}
         >
-          {vm.direction || 'row'} · {children.length} components
+          {vm.direction || 'row'} · 0 components
         </span>
       </div>
     </div>

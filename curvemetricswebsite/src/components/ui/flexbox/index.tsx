@@ -28,6 +28,15 @@ export default function PublicFlexBox(props: FlexboxRendererProps) {
   // Generate a unique class name for this flexbox so responsive CSS can target it
   const uniqueClass = `fx-${(viewModel.id || props.id || Math.random().toString(36).slice(2, 7)).replace(/[^a-z0-9]/gi, '-')}`
 
+  const isCol = viewModel.direction === 'column' || viewModel.direction === 'column-reverse'
+  const baseCss = `
+    .${uniqueClass} > .component-wrapper {
+      width: ${isCol ? '100%' : 'auto'} !important;
+      max-width: 100%;
+      display: ${isCol ? 'block' : 'inline-flex'};
+    }
+  `
+
   const responsiveCss = stackOnMobile
     ? `
       @media (max-width: 768px) {
@@ -35,18 +44,19 @@ export default function PublicFlexBox(props: FlexboxRendererProps) {
           flex-direction: ${mobileDirection} !important;
           gap: ${mobileGap} !important;
         }
+        .${uniqueClass} > .component-wrapper {
+          width: 100% !important;
+        }
       }
     `
     : ''
 
   return (
     <>
-      {responsiveCss && (
-        <style
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: responsiveCss }}
-        />
-      )}
+      <style
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: `${baseCss}\n${responsiveCss}` }}
+      />
       <div
         className={`${uniqueClass}${viewModel.className ? ` ${viewModel.className}` : ''}`}
         id={optionalString(viewModel.id)}
@@ -69,6 +79,13 @@ export default function PublicFlexBox(props: FlexboxRendererProps) {
           boxShadow: viewModel.boxShadow || undefined,
           boxSizing: 'border-box',
           backgroundColor: viewModel.backgroundColor,
+          position: viewModel.position,
+          top: viewModel.top,
+          right: viewModel.right,
+          bottom: viewModel.bottom,
+          left: viewModel.left,
+          zIndex: viewModel.zIndex,
+          overflow: viewModel.overflow,
         }}
       >
         {nested}

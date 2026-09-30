@@ -53,6 +53,14 @@ export function collectNodes(value: unknown, renderComponent?: RenderComponentFn
       return collectNodes(record.components, renderComponent, `${keyPrefix}-components`)
     }
 
+    if (Array.isArray(record.children) && record.children.length > 0) {
+      return collectNodes(record.children, renderComponent, `${keyPrefix}-children`)
+    }
+
+    if (record.content && typeof record.content === 'object' && Array.isArray(record.content.children) && record.content.children.length > 0) {
+      return collectNodes(record.content.children, renderComponent, `${keyPrefix}-content-children`)
+    }
+
     if (Array.isArray(record.children)) {
       return collectNodes(record.children, renderComponent, `${keyPrefix}-children`)
     }
@@ -66,7 +74,17 @@ export function collectNodes(value: unknown, renderComponent?: RenderComponentFn
 }
 
 export function getNestedContent(props: PublicBlockProps, renderComponent?: RenderComponentFn) {
-  const source = props.children ?? props.components ?? props.items ?? props.slots ?? []
+  const source =
+    (Array.isArray(props.children) && props.children.length > 0 ? props.children : undefined) ??
+    (Array.isArray(props.content?.children) && props.content.children.length > 0 ? props.content.children : undefined) ??
+    (Array.isArray((props as any).__sharedViewModel?.children) && (props as any).__sharedViewModel.children.length > 0 ? (props as any).__sharedViewModel.children : undefined) ??
+    (Array.isArray(props.components) && props.components.length > 0 ? props.components : undefined) ??
+    props.children ??
+    props.content?.children ??
+    props.components ??
+    props.items ??
+    props.slots ??
+    []
   return collectNodes(source, renderComponent, 'nested')
 }
 

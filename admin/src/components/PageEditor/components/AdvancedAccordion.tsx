@@ -121,7 +121,11 @@ const AccordionItem: React.FC<{
         className="accordion-content"
       >
         <div style={{ padding: '14px 16px', lineHeight: viewModel.containerStyle.lineHeight }}>
-          {item.content}
+          {typeof item.content === 'string'
+            ? item.content
+            : typeof item.content === 'object' && typeof (item.content as any)?.content === 'string'
+            ? (item.content as any).content
+            : null}
         </div>
       </div>
     </div>

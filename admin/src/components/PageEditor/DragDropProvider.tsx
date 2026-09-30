@@ -70,6 +70,7 @@ const debugLog = (...args: unknown[]) => {
 const getDropPriority = (id: string): number => {
   if (id.startsWith('component:empty:grid:')) return 0
   if (id.startsWith('flexbox-')) return 1        // ← Flexbox drop zone (nested, high priority)
+  if (id.startsWith('container-')) return 1      // ← Container drop zone (nested, high priority)
   if (id.startsWith('swiper-')) return 2
   if (id.startsWith('component:carousel-')) return 3
   if (id.startsWith('column:')) return 10
@@ -85,6 +86,31 @@ const prioritizeNestedTargets = (collisions: Collision[]): Collision[] => {
     const bId = String(b.id)
     const pDiff = getDropPriority(aId) - getDropPriority(bId)
     if (pDiff !== 0) return pDiff
+
+    // When priority is identical (e.g. nested Container inside Container, or Flexbox inside Container):
+    // 1. Check DOM containment: the innermost (child) element must take precedence over its parent!
+    const nodeA = (a.data?.droppableContainer as any)?.node?.current as HTMLElement | undefined
+    const nodeB = (b.data?.droppableContainer as any)?.node?.current as HTMLElement | undefined
+
+    if (nodeA && nodeB && nodeA !== nodeB) {
+      if (nodeA.contains(nodeB)) {
+        // B is a child/descendant inside A => B wins!
+        return 1
+      }
+      if (nodeB.contains(nodeA)) {
+        // A is a child/descendant inside B => A wins!
+        return -1
+      }
+
+      // If neither contains the other directly, compare bounding area: smaller area is more specific
+      const rectA = (a.data?.droppableContainer as any)?.rect?.current
+      const rectB = (b.data?.droppableContainer as any)?.rect?.current
+      const areaA = rectA && rectA.width && rectA.height ? rectA.width * rectA.height : Infinity
+      const areaB = rectB && rectB.width && rectB.height ? rectB.width * rectB.height : Infinity
+      if (areaA !== areaB) {
+        return areaA - areaB
+      }
+    }
 
     const aValue = typeof a.data?.value === 'number' ? a.data.value : 0
     const bValue = typeof b.data?.value === 'number' ? b.data.value : 0
@@ -148,6 +174,7 @@ export const DragDropProvider: React.FC<DragDropProviderProps> = ({ children, on
       overId.startsWith('component:empty:grid:') ||
       overId.startsWith('swiper-') ||
       overId.startsWith('component:carousel-') ||
+      overId.startsWith('container-') ||
       overId.startsWith('flexbox-')
 
     setIsDraggingOverNested(isNestedTarget)

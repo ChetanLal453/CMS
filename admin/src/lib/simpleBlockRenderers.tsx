@@ -165,7 +165,36 @@ export function renderSimpleAdminBlock(type: BlockTypeKey, props: Record<string,
         ),
         'Flex (Flexbox)',
       )
-    case 'button':
+    case 'button': {
+      const showIcon = Boolean(viewModel.showIcon && viewModel.iconName)
+      const rawIcon = String(viewModel.iconName || '').trim()
+      let iconGlyph: React.ReactNode = rawIcon
+      if (rawIcon === 'phone') iconGlyph = '📞'
+      else if (rawIcon === 'calendar-check' || rawIcon === 'calendar') iconGlyph = '📅'
+      else if (rawIcon === 'wrench') iconGlyph = '🔧'
+      else if (rawIcon === 'shield-check') iconGlyph = '🛡️'
+      else if (rawIcon === 'clock') iconGlyph = '⏱️'
+      else if (rawIcon === 'check-circle' || rawIcon === 'check') iconGlyph = '✓'
+      else if (rawIcon === 'arrow-right') iconGlyph = '➔'
+      else if (rawIcon === 'arrow-left') iconGlyph = '←'
+      else if (rawIcon === 'star') iconGlyph = '⭐'
+      else if (rawIcon === 'mail' || rawIcon === 'envelope') iconGlyph = '✉️'
+
+      const iconElement = showIcon
+        ? React.createElement(
+            'span',
+            {
+              style: (viewModel.iconStyle as React.CSSProperties) || {
+                marginRight: viewModel.iconPosition === 'right' ? 0 : '8px',
+                marginLeft: viewModel.iconPosition === 'right' ? '8px' : 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+              },
+            },
+            iconGlyph,
+          )
+        : null
+
       return React.createElement(
         'div',
         {
@@ -177,9 +206,12 @@ export function renderSimpleAdminBlock(type: BlockTypeKey, props: Record<string,
             type: 'button',
             style: (viewModel.buttonStyle as React.CSSProperties) || {},
           },
-          String(viewModel.label || viewModel.text || 'Click Me'),
+          viewModel.iconPosition === 'right' ? null : iconElement,
+          React.createElement('span', null, String(viewModel.label || viewModel.text || 'Click Me')),
+          viewModel.iconPosition === 'right' ? iconElement : null,
         ),
       )
+    }
     case 'quote':
       return React.createElement(
         'blockquote',
@@ -229,7 +261,23 @@ export function renderSimpleAdminBlock(type: BlockTypeKey, props: Record<string,
         },
         String(viewModel.title || viewModel.src || ''),
       )
-    case 'icon':
+    case 'icon': {
+      const raw = String(viewModel.iconName || viewModel.name || '').trim()
+      let glyph = raw || '★'
+      if (raw === 'phone') glyph = '📞'
+      else if (raw === 'calendar-check' || raw === 'calendar') glyph = '📅'
+      else if (raw === 'wrench') glyph = '🔧'
+      else if (raw === 'shield-check') glyph = '🛡️'
+      else if (raw === 'clock') glyph = '⏱️'
+      else if (raw === 'check-circle' || raw === 'check') glyph = '✓'
+      else if (raw === 'arrow-right') glyph = '➔'
+      else if (raw === 'arrow-left') glyph = '←'
+      else if (raw === 'star') glyph = '⭐'
+      else if (raw === 'mail' || raw === 'envelope') glyph = '✉️'
+
+      const rawColor = String(viewModel.color || '').trim()
+      const resolvedColor = !rawColor || rawColor === '#000000' || rawColor === 'black' ? '#a594ff' : rawColor
+
       return React.createElement(
         'div',
         {
@@ -237,14 +285,16 @@ export function renderSimpleAdminBlock(type: BlockTypeKey, props: Record<string,
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: String(viewModel.size || '36px'),
-            height: String(viewModel.size || '36px'),
-            color: String(viewModel.color || '#7c6dfa'),
-            fontSize: String(viewModel.size || '24px'),
+            width: String(viewModel.size || 'auto'),
+            height: String(viewModel.size || 'auto'),
+            color: resolvedColor,
+            fontSize: String(viewModel.size || '16px'),
+            lineHeight: 1,
           },
         },
-        String(viewModel.iconName || '★'),
+        glyph,
       )
+    }
     case 'divider':
       return React.createElement('hr', {
         style: {

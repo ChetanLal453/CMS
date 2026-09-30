@@ -53,6 +53,28 @@ function ensureComponent(component: any, componentIndex: number, sectionIndex: n
     }
   }
 
+  if (Array.isArray(sanitizedProps?.children) && sanitizedProps.children.length > 0) {
+    const childComponents = sanitizedProps.children.map((child: any, childIdx: number) =>
+      ensureComponent(child, childIdx, sectionIndex, rowIndex, columnIndex),
+    )
+    sanitizedProps = {
+      ...sanitizedProps,
+      children: childComponents,
+      ...(sanitizedProps.content && typeof sanitizedProps.content === 'object'
+        ? { content: { ...sanitizedProps.content, children: childComponents } }
+        : {}),
+    }
+  } else if (Array.isArray(sanitizedProps?.content?.children) && sanitizedProps.content.children.length > 0) {
+    const childComponents = sanitizedProps.content.children.map((child: any, childIdx: number) =>
+      ensureComponent(child, childIdx, sectionIndex, rowIndex, columnIndex),
+    )
+    sanitizedProps = {
+      ...sanitizedProps,
+      children: childComponents,
+      content: { ...sanitizedProps.content, children: childComponents },
+    }
+  }
+
   return {
     id: component?.id || `component-${sectionIndex + 1}-${rowIndex + 1}-${columnIndex + 1}-${componentIndex + 1}`,
     type,
@@ -100,11 +122,34 @@ function ensureOutputComponent(component: any, componentIndex: number, sectionIn
         })()
       : props
 
+  let finalProps = normalizedProps
+  if (Array.isArray(finalProps?.children) && finalProps.children.length > 0) {
+    const childComponents = finalProps.children.map((child: any, childIdx: number) =>
+      ensureOutputComponent(child, childIdx, sectionIndex, rowIndex, columnIndex, options),
+    )
+    finalProps = {
+      ...finalProps,
+      children: childComponents,
+      ...(finalProps.content && typeof finalProps.content === 'object'
+        ? { content: { ...finalProps.content, children: childComponents } }
+        : {}),
+    }
+  } else if (Array.isArray(finalProps?.content?.children) && finalProps.content.children.length > 0) {
+    const childComponents = finalProps.content.children.map((child: any, childIdx: number) =>
+      ensureOutputComponent(child, childIdx, sectionIndex, rowIndex, columnIndex, options),
+    )
+    finalProps = {
+      ...finalProps,
+      children: childComponents,
+      content: { ...finalProps.content, children: childComponents },
+    }
+  }
+
   return {
     id: component?.id || `component-${sectionIndex + 1}-${rowIndex + 1}-${columnIndex + 1}-${componentIndex + 1}`,
     type,
     label: component?.label || type,
-    props: normalizedProps,
+    props: finalProps,
   }
 }
 

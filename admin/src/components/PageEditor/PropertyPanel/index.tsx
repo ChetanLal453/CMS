@@ -433,6 +433,7 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
   if (normalizedType === 'container') {
     const cont = normalizeContainer(props)
     return {
+      children: (Array.isArray(cont.children) && cont.children.length > 0 ? cont.children : cont.content?.children) ?? cont.children ?? [],
       maxWidth: cont.style?.maxWidth ?? cont.maxWidth ?? '',
       width: cont.style?.width ?? cont.width ?? '',
       minHeight: cont.style?.minHeight ?? cont.minHeight ?? '',
@@ -675,7 +676,7 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
   if (normalizedType === 'flexbox') {
     const flex = normalizeFlexbox(props)
     return {
-      children: flex.content?.children ?? flex.children ?? [],
+      children: (Array.isArray(flex.children) && flex.children.length > 0 ? flex.children : flex.content?.children) ?? flex.children ?? [],
       preset: flex.content?.preset ?? flex.preset ?? 'custom',
       direction: flex.style?.direction ?? flex.direction ?? 'row',
       justifyContent: flex.style?.justifyContent ?? flex.justifyContent ?? 'flex-start',
@@ -1360,12 +1361,35 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
   if (normalizedType === 'container') {
     const toOptionalString = (v: any) => {
       if (v === undefined || v === null) return undefined
+      if (typeof v === 'object') return undefined
       const str = String(v).trim()
       return str.length > 0 ? str : undefined
     }
 
+    const rawContent =
+      typeof props.content === 'string'
+        ? props.content
+        : typeof props.content?.content === 'string'
+        ? props.content.content
+        : undefined
+
+    const resolvedChildren =
+      Array.isArray(props.children) && props.children.length > 0
+        ? props.children
+        : Array.isArray(props.content?.children) && props.content.children.length > 0
+          ? props.content.children
+          : Array.isArray(props.children)
+            ? props.children
+            : Array.isArray(props.content?.children)
+              ? props.content.children
+              : []
+
     const normalized = normalizeContainer({
-      content: { content: toOptionalString(props.content) },
+      ...props,
+      content: {
+        content: toOptionalString(rawContent),
+        children: resolvedChildren,
+      },
       style: {
         maxWidth: toOptionalString(props.maxWidth),
         width: toOptionalString(props.width),
@@ -1380,12 +1404,33 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
         alignment: toOptionalString(props.alignment ?? props.textAlign),
         textAlign: toOptionalString(props.textAlign ?? props.alignment),
         className: toOptionalString(props.className),
+        position: toOptionalString(props.position),
+        top: toOptionalString(props.top),
+        right: toOptionalString(props.right),
+        bottom: toOptionalString(props.bottom),
+        left: toOptionalString(props.left),
+        zIndex: props.zIndex,
+        overflow: toOptionalString(props.overflow),
       },
+      position: toOptionalString(props.position),
+      top: toOptionalString(props.top),
+      right: toOptionalString(props.right),
+      bottom: toOptionalString(props.bottom),
+      left: toOptionalString(props.left),
+      zIndex: props.zIndex,
+      overflow: toOptionalString(props.overflow),
+      mobilePosition: toOptionalString(props.mobilePosition),
+      children: resolvedChildren,
       responsive: props.responsive || {},
     })
 
     return stripEditorMeta({
       ...normalized,
+      children: resolvedChildren,
+      content: {
+        ...(normalized.content || {}),
+        children: resolvedChildren,
+      },
       version: 1,
     })
   }
@@ -1752,13 +1797,21 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
       return Boolean(v)
     }
 
+    const resolvedChildren =
+      Array.isArray(props.children) && props.children.length > 0
+        ? props.children
+        : Array.isArray(props.content?.children) && props.content.children.length > 0
+          ? props.content.children
+          : Array.isArray(props.children)
+            ? props.children
+            : Array.isArray(props.content?.children)
+              ? props.content.children
+              : []
+
     const normalized = normalizeFlexbox({
+      children: resolvedChildren,
       content: {
-        children: Array.isArray(props.children)
-          ? props.children
-          : Array.isArray(props.content?.children)
-            ? props.content.children
-            : undefined,
+        children: resolvedChildren,
         preset: toOptionalString(props.preset),
       },
       style: {
@@ -1790,6 +1843,11 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
 
     return stripEditorMeta({
       ...normalized,
+      children: resolvedChildren,
+      content: {
+        ...(normalized.content || {}),
+        children: resolvedChildren,
+      },
       version: 1,
     })
   }

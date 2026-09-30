@@ -503,7 +503,11 @@ export function RenderSectionView({ sectionView }: { sectionView: PublicSectionV
                 </h2>
               </div>
             ) : null}
-            {sectionView.content ? <div className="mb-4 text-center lead text-secondary">{sectionView.content}</div> : null}
+            {typeof sectionView.content === 'string' && sectionView.content ? (
+              <div className="mb-4 text-center lead text-secondary">{sectionView.content}</div>
+            ) : typeof sectionView.content === 'object' && typeof (sectionView.content as any)?.content === 'string' && (sectionView.content as any).content ? (
+              <div className="mb-4 text-center lead text-secondary">{(sectionView.content as any).content}</div>
+            ) : null}
             {sectionView.rows.map((row) => (
               <div key={row.id} className="d-flex flex-wrap" style={{ ...row.style, alignItems: getSectionRowAlignment(row.style) }}>
                 {row.columns.map((column) => (

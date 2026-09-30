@@ -24,6 +24,7 @@ interface ComponentWrapperProps {
   cellRow?: number
   cellCol?: number
   parentGridId?: string
+  style?: React.CSSProperties
   onComponentSelect?: (component: LayoutComponent, context: any) => void
 }
 
@@ -33,6 +34,7 @@ export const ComponentWrapper: React.FC<ComponentWrapperProps> = ({
   onDelete,
   onDuplicate,
   className = '',
+  style,
   isGridLevel = false,
   sectionId,
   containerId,
@@ -136,7 +138,8 @@ export const ComponentWrapper: React.FC<ComponentWrapperProps> = ({
 
   return (
     <div
-      className={`relative group component-wrapper overflow-visible ${className}`}
+      className={`${style?.position ? '' : 'relative '}group component-wrapper overflow-visible ${className}`}
+      style={style}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       data-component-id={component?.id}

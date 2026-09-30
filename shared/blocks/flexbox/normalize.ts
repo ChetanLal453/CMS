@@ -24,11 +24,16 @@ export function normalizeFlexbox(input: FlexboxInput = {}): FlexboxProps {
   const styleInput = input.style && typeof input.style === 'object' ? input.style : {}
   const responsiveInput = input.responsive && typeof input.responsive === 'object' ? input.responsive : {}
 
-  const rawChildren = Array.isArray(contentInput.children)
-    ? contentInput.children
-    : Array.isArray(input.children)
+  const rawChildren =
+    Array.isArray(input.children) && input.children.length > 0
       ? input.children
-      : undefined
+      : Array.isArray(contentInput.children) && contentInput.children.length > 0
+        ? contentInput.children
+        : Array.isArray(input.children)
+          ? input.children
+          : Array.isArray(contentInput.children)
+            ? contentInput.children
+            : []
 
   const preset = asStringOrUndefined(contentInput.preset ?? input.preset)
 

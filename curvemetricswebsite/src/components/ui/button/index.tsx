@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { reportCmsBoundaryViolation } from '../../../lib/cmsBoundary'
+import { resolveIconComponent } from '../PublicBlocks/shared'
 
 function optionalString(value?: string) {
   return value && value !== '' ? value : undefined
@@ -10,6 +11,34 @@ function optionalString(value?: string) {
 
 function isExternalUrl(href?: string) {
   return typeof href === 'string' && /^https?:\/\//i.test(href.trim())
+}
+
+function isDirectAnchorProtocol(href?: string) {
+  if (typeof href !== 'string') return false
+  const trimmed = href.trim()
+  return (
+    isExternalUrl(trimmed) ||
+    /^tel:/i.test(trimmed) ||
+    /^mailto:/i.test(trimmed) ||
+    trimmed.startsWith('#')
+  )
+}
+
+function renderButtonIcon(iconName: string) {
+  const trimmed = String(iconName || '').trim()
+  if (!trimmed) return null
+
+  // Non-alphanumeric symbol or emoji: render as text
+  if (!/[a-zA-Z0-9_-]/.test(trimmed)) {
+    return trimmed
+  }
+
+  const IconComp = resolveIconComponent(trimmed)
+  if (IconComp) {
+    return <IconComp size="1em" />
+  }
+
+  return trimmed
 }
 
 const ButtonInner: React.FC<{ viewModel: Record<string, any> }> = ({ viewModel }) => {
@@ -21,17 +50,19 @@ const ButtonInner: React.FC<{ viewModel: Record<string, any> }> = ({ viewModel }
     return reportCmsBoundaryViolation('button', 'Missing required button label.')
   }
 
+  const iconElement = viewModel.showIcon && viewModel.iconName ? renderButtonIcon(viewModel.iconName) : null
+
   const content = (
     <>
-      {viewModel.showIcon && viewModel.iconPosition === 'left' ? (
+      {viewModel.showIcon && viewModel.iconPosition === 'left' && iconElement ? (
         <span style={viewModel.iconStyle} aria-hidden="true">
-          {viewModel.iconName}
+          {iconElement}
         </span>
       ) : null}
       <span>{label}</span>
-      {viewModel.showIcon && viewModel.iconPosition === 'right' ? (
+      {viewModel.showIcon && viewModel.iconPosition === 'right' && iconElement ? (
         <span style={viewModel.iconStyle} aria-hidden="true">
-          {viewModel.iconName}
+          {iconElement}
         </span>
       ) : null}
     </>
@@ -42,10 +73,15 @@ const ButtonInner: React.FC<{ viewModel: Record<string, any> }> = ({ viewModel }
     ...(isPressed ? viewModel.activeStyle : null),
   }
 
+  const useDirectAnchor =
+    Boolean(viewModel.resolvedAction?.isNativeProtocol) ||
+    Boolean(viewModel.resolvedAction?.isExternal) ||
+    isDirectAnchorProtocol(viewModel.link)
+
   return (
     <div style={viewModel.containerStyle}>
       {viewModel.hasLink ? (
-        isExternalUrl(viewModel.link) ? (
+        useDirectAnchor ? (
           <a
             href={viewModel.link}
             target={viewModel.target}

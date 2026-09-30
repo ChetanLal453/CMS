@@ -581,10 +581,29 @@ function migrateBlock(
   }
 
   if (resolvedType === 'container') {
+    const rawChildren =
+      Array.isArray(migrated.props?.children) && migrated.props.children.length > 0
+        ? migrated.props.children
+        : Array.isArray(migrated.props?.content?.children) && migrated.props.content.children.length > 0
+          ? migrated.props.content.children
+          : Array.isArray(migrated.props?.children)
+            ? migrated.props.children
+            : Array.isArray(migrated.props?.content?.children)
+              ? migrated.props.content.children
+              : undefined
+
+    let migratedChildren = rawChildren
+    if (Array.isArray(rawChildren)) {
+      migratedChildren = rawChildren.map((child: unknown, cIdx: number) =>
+        migrateBlock(child, traceId, `${path}.props.children[${cIdx}]`, migrations),
+      )
+    }
+
     if (migrated.props && (!isObject(migrated.props.style) || !migrated.props.version)) {
       const beforeProps = { ...migrated.props }
       const content = {
         content: migrated.props.content,
+        children: migratedChildren,
       }
       const style = {
         maxWidth: migrated.props.maxWidth,
@@ -606,6 +625,7 @@ function migrateBlock(
         ...migrated.props,
         version: 1,
         content,
+        children: migratedChildren,
         style,
         responsive: isObject(migrated.props.responsive) ? migrated.props.responsive : {},
       }
@@ -621,6 +641,12 @@ function migrateBlock(
       }
       migrations.push(entry)
       logAutoMigration(entry)
+    } else if (migrated.props && migratedChildren) {
+      if (!migrated.props.content) {
+        migrated.props.content = {}
+      }
+      migrated.props.content.children = migratedChildren
+      migrated.props.children = migratedChildren
     }
   }
 
@@ -1039,11 +1065,16 @@ function migrateBlock(
   }
 
   if (resolvedType === 'flexbox') {
-    const rawChildren = Array.isArray(migrated.props?.content?.children)
-      ? migrated.props.content.children
-      : Array.isArray(migrated.props?.children)
+    const rawChildren =
+      Array.isArray(migrated.props?.children) && migrated.props.children.length > 0
         ? migrated.props.children
-        : undefined
+        : Array.isArray(migrated.props?.content?.children) && migrated.props.content.children.length > 0
+          ? migrated.props.content.children
+          : Array.isArray(migrated.props?.children)
+            ? migrated.props.children
+            : Array.isArray(migrated.props?.content?.children)
+              ? migrated.props.content.children
+              : undefined
 
     let migratedChildren = rawChildren
     if (Array.isArray(rawChildren)) {
@@ -1087,6 +1118,7 @@ function migrateBlock(
         ...migrated.props,
         version: 1,
         content,
+        children: migratedChildren,
         style,
         responsive,
       }
@@ -1102,8 +1134,12 @@ function migrateBlock(
       }
       migrations.push(entry)
       logAutoMigration(entry)
-    } else if (migrated.props && migratedChildren && migrated.props.content) {
+    } else if (migrated.props && migratedChildren) {
+      if (!migrated.props.content) {
+        migrated.props.content = {}
+      }
       migrated.props.content.children = migratedChildren
+      migrated.props.children = migratedChildren
     }
   }
 

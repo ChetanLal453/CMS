@@ -19,6 +19,7 @@ import { ConfirmationModal } from './components/ConfirmationModal'
 import { DragDropProvider } from './DragDropProvider'
 import { VersionHistory } from './VersionHistory'
 import { TemplateManager } from './TemplateManager'
+import { getPresetsByCategory, instantiateSectionPreset, type SectionPreset, type PresetCategory } from '../../../../shared/presets/registry'
 
 interface PageEditorProps {
   initialLayout?: any
@@ -133,6 +134,16 @@ type UniversalLocation =
       componentIndex: number
       component: LayoutComponent
     }
+  | {
+      type: 'container-child'
+      sectionIndex: number
+      rowIndex: number
+      colIndex: number
+      containerIndex: number
+      containerId: string
+      componentIndex: number
+      component: LayoutComponent
+    }
 
 const findUniversalLocation = (layout: PageLayout | undefined, componentId: string): UniversalLocation | null => {
   if (!layout || !componentId) return null
@@ -231,6 +242,60 @@ const findUniversalLocation = (layout: PageLayout | undefined, componentId: stri
             }
           }
 
+          // Search in container children (and nested children within containers)
+          if (compType === 'container' && Array.isArray(comp.props?.children)) {
+            for (let cChildIdx = 0; cChildIdx < comp.props.children.length; cChildIdx++) {
+              const childComp = comp.props.children[cChildIdx]
+              if (!childComp) continue
+              if (childComp.id === componentId) {
+                return {
+                  type: 'container-child',
+                  sectionIndex: sIdx,
+                  rowIndex: rIdx,
+                  colIndex: cIdx,
+                  containerIndex: compIdx,
+                  containerId: comp.id,
+                  componentIndex: cChildIdx,
+                  component: childComp,
+                }
+              }
+              // If child inside container is a flexbox, search inside that flexbox too!
+              if (String(childComp.type || '').toLowerCase() === 'flexbox' && Array.isArray(childComp.props?.children)) {
+                for (let fIdx = 0; fIdx < childComp.props.children.length; fIdx++) {
+                  if (childComp.props.children[fIdx]?.id === componentId) {
+                    return {
+                      type: 'flexbox-child',
+                      sectionIndex: sIdx,
+                      rowIndex: rIdx,
+                      colIndex: cIdx,
+                      flexboxIndex: compIdx,
+                      flexboxId: childComp.id,
+                      componentIndex: fIdx,
+                      component: childComp.props.children[fIdx],
+                    }
+                  }
+                }
+              }
+              // If child inside container is another container, search inside that too!
+              if (String(childComp.type || '').toLowerCase() === 'container' && Array.isArray(childComp.props?.children)) {
+                for (let subIdx = 0; subIdx < childComp.props.children.length; subIdx++) {
+                  if (childComp.props.children[subIdx]?.id === componentId) {
+                    return {
+                      type: 'container-child',
+                      sectionIndex: sIdx,
+                      rowIndex: rIdx,
+                      colIndex: cIdx,
+                      containerIndex: compIdx,
+                      containerId: childComp.id,
+                      componentIndex: subIdx,
+                      component: childComp.props.children[subIdx],
+                    }
+                  }
+                }
+              }
+            }
+          }
+
           if (Array.isArray(comp.props?.components)) {
             for (let nIdx = 0; nIdx < comp.props.components.length; nIdx++) {
               if (comp.props.components[nIdx]?.id === componentId) {
@@ -291,13 +356,101 @@ const removeUniversalComponent = (layout: any, loc: UniversalLocation): LayoutCo
     return removed || null
   }
 
-  if (loc.type === 'flexbox-child') {
-    const flexbox = col.components?.[loc.flexboxIndex]
-    if (!Array.isArray(flexbox?.props?.children)) return null
-    const [removed] = flexbox.props.children.splice(loc.componentIndex, 1)
-    flexbox.props = { ...flexbox.props, children: [...flexbox.props.children] }
-    return removed || null
+  if (loc.type === 'flexbox-child' || loc.type === 'container-child') {
+    const targetParentId = (loc as any).flexboxId || (loc as any).containerId
+    const targetChildId = loc.component?.id
+
+    const removeInTree = (comps: any[]): LayoutComponent | null => {
+      for (const comp of comps || []) {
+        if (!comp) continue
+
+        // Check if comp is the parent container/flexbox
+        if (targetParentId && comp.id === targetParentId) {
+          const childrenList = Array.isArray(comp.props?.children)
+            ? comp.props.children
+            : Array.isArray(comp.props?.content?.children)
+              ? comp.props.content.children
+              : null
+          if (childrenList) {
+            const idx = targetChildId
+              ? childrenList.findIndex((c: any) => c?.id === targetChildId)
+              : loc.componentIndex
+            if (idx >= 0 && idx < childrenList.length) {
+              const [removed] = childrenList.splice(idx, 1)
+              comp.props.children = [...childrenList]
+              if (comp.props.content && typeof comp.props.content === 'object') {
+                comp.props.content.children = [...childrenList]
+              }
+              comp.props = { ...comp.props }
+              return removed || null
+            }
+          }
+        }
+
+        // Recurse into children
+        if (Array.isArray(comp.props?.children)) {
+          const r = removeInTree(comp.props.children)
+          if (r) {
+            comp.props.children = [...comp.props.children]
+            if (comp.props.content && typeof comp.props.content === 'object') {
+              comp.props.content.children = [...comp.props.children]
+            }
+            comp.props = { ...comp.props }
+            return r
+          }
+        }
+      }
+      return null
+    }
+
+    const removed = removeInTree(col.components || [])
+    if (removed) return removed
   }
+
+  // General recursive fallback across col.components
+  const removeComponentFromTree = (comps: any[]): LayoutComponent | null => {
+    if (!Array.isArray(comps)) return null
+    const targetId = loc.component?.id
+    if (!targetId) return null
+    for (let i = 0; i < comps.length; i++) {
+      if (comps[i]?.id === targetId) {
+        const [removed] = comps.splice(i, 1)
+        return removed || null
+      }
+      if (Array.isArray(comps[i]?.props?.children)) {
+        const removed = removeComponentFromTree(comps[i].props.children)
+        if (removed) {
+          comps[i].props = { ...comps[i].props, children: [...comps[i].props.children] }
+          if (comps[i].props.content && typeof comps[i].props.content === 'object') {
+            comps[i].props.content.children = [...comps[i].props.children]
+          }
+          return removed
+        }
+      }
+      if (Array.isArray(comps[i]?.props?.components)) {
+        const removed = removeComponentFromTree(comps[i].props.components)
+        if (removed) {
+          comps[i].props = { ...comps[i].props }
+          return removed
+        }
+      }
+      if (Array.isArray(comps[i]?.props?.slides)) {
+        for (const slide of comps[i].props.slides) {
+          if (Array.isArray(slide?.components)) {
+            const removed = removeComponentFromTree(slide.components)
+            if (removed) {
+              comps[i].props = { ...comps[i].props }
+              return removed
+            }
+          }
+        }
+      }
+    }
+    return null
+  }
+
+  const fallbackRemoved = removeComponentFromTree(col.components || [])
+  if (fallbackRemoved) return fallbackRemoved
 
   return null
 }
@@ -420,44 +573,154 @@ const formatPublishedStatus = (publishedAt: string | null) => {
   return `Published ${publishedDate.toLocaleString()}`
 }
 
-// Column Selection Modal Component
-const ColumnSelectionModal: React.FC<{
+// Add Section Modal Component (Presets & Blank)
+const AddSectionModal: React.FC<{
   isOpen: boolean
   onClose: () => void
-  onSelect: (columnCount: number) => void
-}> = ({ isOpen, onSelect, onClose }) => {
+  onSelectColumns: (columnCount: number) => void
+  onSelectPreset: (preset: SectionPreset) => void
+}> = ({ isOpen, onClose, onSelectColumns, onSelectPreset }) => {
+  const [activeTab, setActiveTab] = useState<'presets' | 'blank'>('presets')
+  const [selectedCategory, setSelectedCategory] = useState<PresetCategory>('hero')
+
   if (!isOpen) return null
 
+  const presets = getPresetsByCategory(selectedCategory)
+
   return (
-    <div className="editor-modal-backdrop fixed inset-0 flex items-center justify-center z-[9999]">
-      <div className="editor-modal editor-choice-modal w-96 max-w-md">
-        <div className="editor-modal-top">
-          <h3 className="editor-modal-title">Create New Section</h3>
-          <button onClick={onClose} className="editor-modal-close" type="button" aria-label="Close section creator">
+    <div className="editor-modal-backdrop fixed inset-0 flex items-center justify-center z-[9999] bg-black/60 backdrop-blur-sm p-4">
+      <div className="editor-modal bg-[#181b26] border border-[#2e3450] rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2e3450]">
+          <div>
+            <h3 className="text-lg font-semibold text-white">Add Section</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Choose a pre-built section pattern or start with a blank layout</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer"
+            type="button"
+            aria-label="Close section creator">
             ✕
           </button>
         </div>
 
-        <p className="editor-modal-copy">How many columns do you want in this section?</p>
-
-        <div className="editor-choice-grid">
-          {[1, 2, 3, 4, 5, 6].map((num) => (
-            <button
-              key={num}
-              type="button"
-              onClick={() => {
-                onSelect(num)
-                onClose()
-              }}
-              className={`editor-choice-card ${num === 1 ? 'is-wide' : ''} ${num <= 3 ? 'is-featured' : ''}`}>
-              <span className="editor-choice-count">{num}</span>
-              <span className="editor-choice-label">{num === 1 ? 'Single Column' : `${num} Columns`}</span>
-            </button>
-          ))}
+        {/* Mode Switcher Tabs */}
+        <div className="flex items-center gap-2 px-6 pt-4 border-b border-[#2e3450]/60 pb-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab('presets')}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer flex items-center gap-2 ${
+              activeTab === 'presets'
+                ? 'bg-[#7c6dfa] text-white shadow-lg shadow-[#7c6dfa]/20'
+                : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+            }`}>
+            <span>✨ Presets Library</span>
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/20">Hero (1)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('blank')}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer flex items-center gap-2 ${
+              activeTab === 'blank'
+                ? 'bg-[#7c6dfa] text-white shadow-lg shadow-[#7c6dfa]/20'
+                : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+            }`}>
+            <span>⬜ Blank Section</span>
+          </button>
         </div>
 
-        <div className="editor-modal-actions">
-          <button onClick={onClose} className="gbtn ghost" type="button">
+        {/* Body Content */}
+        <div className="p-6 overflow-y-auto flex-1">
+          {activeTab === 'presets' ? (
+            <div className="space-y-4">
+              {/* Category Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                {(['hero', 'services', 'about', 'cta', 'testimonials'] as const).map((cat) => {
+                  const isActive = selectedCategory === cat
+                  const isAvailable = cat === 'hero'
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      disabled={!isAvailable}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium uppercase tracking-wider transition ${
+                        isActive
+                          ? 'bg-[#2a2f4a] text-[#a89cf5] border border-[#3d3870]'
+                          : isAvailable
+                            ? 'text-slate-400 hover:text-white bg-white/5 cursor-pointer'
+                            : 'opacity-40 cursor-not-allowed text-slate-600 bg-transparent'
+                      }`}>
+                      {cat} {cat === 'hero' ? '(1)' : '(soon)'}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Preset Cards */}
+              <div className="grid gap-4">
+                {presets.map((preset) => (
+                  <div
+                    key={preset.id}
+                    className="group bg-[#1e2235] border border-[#2e3450] hover:border-[#7c6dfa] rounded-xl p-5 transition flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="space-y-1.5 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-semibold text-white">{preset.name}</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 uppercase tracking-wider">
+                          24/7 Service
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        {preset.description}
+                      </p>
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {preset.tags?.map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 text-slate-400 border border-white/5">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => onSelectPreset(preset)}
+                      className="w-full md:w-auto px-5 py-2.5 bg-[#7c6dfa] hover:bg-[#6c5ce7] text-white rounded-xl text-sm font-semibold transition shadow-md shadow-[#7c6dfa]/25 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap">
+                      <span>Insert Preset ➔</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-xs text-slate-400 mb-4">Choose how many columns you want in this blank section:</p>
+              <div className="grid grid-cols-3 gap-3">
+                {[1, 2, 3, 4, 5, 6].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => onSelectColumns(num)}
+                    className="p-4 rounded-xl border border-[#2e3450] hover:border-[#7c6dfa] bg-[#1e2235] hover:bg-[#252a40] transition text-center group cursor-pointer">
+                    <span className="block text-2xl font-bold text-white group-hover:text-[#a89cf5] transition mb-1">{num}</span>
+                    <span className="block text-xs text-slate-400">{num === 1 ? 'Single Column' : `${num} Columns`}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 border-t border-[#2e3450] flex justify-end">
+          <button
+            onClick={onClose}
+            type="button"
+            className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition cursor-pointer">
             Cancel
           </button>
         </div>
@@ -465,6 +728,7 @@ const ColumnSelectionModal: React.FC<{
     </div>
   )
 }
+
 
 const PageEditor: React.FC<PageEditorProps> = ({
   initialLayout,
@@ -817,13 +1081,75 @@ const PageEditor: React.FC<PageEditorProps> = ({
         const updatedLayout = JSON.parse(JSON.stringify(currentLayout))
         const loc = findUniversalLocation(updatedLayout, componentId)
 
-        if (!loc) {
-          console.error('❌ Component not found in layout:', componentId)
-          toast.error('Component not found')
-          return currentLayout
+        let removed = loc ? removeUniversalComponent(updatedLayout, loc) : null
+
+        if (!removed) {
+          // Recursive sweep across every section/column/container/flexbox
+          const removeById = (comps: any[]): any => {
+            if (!Array.isArray(comps)) return null
+            for (let i = 0; i < comps.length; i++) {
+              if (comps[i]?.id === componentId) {
+                const [r] = comps.splice(i, 1)
+                return r || null
+              }
+              if (Array.isArray(comps[i]?.props?.children)) {
+                const r = removeById(comps[i].props.children)
+                if (r) {
+                  comps[i].props = { ...comps[i].props, children: [...comps[i].props.children] }
+                  if (comps[i].props.content && typeof comps[i].props.content === 'object') {
+                    comps[i].props.content.children = [...comps[i].props.children]
+                  }
+                  return r
+                }
+              }
+              if (Array.isArray(comps[i]?.props?.components)) {
+                const r = removeById(comps[i].props.components)
+                if (r) {
+                  comps[i].props = { ...comps[i].props }
+                  return r
+                }
+              }
+              if (Array.isArray(comps[i]?.props?.slides)) {
+                for (const slide of comps[i].props.slides) {
+                  if (Array.isArray(slide?.components)) {
+                    const r = removeById(slide.components)
+                    if (r) {
+                      comps[i].props = { ...comps[i].props }
+                      return r
+                    }
+                  }
+                }
+              }
+              if (Array.isArray(comps[i]?.props?.cells)) {
+                for (const row of comps[i].props.cells) {
+                  if (Array.isArray(row)) {
+                    for (const cell of row) {
+                      if (cell?.component?.id === componentId) {
+                        const r = cell.component
+                        cell.component = null
+                        comps[i].props = { ...comps[i].props }
+                        return r
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            return null
+          }
+
+          for (const s of updatedLayout.sections || []) {
+            for (const r of getSectionRows(s)) {
+              for (const c of r.columns || []) {
+                removed = removeById(c.components || [])
+                if (removed) break
+              }
+              if (removed) break
+            }
+            if (removed) break
+          }
         }
 
-        const removed = removeUniversalComponent(updatedLayout, loc)
         if (removed) {
           toast.success('Component deleted')
           setTimeout(() => {
@@ -834,6 +1160,8 @@ const PageEditor: React.FC<PageEditorProps> = ({
           return updatedLayout
         }
 
+        console.error('❌ Component not found in layout:', componentId)
+        toast.error('Component not found')
         return currentLayout
       })
     },
@@ -1071,17 +1399,32 @@ const PageEditor: React.FC<PageEditorProps> = ({
           const findAndAddToFlexbox = (components: any[]): boolean => {
             for (const comp of components || []) {
               if (!comp) continue
+
+              // 1. Recurse deeply into children FIRST so nested flexbox inside container/flexbox matches first
+              if (Array.isArray(comp.props?.children)) {
+                if (findAndAddToFlexbox(comp.props.children)) return true
+              }
+
+              // 2. Check exact flexbox ID match
               if (
                 String(comp.type || '').toLowerCase() === 'flexbox' &&
-                (comp.id === flexboxId || comp.id?.includes(flexboxId))
+                (comp.id === flexboxId || comp.id === `flexbox-${flexboxId}` || `flexbox-${comp.id}` === destinationDroppableId)
               ) {
                 if (!comp.props) comp.props = {}
-                if (!Array.isArray(comp.props.children)) comp.props.children = []
-                comp.props.children.push(movedComponent)
+                const currentChildren = Array.isArray(comp.props.children) && comp.props.children.length > 0
+                  ? comp.props.children
+                  : Array.isArray(comp.props.content?.children)
+                    ? comp.props.content.children
+                    : []
+                const updatedChildren = [...currentChildren, movedComponent]
+                comp.props.children = updatedChildren
+                if (!comp.props.content || typeof comp.props.content !== 'object') comp.props.content = {}
+                comp.props.content.children = updatedChildren
                 comp.props = { ...comp.props }
                 toast.success(sourceLoc ? 'Component moved to Flexbox' : 'Component added to Flexbox')
                 return true
               }
+
               // Recurse into grid cells
               if (comp.props?.cells) {
                 for (const row of comp.props.cells || []) {
@@ -1090,15 +1433,12 @@ const PageEditor: React.FC<PageEditorProps> = ({
                   }
                 }
               }
+
               // Recurse into swiper slides
               if (comp.props?.slides) {
                 for (const slide of comp.props.slides || []) {
                   if (findAndAddToFlexbox(slide.components || [])) return true
                 }
-              }
-              // Recurse into flexbox children
-              if (Array.isArray(comp.props?.children)) {
-                if (findAndAddToFlexbox(comp.props.children)) return true
               }
             }
             return false
@@ -1118,7 +1458,90 @@ const PageEditor: React.FC<PageEditorProps> = ({
             if (found) break
           }
 
-          if (found) return newLayout
+          if (found) {
+            setTimeout(() => {
+              saveLayout(newLayout).then((success) => {
+                debugLog(success ? '💾 Flexbox drop saved' : '❌ Save failed')
+              })
+            }, 0)
+            return newLayout
+          }
+        }
+
+        // Case B.6: Dropping onto a Container drop zone
+        if (destinationDroppableId.startsWith('container-')) {
+          const targetContainerId = destinationDroppableId.replace('container-drop:', '').replace('container-', '')
+
+          const findAndAddToContainer = (components: any[]): boolean => {
+            for (const comp of components || []) {
+              if (!comp) continue
+
+              // 1. Recurse into children FIRST so inner nested container matches with priority!
+              if (Array.isArray(comp.props?.children)) {
+                if (findAndAddToContainer(comp.props.children)) return true
+              }
+
+              // 2. Check exact container ID match
+              if (
+                String(comp.type || '').toLowerCase() === 'container' &&
+                (comp.id === targetContainerId || comp.id === `container-${targetContainerId}` || `container-${comp.id}` === destinationDroppableId)
+              ) {
+                if (!comp.props) comp.props = {}
+                const currentChildren = Array.isArray(comp.props.children) && comp.props.children.length > 0
+                  ? comp.props.children
+                  : Array.isArray(comp.props.content?.children)
+                    ? comp.props.content.children
+                    : []
+                const updatedChildren = [...currentChildren, movedComponent]
+                comp.props.children = updatedChildren
+                if (!comp.props.content || typeof comp.props.content !== 'object') comp.props.content = {}
+                comp.props.content.children = updatedChildren
+                comp.props = { ...comp.props }
+                toast.success(sourceLoc ? 'Component moved to Container' : 'Component added to Container')
+                return true
+              }
+
+              // Recurse into grid cells
+              if (comp.props?.cells) {
+                for (const row of comp.props.cells || []) {
+                  for (const cell of row || []) {
+                    if (cell?.component && findAndAddToContainer([cell.component])) return true
+                  }
+                }
+              }
+
+              // Recurse into swiper slides
+              if (comp.props?.slides) {
+                for (const slide of comp.props.slides || []) {
+                  if (findAndAddToContainer(slide.components || [])) return true
+                }
+              }
+            }
+            return false
+          }
+
+          let found = false
+          for (const section of newLayout.sections || []) {
+            for (const row of getSectionRows(section)) {
+              for (const col of row.columns || []) {
+                if (findAndAddToContainer(col.components || [])) {
+                  found = true
+                  break
+                }
+              }
+              if (found) break
+            }
+            if (found) break
+          }
+
+          if (found) {
+            setTimeout(() => {
+              saveLayout(newLayout).then((success) => {
+                debugLog(success ? '💾 Container drop saved' : '❌ Save failed')
+              })
+            }, 0)
+            return newLayout
+          }
         }
 
         // Case C: Dropping onto a Column or sorting inside a Column
@@ -1213,6 +1636,51 @@ const PageEditor: React.FC<PageEditorProps> = ({
   const handleAddSectionWithColumns = useCallback((columnCount: number) => {
     createSectionWithColumns(columnCount)
   }, [createSectionWithColumns])
+
+  const handleInsertSectionPreset = useCallback(
+    (preset: SectionPreset) => {
+      const instantiated = instantiateSectionPreset(preset)
+
+      const newSection: Section = {
+        id: String(instantiated.id),
+        name: instantiated.name,
+        type: 'custom',
+        props: instantiated.props || {},
+        settings: (instantiated.settings || {}) as any,
+        container: {
+          id: String(instantiated.container?.id || `container-${instantiated.id}`),
+          rows: (instantiated.rows || []) as any,
+        },
+        rows: (instantiated.rows || []) as any,
+      } as any
+
+      setLayout((prevLayout) => {
+        const prevSections = Array.isArray(prevLayout?.sections) ? prevLayout.sections : []
+        let targetIndex = prevSections.length
+
+        if (selectedSectionId) {
+          const idx = prevSections.findIndex((s: Section) => s.id === selectedSectionId)
+          if (idx !== -1) {
+            targetIndex = idx + 1
+          }
+        }
+
+        const nextSections = [...prevSections]
+        nextSections.splice(targetIndex, 0, newSection)
+
+        return {
+          ...prevLayout,
+          sections: nextSections,
+        }
+      })
+
+      setSelectedSectionId(newSection.id)
+      setSelectedComponent(null)
+      setShowColumnModal(false)
+      toast.success(`${preset.name} inserted!`)
+    },
+    [selectedSectionId, setLayout],
+  )
 
   // 🆕 Function to show column selection modal
   const handleAddSectionClick = useCallback(() => {
@@ -1349,21 +1817,55 @@ const PageEditor: React.FC<PageEditorProps> = ({
             section.rows = [newRow]
           }
         } else {
-          // If a component was selected, insert right after it
+          // If a component was selected, insert right after it (or inside if it's a container/flexbox)
           let inserted = false
           if (selectedComponent?.compId) {
-            for (const r of rows) {
-              for (const c of r.columns || []) {
-                const compIndex = (c.components || []).findIndex((comp: any) => comp?.id === selectedComponent.compId)
-                if (compIndex !== -1) {
-                  c.components.splice(compIndex + 1, 0, newComponent)
-                  targetRowId = r.id
-                  targetColId = c.id
-                  inserted = true
-                  break
+            const targetCompType = String(selectedComponent.component?.type || '').toLowerCase()
+            if (targetCompType === 'container' || targetCompType === 'flexbox') {
+              const findContainerAndAppend = (comps: any[]): boolean => {
+                for (const comp of comps || []) {
+                  if (!comp) continue
+                  if (comp.id === selectedComponent.compId) {
+                    if (!comp.props) comp.props = {}
+                    if (!Array.isArray(comp.props.children)) comp.props.children = []
+                    comp.props.children.push(newComponent)
+                    comp.props = { ...comp.props }
+                    return true
+                  }
+                  if (Array.isArray(comp.props?.children)) {
+                    if (findContainerAndAppend(comp.props.children)) return true
+                  }
                 }
+                return false
               }
-              if (inserted) break
+
+              for (const r of rows) {
+                for (const c of r.columns || []) {
+                  if (findContainerAndAppend(c.components || [])) {
+                    targetRowId = r.id
+                    targetColId = c.id
+                    inserted = true
+                    break
+                  }
+                }
+                if (inserted) break
+              }
+            }
+
+            if (!inserted) {
+              for (const r of rows) {
+                for (const c of r.columns || []) {
+                  const compIndex = (c.components || []).findIndex((comp: any) => comp?.id === selectedComponent.compId)
+                  if (compIndex !== -1) {
+                    c.components.splice(compIndex + 1, 0, newComponent)
+                    targetRowId = r.id
+                    targetColId = c.id
+                    inserted = true
+                    break
+                  }
+                }
+                if (inserted) break
+              }
             }
           }
           if (!inserted) {
@@ -1473,8 +1975,21 @@ const PageEditor: React.FC<PageEditorProps> = ({
       // 🎯 Single layout update + debounced save handled by layout actions (deduplicated)
       debugLog('🔄 Calling layoutActionsHandleComponentUpdate...')
       layoutActionsHandleComponentUpdate(componentId, props)
+
+      // When media/images are uploaded or updated, trigger an immediate save so they persist
+      const isMediaProp = Boolean(
+        props.image !== undefined ||
+        props.src !== undefined ||
+        props.url !== undefined ||
+        (props.content && (props.content.src !== undefined || props.content.image !== undefined))
+      )
+      if (isMediaProp) {
+        setTimeout(() => {
+          void saveNow(true)
+        }, 150)
+      }
     },
-    [layoutActionsHandleComponentUpdate, selectedComponent],
+    [layoutActionsHandleComponentUpdate, selectedComponent, saveNow],
   )
 
   const handleComponentDuplicate = useCallback(
@@ -2472,8 +2987,13 @@ const PageEditor: React.FC<PageEditorProps> = ({
           }}
         />
 
-        {/* Column Selection Modal */}
-        <ColumnSelectionModal isOpen={showColumnModal} onClose={() => setShowColumnModal(false)} onSelect={handleAddSectionWithColumns} />
+        {/* Add Section Modal (Presets & Blank) */}
+        <AddSectionModal
+          isOpen={showColumnModal}
+          onClose={() => setShowColumnModal(false)}
+          onSelectColumns={handleAddSectionWithColumns}
+          onSelectPreset={handleInsertSectionPreset}
+        />
 
         {/* Confirmation Modal */}
         {confirmationModal.isOpen && (

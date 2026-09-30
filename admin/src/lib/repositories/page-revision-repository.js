@@ -43,7 +43,7 @@ export async function getNextRevisionNumber(pageId, connection = pool) {
   }
 
   const [rows] = await connection.query(
-    'SELECT COALESCE(MAX(revision_number), 0) + 1 AS next_revision_number FROM page_revisions WHERE page_id = ?',
+    'SELECT COALESCE(MAX(revision_number), 0) + 1 AS next_revision_number FROM page_revisions WHERE page_id = ? FOR UPDATE',
     [pageId],
   )
 
@@ -96,17 +96,29 @@ export async function createRevision(
     return null
   }
 
-  const [result] = await connection.query(
-    `INSERT INTO page_revisions (
-      page_id,
-      revision_number,
-      revision_type,
-      layout_json,
-      created_by,
-      created_at
-    ) VALUES (?, ?, ?, ?, ?, NOW())`,
-    [pageId, revisionNumber, revisionType, JSON.stringify(layoutJson), createdBy],
-  )
+  let finalRevNum = revisionNumber || (await getNextRevisionNumber(pageId, connection))
 
-  return getRevisionById(result.insertId, connection)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const [result] = await connection.query(
+        `INSERT INTO page_revisions (
+          page_id,
+          revision_number,
+          revision_type,
+          layout_json,
+          created_by,
+          created_at
+        ) VALUES (?, ?, ?, ?, ?, NOW())`,
+        [pageId, finalRevNum, revisionType, JSON.stringify(layoutJson), createdBy],
+      )
+
+      return getRevisionById(result.insertId, connection)
+    } catch (err) {
+      if (err.code === 'ER_DUP_ENTRY' && attempt < 2) {
+        finalRevNum = await getNextRevisionNumber(pageId, connection)
+        continue
+      }
+      throw err
+    }
+  }
 }

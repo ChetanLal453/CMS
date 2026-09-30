@@ -212,6 +212,11 @@ const findComponentEverywhere = (layout: PageLayout, id: string): LayoutComponen
       }
 
       // Search other nested structures recursively
+      if (Array.isArray(comp.props?.children)) {
+        const found = searchRecursively(comp.props.children)
+        if (found) return found
+      }
+
       if (comp.props?.components) {
         const validComponents = comp.props.components.filter((c: LayoutComponent | null) => c !== null) as LayoutComponent[]
         const found = searchRecursively(validComponents)
@@ -320,12 +325,28 @@ const updateComponentInLayout = (
 
         // Direct component match
         if (comp.id === componentId) {
+          const mergedProps = {
+            ...comp.props,
+            ...props,
+          }
+          const finalChildren = Array.isArray(mergedProps.children) && mergedProps.children.length > 0
+            ? mergedProps.children
+            : Array.isArray(mergedProps.content?.children) && mergedProps.content.children.length > 0
+              ? mergedProps.content.children
+              : Array.isArray(mergedProps.children)
+                ? mergedProps.children
+                : Array.isArray(mergedProps.content?.children)
+                  ? mergedProps.content.children
+                  : undefined
+          if (finalChildren !== undefined) {
+            mergedProps.children = finalChildren
+            if (mergedProps.content && typeof mergedProps.content === 'object') {
+              mergedProps.content.children = finalChildren
+            }
+          }
           components[i] = {
             ...comp,
-            props: {
-              ...comp.props,
-              ...props,
-            },
+            props: mergedProps,
           }
           updated = true
           componentUpdated = true
@@ -359,10 +380,21 @@ const updateComponentInLayout = (
           }
         }
 
-        // Search in flexbox children
-        if (compTypeLow === 'flexbox' && Array.isArray(comp.props?.children)) {
+        // Search in flexbox, container, or any block with children
+        if (Array.isArray(comp.props?.children)) {
           if (updateComponentRecursively(comp.props.children)) {
             comp.props = { ...comp.props, children: [...comp.props.children] }
+            if (comp.props.content && typeof comp.props.content === 'object') {
+              comp.props.content.children = [...comp.props.children]
+            }
+            updated = true
+            componentUpdated = true
+          }
+        } else if (Array.isArray(comp.props?.content?.children)) {
+          if (updateComponentRecursively(comp.props.content.children)) {
+            comp.props.children = [...comp.props.content.children]
+            comp.props.content.children = [...comp.props.content.children]
+            comp.props = { ...comp.props }
             updated = true
             componentUpdated = true
           }
@@ -1127,6 +1159,14 @@ export const useLayoutActions = (
               }
             }
 
+            // Children of container, flexbox, or composite blocks
+            if (Array.isArray(comp.props?.children)) {
+              if (searchAndDelete(comp.props.children)) {
+                comp.props = { ...comp.props, children: [...comp.props.children] }
+                return true
+              }
+            }
+
             // Nested components
             if (comp.props?.components) {
               const validComponents = comp.props.components.filter((c: LayoutComponent | null) => c !== null) as LayoutComponent[]
@@ -1197,6 +1237,14 @@ export const useLayoutActions = (
           if (sourceIndex !== -1) {
             components.splice(sourceIndex + 1, 0, duplicatedComponent)
             return true
+          }
+          for (const c of components) {
+            if (Array.isArray(c?.props?.children)) {
+              if (addToParent(c.props.children)) {
+                c.props = { ...c.props, children: [...c.props.children] }
+                return true
+              }
+            }
           }
           return false
         }
