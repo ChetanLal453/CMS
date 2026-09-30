@@ -98,19 +98,96 @@ describe('Generic Action Helpers & Primitive Hardening', () => {
   })
 
   describe('Button integration with action resolver', () => {
-    it('resolves action prop inside ButtonViewModel', () => {
+    it('resolves phone action with icon and tel: protocol', () => {
       const vm = createButtonViewModel({
-        text: 'Call Now',
+        text: 'Call (800) 555-0199',
+        icon: 'phone',
         action: {
           type: 'phone',
-          phone: '+919876543210',
+          phone: '+18005550199',
         },
       })
 
-      expect(vm.link).toBe('tel:+919876543210')
+      expect(vm.link).toBe('tel:+18005550199')
+      expect(vm.hasLink).toBe(true)
+      expect(vm.target).toBe('_self')
+      expect(vm.showIcon).toBe(true)
+      expect(vm.iconName).toBe('phone')
+      expect(vm.resolvedAction?.isNativeProtocol).toBe(true)
+    })
+
+    it('resolves email action with mailto: protocol', () => {
+      const vm = createButtonViewModel({
+        text: 'Contact Us',
+        icon: 'mail',
+        action: {
+          type: 'email',
+          email: 'support@example.com',
+        },
+      })
+
+      expect(vm.link).toBe('mailto:support@example.com')
       expect(vm.hasLink).toBe(true)
       expect(vm.target).toBe('_self')
       expect(vm.resolvedAction?.isNativeProtocol).toBe(true)
+    })
+
+    it('resolves anchor action with hash prefix', () => {
+      const vm = createButtonViewModel({
+        text: 'View Services',
+        action: {
+          type: 'anchor',
+          anchor: 'request-service',
+        },
+      })
+
+      expect(vm.link).toBe('#request-service')
+      expect(vm.hasLink).toBe(true)
+      expect(vm.target).toBe('_self')
+    })
+
+    it('resolves internal page URL with leading slash', () => {
+      const vm = createButtonViewModel({
+        text: 'About Company',
+        action: {
+          type: 'page',
+          pageSlug: 'about-us',
+        },
+      })
+
+      expect(vm.link).toBe('/about-us')
+      expect(vm.hasLink).toBe(true)
+      expect(vm.target).toBe('_self')
+      expect(vm.resolvedAction?.isExternal).toBe(false)
+    })
+
+    it('resolves external URL with new tab and security rel', () => {
+      const vm = createButtonViewModel({
+        text: 'External Partner',
+        action: {
+          type: 'url',
+          url: 'https://google.com',
+          openInNewTab: true,
+        },
+      })
+
+      expect(vm.link).toBe('https://google.com')
+      expect(vm.hasLink).toBe(true)
+      expect(vm.target).toBe('_blank')
+      expect(vm.rel).toBe('noopener noreferrer')
+      expect(vm.resolvedAction?.isExternal).toBe(true)
+    })
+
+    it('resolves legacy raw string link for backward compatibility', () => {
+      const vm = createButtonViewModel({
+        text: 'Legacy Link',
+        link: 'https://example.com/legacy',
+        openInNewTab: true,
+      })
+
+      expect(vm.link).toBe('https://example.com/legacy')
+      expect(vm.hasLink).toBe(true)
+      expect(vm.target).toBe('_blank')
     })
   })
 })

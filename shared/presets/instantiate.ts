@@ -103,9 +103,14 @@ export function instantiateSectionPreset(preset: SectionPreset): PageSection {
     }
   })
 
-  // Collect top-level column blocks for section.blocks
+  // Collect top-level column blocks for section.blocks matching canonical section contract
   const allColumnComponents = clonedRows.flatMap((r) => r.columns.flatMap((c) => c.components))
-  const allFlatBlocks = collectAllBlocks(allColumnComponents)
+  const allFlatBlocks: PageBlock[] = allColumnComponents.map((c) => ({
+    id: c.id,
+    type: c.type,
+    label: c.label || null,
+    props: c.props,
+  }))
 
   return {
     id: newSectionId,

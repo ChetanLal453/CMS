@@ -483,6 +483,154 @@ const AccordionItemsField: React.FC<{
   )
 }
 
+const ActionField: React.FC<{
+  propName: string
+  config: any
+  value: any
+  onChange: (value: any) => void
+}> = ({ propName, config, value, onChange }) => {
+  const parseAction = (val: any) => {
+    if (!val) {
+      return { type: 'url', url: '', openInNewTab: false, phone: '', email: '', anchor: '', pageSlug: '' }
+    }
+    if (typeof val === 'string') {
+      const raw = val.trim()
+      if (/^tel:/i.test(raw)) {
+        return { type: 'phone', phone: raw.replace(/^tel:/i, ''), email: '', anchor: '', pageSlug: '', url: '', openInNewTab: false }
+      }
+      if (/^mailto:/i.test(raw)) {
+        return { type: 'email', email: raw.replace(/^mailto:/i, ''), phone: '', anchor: '', pageSlug: '', url: '', openInNewTab: false }
+      }
+      if (raw.startsWith('#')) {
+        return { type: 'anchor', anchor: raw.replace(/^#/, ''), phone: '', email: '', pageSlug: '', url: '', openInNewTab: false }
+      }
+      if (raw.startsWith('/')) {
+        return { type: 'page', pageSlug: raw.replace(/^\//, ''), phone: '', email: '', anchor: '', url: '', openInNewTab: false }
+      }
+      return { type: 'url', url: raw, openInNewTab: false, phone: '', email: '', anchor: '', pageSlug: '' }
+    }
+    if (typeof val === 'object') {
+      return {
+        type: val.type || (val.phone ? 'phone' : val.email ? 'email' : val.anchor ? 'anchor' : val.pageSlug ? 'page' : 'url'),
+        url: val.url || '',
+        pageSlug: val.pageSlug || '',
+        anchor: val.anchor || '',
+        phone: val.phone || '',
+        email: val.email || '',
+        openInNewTab: Boolean(val.openInNewTab),
+      }
+    }
+    return { type: 'url', url: '', openInNewTab: false, phone: '', email: '', anchor: '', pageSlug: '' }
+  }
+
+  const [parsed, setParsed] = useState(() => parseAction(value))
+
+  useEffect(() => {
+    setParsed(parseAction(value))
+  }, [value])
+
+  const emitChange = (data: typeof parsed) => {
+    const payload: Record<string, any> = { type: data.type }
+    if (data.type === 'phone') {
+      payload.phone = data.phone
+    } else if (data.type === 'email') {
+      payload.email = data.email
+    } else if (data.type === 'anchor') {
+      payload.anchor = data.anchor
+    } else if (data.type === 'page') {
+      payload.pageSlug = data.pageSlug
+    } else {
+      payload.url = data.url
+      payload.openInNewTab = Boolean(data.openInNewTab)
+    }
+    onChange(payload)
+  }
+
+  const handleTypeChange = (newType: string) => {
+    const updated = { ...parsed, type: newType }
+    setParsed(updated)
+    emitChange(updated)
+  }
+
+  const handleFieldChange = (field: string, val: any) => {
+    const updated = { ...parsed, [field]: val }
+    setParsed(updated)
+    emitChange(updated)
+  }
+
+  return (
+    <div className="rp-field frow" style={{ display: 'grid', gap: 8 }}>
+      <label className="flbl">{config.label || 'Action / Link'}</label>
+      <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: 8 }}>
+        <select
+          value={parsed.type}
+          onChange={(e) => handleTypeChange(e.target.value)}
+          className="rp-select fsel text-xs">
+          <option value="url">URL</option>
+          <option value="page">Page</option>
+          <option value="anchor">Anchor</option>
+          <option value="phone">Phone</option>
+          <option value="email">Email</option>
+        </select>
+
+        {parsed.type === 'phone' ? (
+          <input
+            type="tel"
+            className="rp-input fi"
+            value={parsed.phone}
+            placeholder="+1 (800) 555-0199"
+            onChange={(e) => handleFieldChange('phone', e.target.value)}
+          />
+        ) : parsed.type === 'email' ? (
+          <input
+            type="email"
+            className="rp-input fi"
+            value={parsed.email}
+            placeholder="info@example.com"
+            onChange={(e) => handleFieldChange('email', e.target.value)}
+          />
+        ) : parsed.type === 'anchor' ? (
+          <input
+            type="text"
+            className="rp-input fi"
+            value={parsed.anchor}
+            placeholder="section-id (e.g. contact)"
+            onChange={(e) => handleFieldChange('anchor', e.target.value)}
+          />
+        ) : parsed.type === 'page' ? (
+          <input
+            type="text"
+            className="rp-input fi"
+            value={parsed.pageSlug}
+            placeholder="about-us or services/hvac"
+            onChange={(e) => handleFieldChange('pageSlug', e.target.value)}
+          />
+        ) : (
+          <input
+            type="text"
+            className="rp-input fi"
+            value={parsed.url}
+            placeholder="https://example.com"
+            onChange={(e) => handleFieldChange('url', e.target.value)}
+          />
+        )}
+      </div>
+
+      {parsed.type === 'url' ? (
+        <label className="toggle-row" style={{ marginTop: 2 }}>
+          <input
+            type="checkbox"
+            checked={Boolean(parsed.openInNewTab)}
+            onChange={(e) => handleFieldChange('openInNewTab', e.target.checked)}
+            className="toggleinp"
+          />
+          <span className="flbl !mb-0 text-xs">Open in New Tab</span>
+        </label>
+      ) : null}
+    </div>
+  )
+}
+
 export const PropertyField: React.FC<PropertyFieldProps> = function PropertyField({ propName, config, value, onChange }) {
   const [localValue, setLocalValue] = useState(value ?? '')
   const timeoutRef = useRef<NodeJS.Timeout>()
@@ -553,6 +701,9 @@ export const PropertyField: React.FC<PropertyFieldProps> = function PropertyFiel
   }
 
   switch (config.type) {
+    case 'action':
+      return <ActionField propName={propName} config={config} value={value} onChange={onChange} />
+
     case 'text':
       return (
         <div className="rp-field frow">

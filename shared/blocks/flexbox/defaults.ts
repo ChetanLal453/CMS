@@ -11,6 +11,7 @@ export const defaultFlexboxProps: FlexboxProps = {
   columnGap: '16px',
   wrap: 'nowrap',
   padding: '16px',
+  margin: '0px',
   minHeight: 'auto',
   backgroundColor: '#ffffff',
   stackOnMobile: true,

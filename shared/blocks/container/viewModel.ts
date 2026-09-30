@@ -4,17 +4,24 @@ import type { ContainerProps, ContainerViewModel } from './types'
 
 export function createContainerViewModel(props: Record<string, any> = {}): ContainerViewModel {
   const normalized = normalizeContainer(props)
-  const resolvedContent =
-    typeof normalized.content === 'string' && normalized.content !== '[object Object]'
-      ? normalized.content
-      : typeof normalized.content?.content === 'string' && normalized.content.content !== '[object Object]'
-      ? normalized.content.content
+  const rawContent = normalized.content
+
+  let resolvedContent: string | undefined = undefined
+  if (typeof rawContent === 'string') {
+    resolvedContent = rawContent !== '[object Object]' ? rawContent : undefined
+  } else if (typeof rawContent === 'object' && rawContent !== null && typeof rawContent.content === 'string') {
+    resolvedContent = rawContent.content !== '[object Object]' ? rawContent.content : undefined
+  }
+
+  const childrenFromContent =
+    typeof rawContent === 'object' && rawContent !== null && Array.isArray(rawContent.children)
+      ? rawContent.children
       : undefined
 
   return {
     ...normalized,
-    children: normalized.children ?? normalized.content?.children ?? [],
-    content: resolvedContent as any,
+    children: normalized.children ?? childrenFromContent ?? [],
+    content: resolvedContent,
     maxWidth: normalized.style?.maxWidth ?? normalized.maxWidth ?? defaultContainerProps.maxWidth ?? '960px',
     width: normalized.style?.width ?? normalized.width ?? (normalized.position === 'absolute' || normalized.style?.position === 'absolute' ? 'auto' : '100%'),
     minHeight: normalized.style?.minHeight ?? normalized.minHeight ?? 'auto',

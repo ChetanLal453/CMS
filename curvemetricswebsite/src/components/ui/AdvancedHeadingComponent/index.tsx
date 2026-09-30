@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { AdvancedHeadingViewModel } from '../../../../../shared/blocks/advancedheading'
-import { sanitizeHtml } from '../../../../../admin/src/lib/sanitize-markup'
+import { sanitizeHtml } from '../../../../../shared/utils/sanitize-markup'
 import { reportCmsBoundaryViolation } from '../../../lib/cmsBoundary'
 
 function optionalString(value?: string) {

@@ -62,6 +62,7 @@ export function normalizeFlexbox(input: FlexboxInput = {}): FlexboxProps {
   const rowGap = asStringOrUndefined(styleInput.rowGap ?? input.rowGap)
   const columnGap = asStringOrUndefined(styleInput.columnGap ?? input.columnGap)
   const padding = asStringOrUndefined(styleInput.padding ?? input.padding)
+  const margin = asStringOrUndefined(styleInput.margin ?? input.margin)
   const minHeight = asStringOrUndefined(styleInput.minHeight ?? input.minHeight)
   const backgroundColor = asStringOrUndefined(styleInput.backgroundColor ?? input.backgroundColor)
   const borderRadius = asStringOrUndefined(styleInput.borderRadius ?? input.borderRadius)
@@ -81,6 +82,7 @@ export function normalizeFlexbox(input: FlexboxInput = {}): FlexboxProps {
   if (rowGap !== undefined) style.rowGap = rowGap
   if (columnGap !== undefined) style.columnGap = columnGap
   if (padding !== undefined) style.padding = padding
+  if (margin !== undefined) style.margin = margin
   if (minHeight !== undefined) style.minHeight = minHeight
   if (backgroundColor !== undefined) style.backgroundColor = backgroundColor
   if (borderRadius !== undefined) style.borderRadius = borderRadius
@@ -121,6 +123,7 @@ export function normalizeFlexbox(input: FlexboxInput = {}): FlexboxProps {
     rowGap: rowGap ?? presetDefaults.rowGap ?? gap ?? defaultFlexboxProps.rowGap,
     columnGap: columnGap ?? presetDefaults.columnGap ?? gap ?? defaultFlexboxProps.columnGap,
     padding: padding ?? presetDefaults.padding ?? defaultFlexboxProps.padding,
+    margin: margin ?? presetDefaults.margin ?? defaultFlexboxProps.margin,
     minHeight: minHeight ?? presetDefaults.minHeight ?? defaultFlexboxProps.minHeight,
     backgroundColor: backgroundColor ?? presetDefaults.backgroundColor ?? defaultFlexboxProps.backgroundColor,
     borderRadius: borderRadius ?? presetDefaults.borderRadius ?? defaultFlexboxProps.borderRadius,

@@ -764,7 +764,7 @@ export const PageEditorCanvas: React.FC<PageEditorCanvasProps> = ({
                     overflow: 'visible',
                     minWidth: 0, // ✅ ADD THIS
                   }}>
-                  {row?.columns?.map((column, columnIndex) => (
+                  {row?.columns?.map((column: any, columnIndex: number) => (
                     <DroppableColumn
                       key={column?.id}
                       column={column}

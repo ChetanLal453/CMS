@@ -2,10 +2,10 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { getComponentRenderer } from '../../../../curvemetricswebsite/src/components/registry'
+import '@/lib/componentRegistry'
 import type { PageNavigationItem, PageRenderBundle } from '../../../../shared/page/PageRenderBundle'
 import { buildPublicPageView, type PublicSectionView } from '../../../../shared/page/viewHelpers'
-import { createBlockViewModel } from '../../../../shared/blocks/registry'
+import { createBlockViewModel, getAdminComponent } from '../../../../shared/blocks/registry'
 
 function getEnvironment() {
   return process.env.NODE_ENV === 'production' ? 'production' : 'development'
@@ -162,7 +162,7 @@ function renderComponent(component: { id: string | number; type: string; props: 
   let Renderer: React.ComponentType<any>
 
   try {
-    Renderer = getComponentRenderer(component.type)
+    Renderer = getAdminComponent(component.type)
   } catch {
     const traceId = 'unknown-trace'
     if (getEnvironment() !== 'production') {

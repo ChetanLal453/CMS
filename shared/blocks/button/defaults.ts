@@ -4,6 +4,7 @@ export const defaultButtonProps: ButtonProps = {
   text: 'Click Me',
   link: '#',
   openInNewTab: false,
+  action: null,
   variant: 'primary',
   size: 'medium',
   primaryColor: '#7C6DFA',

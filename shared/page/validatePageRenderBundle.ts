@@ -400,6 +400,63 @@ function validateFilterValue(value: unknown, traceId: string, path: string) {
   assert(false, traceId, path, `${path} must be a string, number, boolean, array, or null`, 'INVALID_BLOCK_PROPS')
 }
 
+const ALLOWED_ACTION_TYPES = new Set(['url', 'page', 'anchor', 'phone', 'email', 'dynamicRecord', 'file'])
+
+function validateActionValue(value: unknown, traceId: string, path: string) {
+  if (value === null || value === undefined) {
+    return
+  }
+
+  // Legacy string link (e.g. 'tel:1234', 'https://...', '#anchor', '/page')
+  if (typeof value === 'string') {
+    return
+  }
+
+  assert(isObject(value), traceId, path, `${path} must be an object or string`, 'INVALID_BLOCK_PROPS')
+
+  if (value.type !== undefined) {
+    assert(
+      isString(value.type) && ALLOWED_ACTION_TYPES.has(value.type),
+      traceId,
+      `${path}.type`,
+      `${path}.type must be one of: ${Array.from(ALLOWED_ACTION_TYPES).join(', ')}`,
+      'INVALID_BLOCK_PROPS',
+    )
+  }
+
+  if (value.url !== undefined) {
+    assert(isString(value.url), traceId, `${path}.url`, `${path}.url must be a string`, 'INVALID_BLOCK_PROPS')
+  }
+  if (value.pageSlug !== undefined) {
+    assert(isString(value.pageSlug), traceId, `${path}.pageSlug`, `${path}.pageSlug must be a string`, 'INVALID_BLOCK_PROPS')
+  }
+  if (value.anchor !== undefined) {
+    assert(isString(value.anchor), traceId, `${path}.anchor`, `${path}.anchor must be a string`, 'INVALID_BLOCK_PROPS')
+  }
+  if (value.phone !== undefined) {
+    assert(isString(value.phone), traceId, `${path}.phone`, `${path}.phone must be a string`, 'INVALID_BLOCK_PROPS')
+  }
+  if (value.email !== undefined) {
+    assert(isString(value.email), traceId, `${path}.email`, `${path}.email must be a string`, 'INVALID_BLOCK_PROPS')
+  }
+  if (value.openInNewTab !== undefined) {
+    assert(isBoolean(value.openInNewTab), traceId, `${path}.openInNewTab`, `${path}.openInNewTab must be a boolean`, 'INVALID_BLOCK_PROPS')
+  }
+  if (value.fileUrl !== undefined) {
+    assert(isString(value.fileUrl), traceId, `${path}.fileUrl`, `${path}.fileUrl must be a string`, 'INVALID_BLOCK_PROPS')
+  }
+  if (value.dynamicRecord !== undefined) {
+    assert(isObject(value.dynamicRecord), traceId, `${path}.dynamicRecord`, `${path}.dynamicRecord must be an object`, 'INVALID_BLOCK_PROPS')
+    assert(
+      isString(value.dynamicRecord.collectionSlug),
+      traceId,
+      `${path}.dynamicRecord.collectionSlug`,
+      `${path}.dynamicRecord.collectionSlug must be a string`,
+      'INVALID_BLOCK_PROPS',
+    )
+  }
+}
+
 function validateSchemaValue(
   value: unknown,
   schemaField: SchemaField | undefined,
@@ -420,6 +477,16 @@ function validateSchemaValue(
     return
   }
 
+  if (schemaType === 'action' || propName === 'action') {
+    validateActionValue(value, traceId, path)
+    return
+  }
+
+  if (propName === 'zIndex') {
+    assert(isStringOrNumber(value), traceId, path, `${path} must be a string or number`, 'INVALID_BLOCK_PROPS')
+    return
+  }
+
   if (blockType === 'filter' && (propName === 'defaultValue' || propName === 'value')) {
     validateFilterValue(value, traceId, path)
     return
@@ -434,6 +501,9 @@ function validateSchemaValue(
   }
 
   switch (schemaType) {
+    case 'action':
+      validateActionValue(value, traceId, path)
+      return
     case 'toggle':
     case 'boolean':
       assert(isBoolean(value), traceId, path, `${path} must be a boolean`, 'INVALID_BLOCK_PROPS')

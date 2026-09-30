@@ -433,7 +433,7 @@ const getEditorPropsForComponent = (type: string | undefined, props: Record<stri
   if (normalizedType === 'container') {
     const cont = normalizeContainer(props)
     return {
-      children: (Array.isArray(cont.children) && cont.children.length > 0 ? cont.children : cont.content?.children) ?? cont.children ?? [],
+      children: (Array.isArray(cont.children) && cont.children.length > 0 ? cont.children : (typeof cont.content === 'object' && cont.content ? cont.content.children : undefined)) ?? cont.children ?? [],
       maxWidth: cont.style?.maxWidth ?? cont.maxWidth ?? '',
       width: cont.style?.width ?? cont.width ?? '',
       minHeight: cont.style?.minHeight ?? cont.minHeight ?? '',
@@ -1428,7 +1428,8 @@ const preparePropsForUpdate = (type: string | undefined, props: Record<string, a
       ...normalized,
       children: resolvedChildren,
       content: {
-        ...(normalized.content || {}),
+        ...(typeof normalized.content === 'object' && normalized.content !== null ? normalized.content : {}),
+        ...(typeof normalized.content === 'string' ? { content: normalized.content } : {}),
         children: resolvedChildren,
       },
       version: 1,

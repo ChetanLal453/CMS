@@ -1,6 +1,6 @@
 import React from 'react'
-import { getComponentRenderer } from '../../../curvemetricswebsite/src/components/registry'
-import { createBlockViewModel } from '../../../shared/blocks/registry'
+import '@/lib/componentRegistry'
+import { getAdminComponent, createBlockViewModel } from '../../../shared/blocks/registry'
 
 interface LayoutComponent {
   id: string
@@ -43,9 +43,9 @@ function renderComponent(component: LayoutComponent) {
   let Renderer: React.ComponentType<any>
 
   try {
-    Renderer = getComponentRenderer(component.type)
+    Renderer = getAdminComponent(component.type)
   } catch (error) {
-    console.error(`Error resolving website renderer for component ${component.type}:`, error)
+    console.error(`Error resolving admin renderer for component ${component.type}:`, error)
     return (
       <div key={component.id} style={{ padding: '20px', border: '1px solid #fecaca', backgroundColor: '#fef2f2' }}>
         Unsupported component type "{component.type}"

@@ -57,9 +57,9 @@ describe('Section Preset Registry & Instantiation Engine', () => {
     })
 
     // Confirm ZERO ID overlap between the two instances
-    for (const id of ids1) {
+    ids1.forEach((id) => {
       expect(ids2.has(id)).toBe(false)
-    }
+    })
 
     // Verify children have fresh IDs as well
     const colContent1 = instance1.rows[0].columns[0]

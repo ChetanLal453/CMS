@@ -13,6 +13,7 @@ export interface CanonicalFlexboxStyle {
   rowGap?: string
   columnGap?: string
   padding?: string
+  margin?: string
   minHeight?: string
   backgroundColor?: string
   borderRadius?: string
@@ -49,6 +50,7 @@ export type FlexboxProps = CanonicalFlexboxProps & {
   rowGap: string
   columnGap: string
   padding: string
+  margin?: string
   minHeight: string
   backgroundColor: string
   stackOnMobile: boolean
