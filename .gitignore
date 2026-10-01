@@ -1,35 +1,43 @@
 # Dependencies
 node_modules/
-*/node_modules/
+**/node_modules/
 .pnp
 .pnp.js
 
 # Next.js & build outputs
 .next/
-*/.next/
+**/.next/
 out/
-*/out/
+**/out/
 build/
-*/build/
+**/build/
 dist/
-*/dist/
+**/dist/
 
 # Environment files (protect secrets)
 .env
+.env.local
+.env.*.local
 .env*.local
 *.env
-admin/.env
-curvemetricswebsite/.env
+**/.env
+**/.env.local
+**/.env.*.local
+**/*.env
+apps/admin/.env*
+apps/site-runtime/.env*
+!.env.example
+!**/.env.example
 
 # Git backups
 .git_backup/
-*/.git_backup/
+**/.git_backup/
 *.tsbuildinfo
 next-env.d.ts
 
 # Testing
 coverage/
-*/coverage/
+**/coverage/
 
 # Logs & OS files
 .DS_Store
@@ -42,5 +50,5 @@ yarn-error.log*
 # Database backups & large SQL dumps
 *.sql
 *.sql.gz
-admin/database/backups/
+apps/admin/database/backups/
 database/backups/

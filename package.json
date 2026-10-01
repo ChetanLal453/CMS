@@ -1,8 +1,21 @@
 {
-  "name": "curve-metrics",
+  "name": "uadmin",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "postinstall": "node scripts/link-types.js"
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "dev:site": "npm run dev --workspace=apps/site-runtime",
+    "build:admin": "npm run build --workspace=apps/admin",
+    "build:site": "npm run build --workspace=apps/site-runtime",
+    "typecheck": "npm run typecheck --workspace=apps/admin && npm run typecheck --workspace=apps/site-runtime",
+    "test": "npm test --workspace=apps/admin",
+    "lint": "npm run lint --workspace=apps/admin && npm run lint --workspace=apps/site-runtime"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }

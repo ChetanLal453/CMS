@@ -1,0 +1,49 @@
+{
+  "name": "@uadmin/shared",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./blocks/registry": "./blocks/registry.ts",
+    "./blocks/advancedcard/renderer/AdvancedCardRenderer": "./blocks/advancedcard/renderer/AdvancedCardRenderer.tsx",
+    "./blocks/advancedaccordion": "./blocks/advancedaccordion/index.ts",
+    "./blocks/advancedheading": "./blocks/advancedheading/index.ts",
+    "./blocks/advancedlist": "./blocks/advancedlist/index.ts",
+    "./blocks/advancedparagraph": "./blocks/advancedparagraph/index.ts",
+    "./blocks/filter": "./blocks/filter/index.ts",
+    "./blocks/newgrid": "./blocks/newgrid/index.ts",
+    "./blocks/swipercontainer": "./blocks/swipercontainer/index.ts",
+    "./blocks/tabs": "./blocks/tabs/index.ts",
+    "./blocks/video": "./blocks/video/index.ts",
+    "./blocks/*": "./blocks/*.ts",
+    "./page/*": "./page/*.ts",
+    "./presets/registry": "./presets/registry.ts",
+    "./presets/*": "./presets/*.ts",
+    "./theme": "./theme/index.ts",
+    "./theme/*": "./theme/*.ts",
+    "./utils/*": "./utils/*.ts",
+    "./*": "./*.ts"
+  },
+  "typesVersions": {
+    "*": {
+      "blocks/registry": ["./blocks/registry.ts"],
+      "blocks/advancedcard/renderer/AdvancedCardRenderer": ["./blocks/advancedcard/renderer/AdvancedCardRenderer.tsx"],
+      "blocks/advancedaccordion": ["./blocks/advancedaccordion/index.ts"],
+      "blocks/advancedheading": ["./blocks/advancedheading/index.ts"],
+      "blocks/advancedlist": ["./blocks/advancedlist/index.ts"],
+      "blocks/advancedparagraph": ["./blocks/advancedparagraph/index.ts"],
+      "blocks/filter": ["./blocks/filter/index.ts"],
+      "blocks/newgrid": ["./blocks/newgrid/index.ts"],
+      "blocks/swipercontainer": ["./blocks/swipercontainer/index.ts"],
+      "blocks/tabs": ["./blocks/tabs/index.ts"],
+      "blocks/video": ["./blocks/video/index.ts"],
+      "blocks/*": ["./blocks/*.ts"],
+      "page/*": ["./page/*.ts"],
+      "presets/registry": ["./presets/registry.ts"],
+      "presets/*": ["./presets/*.ts"],
+      "theme": ["./theme/index.ts"],
+      "theme/*": ["./theme/*.ts"],
+      "utils/*": ["./utils/*.ts"],
+      "*": ["./*.ts"]
+    }
+  }
+}
