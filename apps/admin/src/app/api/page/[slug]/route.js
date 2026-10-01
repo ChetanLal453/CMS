@@ -3,6 +3,7 @@ import { createPageRenderApiError } from '@uadmin/shared/page/apiContract'
 import { assertPageRenderBundle } from '@uadmin/shared/page/assertPageRenderBundle'
 import { PageRenderBundleValidationError } from '@uadmin/shared/page/validatePageRenderBundle'
 import { loadPageRenderSource } from '../../../../lib/services/page-render-service.js'
+import { resolveSiteFromRequest } from '../../../../lib/services/site-resolver.js'
 
 function formatSlugLabel(slug) {
   const normalized = String(slug || '')
@@ -124,7 +125,7 @@ function prunePublicSection(section) {
   }
 }
 
-function createPublicApiBundle(bundle) {
+function createPublicApiBundle(bundle, site = null) {
   const publicSections = Array.isArray(bundle.sections) ? bundle.sections.map(prunePublicSection) : []
   const publicLayoutSections = Array.isArray(bundle.layout?.sections) ? bundle.layout.sections.map(prunePublicSection) : []
   const publicViewContent = Array.isArray(bundle.view?.content) ? bundle.view.content.map(prunePublicSection) : []
@@ -133,6 +134,14 @@ function createPublicApiBundle(bundle) {
     success: bundle.success,
     schemaVersion: bundle.schemaVersion,
     mode: bundle.mode,
+    site: site
+      ? {
+          id: site.id,
+          name: site.name,
+          slug: site.slug,
+          domain: site.domain,
+        }
+      : null,
     page: bundle.page,
     layout: {
       schemaVersion: bundle.layout?.schemaVersion,
@@ -201,7 +210,18 @@ export async function GET(request, { params }) {
 
     const revisionId = parsedRevisionId == null || Number.isNaN(parsedRevisionId) ? null : parsedRevisionId
     const mode = preview ? 'preview' : 'public'
-    const source = await loadPageRenderSource(slug, { mode, revisionId })
+
+    // Resolve tenant site context from request
+    const { site, siteId } = await resolveSiteFromRequest(request, undefined, { mode })
+
+    if (mode === 'public' && (siteId === -1 || siteId === null)) {
+      return jsonPageRenderError(404, {
+        code: 'SITE_NOT_FOUND',
+        message: 'Site not found for requested host',
+      })
+    }
+
+    const source = await loadPageRenderSource(slug, { mode, revisionId, siteId })
 
     if (!source) {
       return jsonPageRenderError(404, {
@@ -225,7 +245,17 @@ export async function GET(request, { params }) {
         })
       }
 
-      return Response.json(bundle)
+      return Response.json({
+        ...bundle,
+        site: site
+          ? {
+              id: site.id,
+              name: site.name,
+              slug: site.slug,
+              domain: site.domain,
+            }
+          : null,
+      })
     }
 
     const pageIsPublished = String(bundle.page?.status || '').toLowerCase() === 'published'
@@ -245,7 +275,7 @@ export async function GET(request, { params }) {
       })
     }
 
-    return Response.json(createPublicApiBundle(bundle))
+    return Response.json(createPublicApiBundle(bundle, site))
   } catch (error) {
     if (error instanceof PageRenderBundleValidationError) {
       console.error('page_render_bundle_validation_failed', {

@@ -84,7 +84,7 @@ export async function publishCurrentDraft({ pageId, actor = null }) {
     const updatedPage = await updatePageById(pageId, payload, connection)
 
     await connection.commit()
-    clearPublicPageBundleCache(existingPage.slug)
+    clearPublicPageBundleCache(existingPage.slug, existingPage.site_id)
 
     return {
       page: updatedPage,

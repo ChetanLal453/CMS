@@ -40,7 +40,7 @@ function buildNavigationTree(items = []) {
   return walk(null)
 }
 
-async function loadRecordByIdentifier(tableName, identifier, requestedColumns) {
+async function loadRecordByIdentifier(tableName, identifier, requestedColumns, siteId = null) {
   if (!identifier?.id && !identifier?.slug) {
     return null
   }
@@ -56,15 +56,28 @@ async function loadRecordByIdentifier(tableName, identifier, requestedColumns) {
 
   const whereField = identifier.id != null ? 'id' : 'slug'
   const whereValue = identifier.id ?? identifier.slug
+  const whereParts = [`${whereField} = ?`]
+  const params = [whereValue]
+
+  const allTableCols = await getExistingColumns(tableName)
+  if (siteId != null && allTableCols.includes('site_id')) {
+    whereParts.push('(site_id = ? OR site_id IS NULL)')
+    params.push(siteId)
+  }
+
   const [rows] = await pool.execute(
-    `SELECT ${columns.join(', ')} FROM ${tableName} WHERE ${whereField} = ? LIMIT 1`,
-    [whereValue],
+    `SELECT ${columns.join(', ')} FROM ${tableName} WHERE ${whereParts.join(' AND ')} LIMIT 1`,
+    params,
   )
 
   return rows[0] || null
 }
 
-async function loadFirstFooter() {
+async function loadFirstFooter(siteId = null) {
+  if (!siteId) {
+    return null
+  }
+
   if (!(await tableExists('footers'))) {
     return null
   }
@@ -78,24 +91,34 @@ async function loadFirstFooter() {
     'social_links',
     'bg_color',
     'settings',
+    'site_id',
   ])
 
   if (!columns.length) {
     return null
   }
 
-  const [rows] = await pool.execute(
-    `SELECT ${columns.join(', ')} FROM footers ORDER BY id ASC LIMIT 1`,
-  )
+  if (columns.includes('site_id')) {
+    const [siteRows] = await pool.execute(
+      `SELECT ${columns.join(', ')} FROM footers WHERE site_id = ? ORDER BY id ASC LIMIT 1`,
+      [siteId],
+    )
+    if (siteRows[0]) {
+      return siteRows[0]
+    }
+  }
 
-  return rows[0] || null
+  // Strict isolation: if no footer exists for this tenant, fail closed (never leak another tenant's footer)
+  return null
 }
 
 async function loadHeader(page) {
+  const siteId = page.site_id ?? null
   const header = await loadRecordByIdentifier(
     'headers',
     { id: page.header_id ?? null, slug: page.header_slug ?? null },
     ['id', 'slug', 'name', 'logo', 'logo_dark', 'cta_label', 'cta_link', 'is_sticky', 'bg_color', 'settings'],
+    siteId,
   )
 
   if (!header) {
@@ -148,10 +171,12 @@ async function loadHeader(page) {
 }
 
 async function loadFooter(page) {
+  const siteId = page.site_id ?? null
   const requestedFooter = await loadRecordByIdentifier(
     'footers',
     { id: page.footer_id ?? null, slug: page.footer_slug ?? null },
     ['id', 'slug', 'name', 'columns', 'copyright', 'social_links', 'bg_color', 'settings'],
+    siteId,
   )
 
   if (requestedFooter) {
@@ -167,9 +192,10 @@ async function loadFooter(page) {
     'footers',
     { slug: 'global-footer' },
     ['id', 'slug', 'name', 'columns', 'copyright', 'social_links', 'bg_color', 'settings'],
+    siteId,
   )
 
-  const fallbackFooter = globalFooter || (await loadFirstFooter())
+  const fallbackFooter = globalFooter || (await loadFirstFooter(siteId))
 
   if (!fallbackFooter) {
     return null
@@ -184,10 +210,12 @@ async function loadFooter(page) {
 }
 
 async function loadBanner(page) {
+  const siteId = page.site_id ?? null
   const banner = await loadRecordByIdentifier(
     'banners',
     { id: page.banner_id ?? null, slug: page.banner_slug ?? null },
     ['id', 'slug', 'name', 'content', 'is_active'],
+    siteId,
   )
 
   if (!banner) {
@@ -225,11 +253,20 @@ async function resolveDraftRevision(page, explicitRevisionId = null) {
   }
 
   if (explicitRevisionId != null) {
-    return getRevisionById(explicitRevisionId, pool)
+    const revision = await getRevisionById(explicitRevisionId, pool)
+    if (!revision || Number(revision.page_id) !== Number(page.id)) {
+      // Security: Cross-page or cross-tenant revision access forbidden
+      return null
+    }
+    return revision
   }
 
   if (page.current_revision_id != null) {
-    return getRevisionById(page.current_revision_id, pool)
+    const revision = await getRevisionById(page.current_revision_id, pool)
+    if (!revision || Number(revision.page_id) !== Number(page.id)) {
+      return null
+    }
+    return revision
   }
 
   return null
@@ -240,20 +277,27 @@ async function resolvePublishedRevision(page) {
     return null
   }
 
-  if (page.published_revision_id != null) {
-    return getRevisionById(page.published_revision_id, pool)
-  }
+  const targetRevisionId =
+    page.published_revision_id != null
+      ? page.published_revision_id
+      : String(page.status || '').toLowerCase() === 'published'
+        ? page.current_revision_id ?? null
+        : null
 
-  if (String(page.status || '').toLowerCase() === 'published' && page.current_revision_id != null) {
-    return getRevisionById(page.current_revision_id, pool)
+  if (targetRevisionId != null) {
+    const revision = await getRevisionById(targetRevisionId, pool)
+    if (!revision || Number(revision.page_id) !== Number(page.id)) {
+      return null
+    }
+    return revision
   }
 
   return null
 }
 
 export async function loadPageRenderSource(slug, options = {}) {
-  const { mode = 'public', revisionId = null } = options
-  const page = await getPageBySlug(slug, pool)
+  const { mode = 'public', revisionId = null, siteId = null } = options
+  const page = await getPageBySlug(slug, { siteId, connection: pool })
 
   if (!page) {
     return null
@@ -275,6 +319,7 @@ export async function loadPageRenderSource(slug, options = {}) {
       title: page.title,
       name: page.name,
       status: page.status,
+      site_id: page.site_id ?? null,
       seo: {
         title: page.meta_title ?? '',
         description: page.meta_description ?? '',

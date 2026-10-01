@@ -67,8 +67,16 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (context)
     return { notFound: true }
   }
 
+  const rawHost =
+    (context.req.headers['x-forwarded-host'] as string) ||
+    (context.req.headers.host as string) ||
+    ''
+
   try {
-    const bundle = await fetchPageBundleForPath(requestedPath ? requestedPath.split('/').filter(Boolean) : [])
+    const bundle = await fetchPageBundleForPath(
+      requestedPath ? requestedPath.split('/').filter(Boolean) : [],
+      { host: rawHost },
+    )
 
     if (!bundle?.page?.slug) {
       return { notFound: true }

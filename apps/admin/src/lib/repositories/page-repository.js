@@ -29,6 +29,7 @@ export async function getPageSelectClause() {
     { column: 'meta_description', select: 'meta_description', fallback: 'NULL AS meta_description' },
     { column: 'meta_image', select: 'meta_image', fallback: 'NULL AS meta_image' },
     { column: 'meta_image_id', select: 'meta_image_id', fallback: 'NULL AS meta_image_id' },
+    { column: 'site_id', select: 'site_id', fallback: 'NULL AS site_id' },
     { column: 'published_at', select: 'published_at', fallback: 'NULL AS published_at' },
     { column: 'updated_at', select: 'updated_at', fallback: 'NULL AS updated_at' },
     { column: 'current_revision_id', select: 'current_revision_id', fallback: 'NULL AS current_revision_id' },
@@ -38,35 +39,100 @@ export async function getPageSelectClause() {
   return mapAvailableFields(fields, columns).join(',\n        ')
 }
 
-export async function getPageById(pageId, connection = pool) {
+function parsePageRepoOptions(optionsOrConnection, fallbackConnection) {
+  let conn = fallbackConnection
+  let siteId = null
+  let allowUnscoped = false
+
+  if (optionsOrConnection && typeof optionsOrConnection.query === 'function') {
+    conn = optionsOrConnection
+  } else if (typeof optionsOrConnection === 'object' && optionsOrConnection !== null) {
+    siteId = optionsOrConnection.siteId ?? null
+    conn = optionsOrConnection.connection || fallbackConnection
+    allowUnscoped = Boolean(optionsOrConnection.allowUnscoped)
+  } else if (optionsOrConnection !== null && optionsOrConnection !== undefined) {
+    siteId = optionsOrConnection
+  }
+
+  // Parse numeric siteId if possible
+  const parsedSiteId = siteId != null ? Number(siteId) : null
+  const validSiteId = parsedSiteId !== null && !Number.isNaN(parsedSiteId) && parsedSiteId > 0 ? parsedSiteId : null
+
+  return { conn, siteId: validSiteId, allowUnscoped }
+}
+
+/**
+ * Tenant-scoped page retrieval by ID.
+ * FAILS CLOSED if siteId is omitted or invalid, unless explicitly marked allowUnscoped.
+ */
+export async function getPageById(pageId, optionsOrConnection = pool, connection = pool) {
+  const { conn, siteId, allowUnscoped } = parsePageRepoOptions(optionsOrConnection, connection)
+
+  if (!pageId) {
+    return null
+  }
+
+  // Fail closed: tenant-owned query requires explicit siteId or explicit allowUnscoped
+  if (!siteId && !allowUnscoped) {
+    return null
+  }
+
   const selectClause = await getPageSelectClause()
-  const [rows] = await connection.query(
+  const whereParts = ['id = ?']
+  const params = [pageId]
+
+  if (siteId) {
+    whereParts.push('site_id = ?')
+    params.push(siteId)
+  }
+
+  const [rows] = await conn.query(
     `SELECT
         ${selectClause}
       FROM pages
-      WHERE id = ?
+      WHERE ${whereParts.join(' AND ')}
       LIMIT 1`,
-    [pageId],
+    params,
   )
 
   return rows[0] || null
 }
 
-export async function getPageBySlug(slug, connection = pool) {
-  const selectClause = await getPageSelectClause()
+/**
+ * Tenant-scoped page retrieval by slug.
+ * FAILS CLOSED if siteId is omitted or invalid, unless explicitly marked allowUnscoped.
+ */
+export async function getPageBySlug(slug, optionsOrConnection = pool, connection = pool) {
+  const { conn, siteId, allowUnscoped } = parsePageRepoOptions(optionsOrConnection, connection)
   const normalizedSlug = String(slug || '').trim().replace(/^\/+|\/+$/g, '').toLowerCase()
 
   if (!normalizedSlug) {
     return null
   }
 
-  const [rows] = await connection.query(
+  // Fail closed: tenant-owned query requires explicit siteId or explicit allowUnscoped
+  if (!siteId && !allowUnscoped) {
+    return null
+  }
+
+  const selectClause = await getPageSelectClause()
+  const whereParts = [
+    `(LOWER(TRIM(BOTH '/' FROM slug)) = ?
+       OR LOWER(TRIM(COALESCE(title, ''))) = ?
+       OR LOWER(TRIM(COALESCE(name, ''))) = ?)`
+  ]
+  const params = [normalizedSlug, normalizedSlug, normalizedSlug]
+
+  if (siteId) {
+    whereParts.push('site_id = ?')
+    params.push(siteId)
+  }
+
+  const [rows] = await conn.query(
     `SELECT
         ${selectClause}
       FROM pages
-      WHERE LOWER(TRIM(BOTH '/' FROM slug)) = ?
-         OR LOWER(TRIM(COALESCE(title, ''))) = ?
-         OR LOWER(TRIM(COALESCE(name, ''))) = ?
+      WHERE ${whereParts.join(' AND ')}
       ORDER BY
         CASE
           WHEN LOWER(TRIM(BOTH '/' FROM slug)) = ? THEN 0
@@ -76,10 +142,24 @@ export async function getPageBySlug(slug, connection = pool) {
         END,
         id ASC
       LIMIT 1`,
-    [normalizedSlug, normalizedSlug, normalizedSlug, normalizedSlug, normalizedSlug, normalizedSlug],
+    [...params, normalizedSlug, normalizedSlug, normalizedSlug],
   )
 
   return rows[0] || null
+}
+
+/**
+ * Explicit unscoped system helper for internal migrations or system-wide operations.
+ */
+export async function getPageByIdSystem(pageId, connection = pool) {
+  return getPageById(pageId, { allowUnscoped: true, connection })
+}
+
+/**
+ * Explicit unscoped system helper for internal migrations or system-wide operations.
+ */
+export async function getPageBySlugSystem(slug, connection = pool) {
+  return getPageBySlug(slug, { allowUnscoped: true, connection })
 }
 
 export async function updatePageById(pageId, payload, connection = pool) {
@@ -104,5 +184,5 @@ export async function updatePageById(pageId, payload, connection = pool) {
     values,
   )
 
-  return getPageById(pageId, connection)
+  return getPageByIdSystem(pageId, connection)
 }

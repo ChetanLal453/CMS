@@ -49,6 +49,7 @@ yarn-error.log*
 
 # Database backups & large SQL dumps
 *.sql
+!apps/admin/src/migrations/*.sql
 *.sql.gz
 apps/admin/database/backups/
 database/backups/

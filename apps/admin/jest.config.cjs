@@ -11,6 +11,7 @@ const customJestConfig = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   roots: ['<rootDir>/__tests__'],
   moduleNameMapper: {
+    '^@/(.*)$': path.resolve(__dirname, 'src/$1'),
     '^@uadmin/shared/(.*)$': path.resolve(__dirname, '../../packages/shared/$1'),
   },
 }

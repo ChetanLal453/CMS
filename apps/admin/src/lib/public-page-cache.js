@@ -19,6 +19,19 @@ function normalizeKey(key) {
   return String(key || '').trim().toLowerCase()
 }
 
+/**
+ * Generates a tenant-scoped cache key.
+ * Format: site:{siteId}:page:{slug}
+ * @param {string} slug
+ * @param {string|number|null} [siteId]
+ * @returns {string}
+ */
+export function makePublicPageCacheKey(slug, siteId = null) {
+  const normSlug = normalizeKey(slug)
+  const normSite = siteId != null && siteId !== '' ? String(siteId).trim().toLowerCase() : 'global'
+  return `site:${normSite}:page:${normSlug}`
+}
+
 export async function getOrSetPublicPageCache(key, loader, ttlMs = DEFAULT_TTL_MS) {
   const normalizedKey = normalizeKey(key)
   if (!normalizedKey) {
@@ -58,13 +71,55 @@ export async function getOrSetPublicPageCache(key, loader, ttlMs = DEFAULT_TTL_M
   return request
 }
 
-export function clearPublicPageBundleCache(key) {
+/**
+ * Clears cached public page bundles.
+ * Supports:
+ * - clearPublicPageBundleCache(slug, siteId): clears only that tenant's page
+ * - clearPublicPageBundleCache(null, siteId): clears all pages for that tenant
+ * - clearPublicPageBundleCache(slug): clears all tenant pages matching that slug
+ * - clearPublicPageBundleCache(): clears entire cache
+ * @param {string|null} [slug]
+ * @param {string|number|null} [siteId]
+ * @returns {void}
+ */
+export function clearPublicPageBundleCache(slug = null, siteId = null) {
   const { cache, inflight } = getCacheStore()
 
-  if (key) {
-    const normalizedKey = normalizeKey(key)
-    cache.delete(normalizedKey)
-    inflight.delete(normalizedKey)
+  if (slug && siteId) {
+    const specificKey = makePublicPageCacheKey(slug, siteId)
+    cache.delete(specificKey)
+    inflight.delete(specificKey)
+    return
+  }
+
+  if (siteId && !slug) {
+    const prefix = `site:${String(siteId).trim().toLowerCase()}:`
+    for (const key of cache.keys()) {
+      if (key.startsWith(prefix)) {
+        cache.delete(key)
+      }
+    }
+    for (const key of inflight.keys()) {
+      if (key.startsWith(prefix)) {
+        inflight.delete(key)
+      }
+    }
+    return
+  }
+
+  if (slug && !siteId) {
+    const normSlug = normalizeKey(slug)
+    const suffix = `:page:${normSlug}`
+    for (const key of cache.keys()) {
+      if (key.endsWith(suffix) || key === normSlug) {
+        cache.delete(key)
+      }
+    }
+    for (const key of inflight.keys()) {
+      if (key.endsWith(suffix) || key === normSlug) {
+        inflight.delete(key)
+      }
+    }
     return
   }
 
